@@ -31,8 +31,6 @@ params.n = length(params.x0);  %dimension of state vector x
 params.m = length(params.u0);  %dimension of state vector u
 
 % Set values of elastomer constants
-% Fs = -149.8227.*L+389.7264.*1+14.32402.*L.^2;
-% Ms = -1.11737.*theta+15.6772.*1+0.0197989.*theta.^2;
 params.Felast_consts = [14.32402, -149.8227, 389.7264];     % force elastomer constants (L0 = 5.68 in)
 params.Melast_consts = [0.0197989, -1.11737, 15.6772];     % moment elastomer constants (L0 = 5.68 in) 
 
