@@ -25,7 +25,7 @@ function [c, grad_c] = obj(s, params)
     end
     
     % Calculate final cost
-    [fc, dfcdx, dfcdu] = final_cost(x(:,end), u(:,end), params);
+    [fc, dfcdx, dfcdu] = final_cost_none(x(:,end), u(:,end), params);
     
     % Set value for cost and gradient of cost
     c = rc + fc;

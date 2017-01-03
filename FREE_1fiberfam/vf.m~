@@ -6,7 +6,7 @@ function [f, dfdx, dfdu, df_ddxdt] = vf(x, u, dxdt, params)
     [c1, c2, c3] = deal(params.Felast_consts(1), params.Felast_consts(2), params.Felast_consts(3));
     [c4, c5, c6] = deal(params.Melast_consts(1), params.Melast_consts(2), params.Melast_consts(3));
     
-    [P0, gama0, r0, L0, phi0] = deal(params.x_rest(1), params.x_rest(2), params.x_rest(3), params.x_rest(4), params.x_rest(5));
+    [P0, gama0, r0, L0, phi0] = deal(params.x0(1), params.x0(2), params.x0(3), params.x0(4), params.x0(5));
     [P, gama, r, L, phi] = deal(x(1), x(2), x(3), x(4), x(5));
     [dP, dgama, dr, dL, dphi] = deal(dxdt(1), dxdt(2), dxdt(3), dxdt(4), dxdt(5));
 

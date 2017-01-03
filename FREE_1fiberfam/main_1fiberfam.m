@@ -13,14 +13,16 @@ clc
 params = struct;
 
 % Desired twist and/or length
-params.phi_desired = deg2rad(-130);
+params.phi_desired = deg2rad(130);
 % params.len_desired = 7;
 
-params.x0 = [0.1 0.6981 3/16 5.68 0]';    %state vector initial condition
+params.x_rest = [0.01, deg2rad(40), 3/16, 5.68, 0]';    % resting state, P = 0 psi
+
+params.x0 = [10.02, 0.67163, 0.21484, 5.8316, 21.577]';     % state vector initial condition
 params.u0 = [0]';        %input vector initial condition
 
-params.Pmax = 100;
-params.T = 10;   %final time
+params.Pmax = 100;  % maximum pressure allowed
+params.T = 20;   %final time
 params.N = 30; %number of steps
 params.dt = params.T/params.N;    %size of one time step
 params.n = length(params.x0);  %dimension of state vector x
