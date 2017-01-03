@@ -19,7 +19,7 @@ function [con, coneq, grad_con, grad_coneq] = implicit_Dynamics(s, params)
         % Upper bounds on states
         con(1, p) = x(1,p) - Pmax;           %pressure limitation Pmax
         con(2, p) = x(2,p)*sign(x(2,p)) - 1.5;          %fiber angle cannot exceed 90 degrees in magnitude  
-        con(3, p) = x(3,p) - x0(3)*3;      %radius can triple, but no more
+        con(3, p) = x(3,p) - x0(3)*5;      %radius can triple, but no more
         con(4, p) = x(4,p) - (x0(4)*1.5);   %length cannot increase more than 50%
  %       con(5, p) = x(5,p) - 100;  
         
