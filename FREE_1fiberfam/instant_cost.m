@@ -9,13 +9,13 @@ function [ic, dicdx, dicdu] = instant_cost(x, u, params)
 %     % Desired pressure
 %     P_desired = 40;
 %     ic =  (P_desired - x(1))^2;
-%     dicdx = [-2*(P_desired - x(1)) 0 0 0 0];
+%     dicdx = [-2*(P_desired - x(1)) 0 0 0];
 %     dicdu = 0;
     
     % Desired input
     u_desired = 10;
     ic =  (u_desired - u)^2;
-    dicdx = [0 0 0 0 0];
+    dicdx = [0 0 0 0];
     dicdu = -2*(u_desired - u);
 
 
