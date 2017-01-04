@@ -12,7 +12,12 @@ function [vf_maxerror, ic_max] = check_vf_maxerror(params, k)
     end
 
     for j = 1:k
-        x0(:,j) = (1.5-x_0).*rand(n,1) + x_0;
+%         x0(:,j) = (1.5-x_0).*rand(n,1) + x_0;         % simpler, sets ranges of all states. 
+        x0(1,j) = (30-0).*rand(1,1) + 0;    % pressure
+        x0(2,j) = (1.5-x_0(2)).*rand(1,1) + x_0(2);   % fiber angle      %only works for positive gama0
+        x0(3,j) = (5*x_0(3)-x_0(3)).*rand(1,1) + x_0(3);    % radius
+        x0(4,j) = (1.5*x_0(4) - 0.75*x_0(4)).*rand(1,1) + 0.75*x_0(4);  % length
+        
         u0(:,j) = (100-u_0).*rand(m,1) + u_0;
         xdot0(:,j) = (10-(-10)).*rand(n,1) + -10;
         

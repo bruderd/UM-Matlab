@@ -37,8 +37,8 @@ function [f, dfdx, dfdu, df_ddxdt] = vf(x, u, dxdt, params)
         
             
 %     % Possible fixing of a sign error in derivatives 1/2/2017 --BAD
-%     dfdx = [1 0 0 0; 0 -1 0 0; 0 0 1 0; 0 0 0 1] * dfdx;
-%     df_ddxdt = [1 0 0 0; 0 -1 0 0; 0 0 1 0; 0 0 0 1] * df_ddxdt;
+%     dfdx = [1 0 0 0; 0 -1 0 0; 0 0 -1 0; 0 0 0 -1] * dfdx;
+%     df_ddxdt = [1 0 0 0; 0 -1 0 0; 0 0 -1 0; 0 0 0 1] * df_ddxdt;
     
     
     

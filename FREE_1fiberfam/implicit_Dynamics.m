@@ -21,26 +21,25 @@ function [con, coneq, grad_con, grad_coneq] = implicit_Dynamics(s, params)
         con(2, p) = x(2,p)*sign(x(2,p)) - 1.5;          %fiber angle cannot exceed 90 degrees in magnitude  
         con(3, p) = x(3,p) - x0(3)*5;      %radius can triple, but no more
         con(4, p) = x(4,p) - (x0(4)*1.5);   %length cannot increase more than 50%
- %       con(5, p) = x(5,p) - 100;  
-        
+ 
         % Lower bounds on states
         con(1, (N+1)+p) = -x(1,p) + 0;
         con(2, (N+1)+p) = -x(2,p)*sign(x(2,p)) + 0;            %fiber angle cannot cross over 0 degrees   
         con(3, (N+1)+p) = -x(3,p) + x0(3);           %radius cannot decrease
         con(4, (N+1)+p) = -x(4,p) + (x0(4)*0.5);     %length cannot decrease more than 50%
- %       con(5, (N+1)+p) = -x(5,p) + -100;     
+    
     end
     
     for q = 1:N+1
         % Gradient of upper bounds on states
         grad_con(1, q, n*(q-1)+1) = 1;
-        grad_con(2, q, n*(q-1)+2) = 1;
+        grad_con(2, q, n*(q-1)+2) = 1*sign(x(2,p));
         grad_con(3, q, n*(q-1)+3) = 1;
         grad_con(4, q, n*(q-1)+4) = 1;
  %       grad_con(5, q, n*(q-1)+5) = 1;
         % Gradient of lower bounds on states
         grad_con(1, (N+1)+q, n*(q-1)+1) = -1;
-        grad_con(2, (N+1)+q, n*(q-1)+2) = -1;
+        grad_con(2, (N+1)+q, n*(q-1)+2) = -1*sign(x(2,p));
         grad_con(3, (N+1)+q, n*(q-1)+3) = -1;
         grad_con(4, (N+1)+q, n*(q-1)+4) = -1;
  %       grad_con(5, (N+1)+q, n*(q-1)+5) = -1;      

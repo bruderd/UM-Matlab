@@ -24,7 +24,7 @@ P = sym('P(t)');
 gama = sym('gama(t)');
 r = sym('r(t)');
 L = sym('L(t)');
-phi = (-tan(gama)*L/r + tan(gama0)*L0/r0) * (-1);      %TRY MULTIPLYING THIS BY -1 NEXT
+phi = (-tan(gama)*L/r + tan(gama0)*L0/r0) * (-1);      %TRIED MULTIPLYING THIS BY -1. Doesn't fix issue with system evolvin in wrong direction
 
 assumeAlso(P, 'real')
 assumeAlso(gama, 'real')
