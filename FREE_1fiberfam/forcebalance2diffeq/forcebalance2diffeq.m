@@ -38,8 +38,8 @@ M_elast = [c4 c5 c6] * [phi^2, phi, 1]';
 
 
 % Differentiates the system of equations wrt time
-force_balance = diff( 0 == -P*pi*r^2 + 2*P*pi*r^2*cot(gama)^2 + F_elast ,  t);
-torque_balance = diff( 0 == 2*P*pi*r^3*cot(gama) + M_elast ,  t);               % tried changing the sign of just one of these
+force_balance = diff( 0 == P*pi*r^2 - 2*P*pi*r^2*cot(gama)^2 + F_elast ,  t);   % changed signs of first 2 terms to match ICRA
+torque_balance = diff( 0 == -2*P*pi*r^3*cot(gama) + M_elast ,  t);               % changed signs back to match ICRA
 geometry_constraint = diff( 0 == -cos(gama) + (L/L0)*cos(gama0) ,  t);
 
 System = [force_balance; torque_balance; geometry_constraint];

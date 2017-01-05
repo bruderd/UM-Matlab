@@ -4,7 +4,7 @@
 
 % Point at which we want to evaluate the feasability
 x = [10.02, 0.67163, 0.21484, 5.8316]';
-xdot = [1 0 0 0]';  % asssume steady state
+xdot = [0 0 0 0]';  % asssume steady state
 
 n = params.n;
 m = params.m;
@@ -21,3 +21,8 @@ f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary
      c2*dL + 2*c1*L*dL - pi*r^2*dP - 2*pi*P*r*dr + 2*pi*cot(gama)^2*r^2*dP + 4*pi*cot(gama)^2*P*r*dr - 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
      c5*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) - 2*c4*((L0*tan(gama0))/r0 - (tan(gama)*L)/r)*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) - 2*pi*cot(gama)*r^3*dP + 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) - 6*pi*cot(gama)*P*r^2*dr;...
      sin(gama)*dgama + (cos(gama0)*dL)/L0];
+ 
+f_v2 = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary
+         c2*dL + 2*c1*L*dL + pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
+         c5*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) - 2*c4*((L0*tan(gama0))/r0 - (tan(gama)*L)/r)*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) - 2*pi*cot(gama)*r^3*dP + 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) - 6*pi*cot(gama)*P*r^2*dr;...
+         sin(gama)*dgama + (cos(gama0)*dL)/L0];
