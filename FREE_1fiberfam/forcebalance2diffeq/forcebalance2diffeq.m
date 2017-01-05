@@ -24,7 +24,7 @@ P = sym('P(t)');
 gama = sym('gama(t)');
 r = sym('r(t)');
 L = sym('L(t)');
-phi = (-tan(gama)*L/r + tan(gama0)*L0/r0) * (-1);      %TRIED MULTIPLYING THIS BY -1. Doesn't fix issue with system evolvin in wrong direction
+phi = (-tan(gama)*L/r + tan(gama0)*L0/r0) * (-1);      %TRIED MULTIPLYING THIS BY -1. Doesn't fix issue with system evolving in wrong direction
 
 assumeAlso(P, 'real')
 assumeAlso(gama, 'real')
@@ -39,7 +39,7 @@ M_elast = [c4 c5 c6] * [phi^2, phi, 1]';
 
 % Differentiates the system of equations wrt time
 force_balance = diff( 0 == -P*pi*r^2 + 2*P*pi*r^2*cot(gama)^2 + F_elast ,  t);
-torque_balance = diff( 0 == - 2*P*pi*r^3*cot(gama) + M_elast ,  t);
+torque_balance = diff( 0 == 2*P*pi*r^3*cot(gama) + M_elast ,  t);               % tried changing the sign of just one of these
 geometry_constraint = diff( 0 == -cos(gama) + (L/L0)*cos(gama0) ,  t);
 
 System = [force_balance; torque_balance; geometry_constraint];
