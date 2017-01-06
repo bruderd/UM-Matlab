@@ -25,7 +25,7 @@ function [con, coneq, grad_con, grad_coneq] = implicit_Dynamics(s, params)
         % Lower bounds on states
         con(1, (N+1)+p) = -x(1,p) + 0;
         con(2, (N+1)+p) = -x(2,p)*sign(x(2,p)) + 0;            %fiber angle cannot cross over 0 degrees   
-        con(3, (N+1)+p) = -x(3,p) + x0(3);           %radius cannot decrease
+        con(3, (N+1)+p) = -x(3,p) + x0(3)*0.5;           %radius cannot decrease in real life but ALLOW THIS FOR NOW (1/6/2017)
         con(4, (N+1)+p) = -x(4,p) + (x0(4)*0.5);     %length cannot decrease more than 50%
     
     end

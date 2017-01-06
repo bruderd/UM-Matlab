@@ -9,7 +9,10 @@ function [f, dfdx, dfdu, df_ddxdt] = vf(x, u, dxdt, params)
     [P0, gama0, r0, L0] = deal(params.x_rest(1), params.x_rest(2), params.x_rest(3), params.x_rest(4));
     [P, gama, r, L] = deal(x(1), x(2), x(3), x(4));
     [dP, dgama, dr, dL] = deal(dxdt(1), dxdt(2), dxdt(3), dxdt(4));
-
+    
+%     % 1/5/2017: Fix r. This is for testing purposes only (REMEMBER to undo this later!)
+%     r = r0 + 0.05*P;
+%     dr = sign(dr)*dr;
     
     f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary
          c2*dL + 2*c1*L*dL + pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
