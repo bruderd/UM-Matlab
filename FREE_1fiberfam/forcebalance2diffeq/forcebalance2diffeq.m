@@ -24,7 +24,7 @@ P = sym('P(t)');
 gama = sym('gama(t)');
 r = sym('r(t)');
 L = sym('L(t)');
-phi = (-tan(gama)*L/r + tan(gama0)*L0/r0) * (-1);      %TRIED MULTIPLYING THIS BY -1. Doesn't fix issue with system evolving in wrong direction
+phi = (-tan(gama)*L/r + tan(gama0)*L0/r0);      
 
 assumeAlso(P, 'real')
 assumeAlso(gama, 'real')
@@ -33,7 +33,7 @@ assumeAlso(L, 'real')
 
 % Definition of elastomer spring force functions, constants from sys id
 % experimental data
-F_elast = [c1 c2 c3] * [(L-L0)^2, L-L0, 1]';
+F_elast = [c1 c2 c3] * [L^2, L, 1]';
 M_elast = [c4 c5 c6] * [phi^2, phi, 1]';
 
 

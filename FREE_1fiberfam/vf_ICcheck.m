@@ -1,0 +1,36 @@
+%% Check ICs of dynamics
+%   plugs in sets of initial conditions for vf and evaluates
+
+    [c1, c2, c3] = deal(params.Felast_consts(1), params.Felast_consts(2), params.Felast_consts(3));
+    [c4, c5, c6] = deal(params.Melast_consts(1), params.Melast_consts(2), params.Melast_consts(3));
+    [P0, gama0, r0, L0] = deal(params.x_rest(1), params.x_rest(2), params.x_rest(3), params.x_rest(4));
+    u = 10; 
+    
+% User defined ICs
+x0 = [0.6	0.71664	0.1898	5.6175	25.783]';
+xdot0 = [4.700057967	-0.01880023187	0.0141001739	0.07833429946]';  
+ 
+[P, gama, r, L] = deal(x0(1), x0(2), x0(3), x0(4));
+[dP, dgama, dr, dL] = deal(xdot0(1), xdot0(2), xdot0(3), xdot0(4));
+
+%% Evaluate dynamics at the initial condition above   
+    f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary
+         c2*dL + 2*c1*L*dL + pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
+         2*pi*P*r^3*dgama*(cot(gama)^2 + 1) - 2*c4*((L0*tan(gama0))/r0 - (tan(gama)*L)/r)*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) - 2*pi*cot(gama)*r^3*dP - c5*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) - 6*pi*cot(gama)*P*r^2*dr;...
+         sin(gama)*dgama + (cos(gama0)*dL)/L0];
+    
+    dfdx = [-1*0.5,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      0,                                                                                                                                                                                                                                                                                                                                                                                                         0,                                                                                                                                                                                                                                                     0;...
+            2*pi*dr*r - 4*pi*dr*r*cot(gama)^2 + 4*pi*dgama*r^2*cot(gama)*(cot(gama)^2 + 1), 4*pi*dP*r^2*cot(gama)*(cot(gama)^2 + 1) - 4*pi*P*dgama*r^2*(cot(gama)^2 + 1)^2 + 8*pi*P*dr*r*cot(gama)*(cot(gama)^2 + 1) - 8*pi*P*dgama*r^2*cot(gama)^2*(cot(gama)^2 + 1), 2*pi*P*dr + 2*pi*dP*r - 4*pi*P*dr*cot(gama)^2 - 4*pi*dP*r*cot(gama)^2 + 8*pi*P*dgama*r*cot(gama)*(cot(gama)^2 + 1), 2*c1*dL;...
+            2*pi*dgama*r^3*(cot(gama)^2 + 1) - 6*pi*dr*r^2*cot(gama), 2*c4*((L*tan(gama))/r - (L0*tan(gama0))/r0)*((dL*(tan(gama)^2 + 1))/r - (L*dr*(tan(gama)^2 + 1))/r^2 + (2*L*dgama*tan(gama)*(tan(gama)^2 + 1))/r) - c5*((dL*(tan(gama)^2 + 1))/r - (L*dr*(tan(gama)^2 + 1))/r^2 + (2*L*dgama*tan(gama)*(tan(gama)^2 + 1))/r) + 2*pi*dP*r^3*(cot(gama)^2 + 1) + (2*L*c4*(tan(gama)^2 + 1)*((dL*tan(gama))/r + (L*dgama*(tan(gama)^2 + 1))/r - (L*dr*tan(gama))/r^2))/r + 6*pi*P*dr*r^2*(cot(gama)^2 + 1) - 4*pi*P*dgama*r^3*cot(gama)*(cot(gama)^2 + 1), c5*((dL*tan(gama))/r^2 + (L*dgama*(tan(gama)^2 + 1))/r^2 - (2*L*dr*tan(gama))/r^3) - 2*c4*((L*tan(gama))/r - (L0*tan(gama0))/r0)*((dL*tan(gama))/r^2 + (L*dgama*(tan(gama)^2 + 1))/r^2 - (2*L*dr*tan(gama))/r^3) - 6*pi*dP*r^2*cot(gama) - 12*pi*P*dr*r*cot(gama) + 6*pi*P*dgama*r^2*(cot(gama)^2 + 1) - (2*L*c4*tan(gama)*((dL*tan(gama))/r + (L*dgama*(tan(gama)^2 + 1))/r - (L*dr*tan(gama))/r^2))/r^2, 2*c4*((dgama*(tan(gama)^2 + 1))/r - (dr*tan(gama))/r^2)*((L*tan(gama))/r - (L0*tan(gama0))/r0) - c5*((dgama*(tan(gama)^2 + 1))/r - (dr*tan(gama))/r^2) + (2*c4*tan(gama)*((dL*tan(gama))/r + (L*dgama*(tan(gama)^2 + 1))/r - (L*dr*tan(gama))/r^2))/r;...
+            0,                                                                                                                                                                                                                                                                                                                                                                                                                                                                        dgama*cos(gama),                                                                                                                                                                                                                                                                                                                                                                                                         0,                                                                                                                                                                                                                                                     0];
+   
+    dfdu = [1*0.5;...
+            0;...
+            0;...
+            0];
+        
+    df_ddxdt = [-1,                                                                                                                               0,                                                                                                           0,                                                                            0;...
+                pi*r^2 - 2*pi*r^2*cot(gama)^2, 4*pi*P*r^2*cot(gama)*(cot(gama)^2 + 1), 2*pi*P*r - 4*pi*P*r*cot(gama)^2, c2 + 2*L*c1;...
+                -2*pi*r^3*cot(gama), 2*pi*P*r^3*(cot(gama)^2 + 1) - (L*c5*(tan(gama)^2 + 1))/r + (2*L*c4*((L*tan(gama))/r - (L0*tan(gama0))/r0)*(tan(gama)^2 + 1))/r, (L*c5*tan(gama))/r^2 - 6*pi*P*r^2*cot(gama) - (2*L*c4*tan(gama)*((L*tan(gama))/r - (L0*tan(gama0))/r0))/r^2, (2*c4*tan(gama)*((L*tan(gama))/r - (L0*tan(gama0))/r0))/r - (c5*tan(gama))/r;...
+                0,                                                                                                                       sin(gama),                                                                                                           0,                                                                cos(gama0)/L0]; 
+ 
