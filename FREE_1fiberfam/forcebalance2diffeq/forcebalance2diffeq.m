@@ -33,8 +33,11 @@ assumeAlso(L, 'real')
 
 % Definition of elastomer spring force functions, constants from sys id
 % experimental data
-F_elast = [c1 c2 c3] * [L^2, L, 1]';
-M_elast = [c4 c5 c6] * [phi^2, phi, 1]';
+% F_elast = [c1 c2 c3] * [L^2, L, 1]';
+% M_elast = [c4 c5 c6] * [phi^2, phi, 1]';
+F_elast = (L-L0);    % simpler version
+M_elast = phi;    % simpler version
+
 
 
 % Differentiates the system of equations wrt time
