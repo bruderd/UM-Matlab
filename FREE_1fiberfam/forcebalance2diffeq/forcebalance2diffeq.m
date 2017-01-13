@@ -24,6 +24,7 @@ P = sym('P(t)');
 gama = sym('gama(t)');
 r = sym('r(t)');
 L = sym('L(t)');
+theta = tan(gama)*L/r;
 phi = (-tan(gama)*L/r + tan(gama0)*L0/r0);      
 
 assumeAlso(P, 'real')
@@ -35,8 +36,8 @@ assumeAlso(L, 'real')
 % experimental data
 % F_elast = [c1 c2 c3] * [L^2, L, 1]';
 % M_elast = [c4 c5 c6] * [phi^2, phi, 1]';
-F_elast = (L-L0) * 0;    % simpler version
-M_elast = phi * 0;    % simpler version
+F_elast = (L-L0) * 1;    % simpler version
+M_elast = theta * 1;    % simpler version
 
 
 
