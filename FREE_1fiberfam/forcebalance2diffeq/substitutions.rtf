@@ -151,13 +151,21 @@
 0 == sin(gama)*dgama + (cos(gama0)*dL)/L0\
 \
 \
+\
+\
+\
 %% 1/13/2017: 
 \f1\fs20 F_elast = (r/r0 + 1)*(L0-L) * 1; M_elast = (r/r0 + 1)*(-1) * phi * 1
 \f0\fs24 \
 0 == pi*r^2*dP - (r/r0 + 1)*dL + (dr*(L0 - L))/r0 + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1)\
 \
 0 == (r/r0 + 1)*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) - (((L0*tan(gama0))/r0 - (tan(gama)*L)/r)*dr)/r0 + 2*pi*cot(gama)*r^3*dP - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + 6*pi*cot(gama)*P*r^2*dr\
-                                                                                                                                                                                                                                                                                                         0 == sin(gama)*dgama + (cos(gama0)*dL)/L0\
+\
+0 == sin(gama)*dgama + (cos(gama0)*dL)/L0\
+\
+\
+\
+\
 \
 \
 \
@@ -169,6 +177,59 @@
 0 == sin(gama)*dgama + (cos(gama0)*dL)/L0\
  \
  \
+\
+\
+\
+%% 1/15/2017: F_elast = c1*(L0-L), M_elast = c4*(-1)*phi\
+0 == pi*r^2*dP - c1*dL + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1)\
+\
+0 == c4*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) + 2*pi*cot(gama)*r^3*dP - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + 6*pi*cot(gama)*P*r^2*dr\
+\
+0 == sin(gama)*dgama + (cos(gama0)*dL)/L0\
+ \
+ \
+\
+\
+\
+%% 1/15/2017: F_elast = M_elast = 0, with correct sign conventions in place\
+0 == pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1)\
+\
+0 == 2*pi*cot(gama)*r^3*dP - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + 6*pi*cot(gama)*P*r^2*dr\
+\
+0 == sin(gama)*dgama + (cos(gama0)*dL)/L0\
+\
+\
+\
+\
+%% Pressure dependence incorporated: F_elast = c1*(L0-L)*P, M_elast = c4*(-1)*phi*P (1/16/2017)\
+0 == c1*dP*(L0 - L) - c1*P*dL + pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1)\
+\
+0 == c4*P*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) - c4*((L0*tan(gama0))/r0 - (tan(gama)*L)/r)*dP + 2*pi*cot(gama)*r^3*dP - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + 6*pi*cot(gama)*P*r^2*dr\
+\
+0 == sin(gama)*dgama + (cos(gama0)*dL)/L0\
+\
+\
+\
+ \
+%% F_elast = c1*(L0-L), M_elast = c4*(-1)*phi,  3rd equation is 0 == -(r/r0)*(L/cos(gama)) + L0/cos(gama0)  (1/16/17)
+\f1 \
+
+\f0 0 == pi*r^2*dP - c1*dL + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1)\
+\
+0 == c4*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) + 2*pi*cot(gama)*r^3*dP - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + 6*pi*cot(gama)*P*r^2*dr\
+\
+0 == - (L*dr)/(r0*cos(gama)) - (r*dL)/(r0*cos(gama)) - (sin(gama)*L*r*dgama)/(r0*cos(gama)^2)\
+ \
+\
+\
+%% Trying to recreate correct results pre-ICRA:  Kf = (c1*r - c2)/L0; Kt = (c3*r + c4)/L0; F_elast = Kf*(L0-L); M_elast = Kt*phi; (1/16/2017)
+\f1 \
+
+\f0 0 == ((c2 - c1*r)*dL)/L0 + pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP + (c1*dr*(L0 - L))/L0 - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1)\
+\
+0 == (c3*((L0*tan(gama0))/r0 - (tan(gama)*L)/r)*dr)/L0 - ((c4 + c3*r)*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2))/L0 + 2*pi*cot(gama)*r^3*dP - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + 6*pi*cot(gama)*P*r^2*dr\
+\
+0 == sin(gama)*dgama + (cos(gama0)*dL)/L0\
  \
 \
 }

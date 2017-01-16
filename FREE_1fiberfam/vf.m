@@ -10,27 +10,27 @@ function [f, dfdx, dfdu, df_ddxdt] = vf(x, u, dxdt, params)
     [P, gama, r, L] = deal(x(1), x(2), x(3), x(4));
     [dP, dgama, dr, dL] = deal(dxdt(1), dxdt(2), dxdt(3), dxdt(4));
 
-%% Regular Version (1/7/2017)    
-    f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary
-         c2*dL + 2*c1*L*dL + pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
-         2*pi*P*r^3*dgama*(cot(gama)^2 + 1) - 2*c4*((L0*tan(gama0))/r0 - (tan(gama)*L)/r)*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) - 2*pi*cot(gama)*r^3*dP - c5*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) - 6*pi*cot(gama)*P*r^2*dr;...
-         sin(gama)*dgama + (cos(gama0)*dL)/L0];
-    
-    dfdx = [-1*0.5,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      0,                                                                                                                                                                                                                                                                                                                                                                                                         0,                                                                                                                                                                                                                                                     0;...
-            2*pi*dr*r - 4*pi*dr*r*cot(gama)^2 + 4*pi*dgama*r^2*cot(gama)*(cot(gama)^2 + 1), 4*pi*dP*r^2*cot(gama)*(cot(gama)^2 + 1) - 4*pi*P*dgama*r^2*(cot(gama)^2 + 1)^2 + 8*pi*P*dr*r*cot(gama)*(cot(gama)^2 + 1) - 8*pi*P*dgama*r^2*cot(gama)^2*(cot(gama)^2 + 1), 2*pi*P*dr + 2*pi*dP*r - 4*pi*P*dr*cot(gama)^2 - 4*pi*dP*r*cot(gama)^2 + 8*pi*P*dgama*r*cot(gama)*(cot(gama)^2 + 1), 2*c1*dL;...
-            2*pi*dgama*r^3*(cot(gama)^2 + 1) - 6*pi*dr*r^2*cot(gama), 2*c4*((L*tan(gama))/r - (L0*tan(gama0))/r0)*((dL*(tan(gama)^2 + 1))/r - (L*dr*(tan(gama)^2 + 1))/r^2 + (2*L*dgama*tan(gama)*(tan(gama)^2 + 1))/r) - c5*((dL*(tan(gama)^2 + 1))/r - (L*dr*(tan(gama)^2 + 1))/r^2 + (2*L*dgama*tan(gama)*(tan(gama)^2 + 1))/r) + 2*pi*dP*r^3*(cot(gama)^2 + 1) + (2*L*c4*(tan(gama)^2 + 1)*((dL*tan(gama))/r + (L*dgama*(tan(gama)^2 + 1))/r - (L*dr*tan(gama))/r^2))/r + 6*pi*P*dr*r^2*(cot(gama)^2 + 1) - 4*pi*P*dgama*r^3*cot(gama)*(cot(gama)^2 + 1), c5*((dL*tan(gama))/r^2 + (L*dgama*(tan(gama)^2 + 1))/r^2 - (2*L*dr*tan(gama))/r^3) - 2*c4*((L*tan(gama))/r - (L0*tan(gama0))/r0)*((dL*tan(gama))/r^2 + (L*dgama*(tan(gama)^2 + 1))/r^2 - (2*L*dr*tan(gama))/r^3) - 6*pi*dP*r^2*cot(gama) - 12*pi*P*dr*r*cot(gama) + 6*pi*P*dgama*r^2*(cot(gama)^2 + 1) - (2*L*c4*tan(gama)*((dL*tan(gama))/r + (L*dgama*(tan(gama)^2 + 1))/r - (L*dr*tan(gama))/r^2))/r^2, 2*c4*((dgama*(tan(gama)^2 + 1))/r - (dr*tan(gama))/r^2)*((L*tan(gama))/r - (L0*tan(gama0))/r0) - c5*((dgama*(tan(gama)^2 + 1))/r - (dr*tan(gama))/r^2) + (2*c4*tan(gama)*((dL*tan(gama))/r + (L*dgama*(tan(gama)^2 + 1))/r - (L*dr*tan(gama))/r^2))/r;...
-            0,                                                                                                                                                                                                                                                                                                                                                                                                                                                                        dgama*cos(gama),                                                                                                                                                                                                                                                                                                                                                                                                         0,                                                                                                                                                                                                                                                     0];
-   
-    dfdu = [1*0.5;...
-            0;...
-            0;...
-            0];
-        
-    df_ddxdt = [-1,                                                                                                                               0,                                                                                                           0,                                                                            0;...
-                pi*r^2 - 2*pi*r^2*cot(gama)^2, 4*pi*P*r^2*cot(gama)*(cot(gama)^2 + 1), 2*pi*P*r - 4*pi*P*r*cot(gama)^2, c2 + 2*L*c1;...
-                -2*pi*r^3*cot(gama), 2*pi*P*r^3*(cot(gama)^2 + 1) - (L*c5*(tan(gama)^2 + 1))/r + (2*L*c4*((L*tan(gama))/r - (L0*tan(gama0))/r0)*(tan(gama)^2 + 1))/r, (L*c5*tan(gama))/r^2 - 6*pi*P*r^2*cot(gama) - (2*L*c4*tan(gama)*((L*tan(gama))/r - (L0*tan(gama0))/r0))/r^2, (2*c4*tan(gama)*((L*tan(gama))/r - (L0*tan(gama0))/r0))/r - (c5*tan(gama))/r;...
-                0,                                                                                                                       sin(gama),                                                                                                           0,                                                                cos(gama0)/L0]; 
-    
+%% Regular Version. Matches ICRA equations, only r moves in wrong direction (1/7/2017)    
+%     f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary
+%          c2*dL + 2*c1*L*dL + pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
+%          2*pi*P*r^3*dgama*(cot(gama)^2 + 1) - 2*c4*((L0*tan(gama0))/r0 - (tan(gama)*L)/r)*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) - 2*pi*cot(gama)*r^3*dP - c5*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) - 6*pi*cot(gama)*P*r^2*dr;...
+%          sin(gama)*dgama + (cos(gama0)*dL)/L0];
+%     
+%     dfdx = [-1*0.5,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      0,                                                                                                                                                                                                                                                                                                                                                                                                         0,                                                                                                                                                                                                                                                     0;...
+%             2*pi*dr*r - 4*pi*dr*r*cot(gama)^2 + 4*pi*dgama*r^2*cot(gama)*(cot(gama)^2 + 1), 4*pi*dP*r^2*cot(gama)*(cot(gama)^2 + 1) - 4*pi*P*dgama*r^2*(cot(gama)^2 + 1)^2 + 8*pi*P*dr*r*cot(gama)*(cot(gama)^2 + 1) - 8*pi*P*dgama*r^2*cot(gama)^2*(cot(gama)^2 + 1), 2*pi*P*dr + 2*pi*dP*r - 4*pi*P*dr*cot(gama)^2 - 4*pi*dP*r*cot(gama)^2 + 8*pi*P*dgama*r*cot(gama)*(cot(gama)^2 + 1), 2*c1*dL;...
+%             2*pi*dgama*r^3*(cot(gama)^2 + 1) - 6*pi*dr*r^2*cot(gama), 2*c4*((L*tan(gama))/r - (L0*tan(gama0))/r0)*((dL*(tan(gama)^2 + 1))/r - (L*dr*(tan(gama)^2 + 1))/r^2 + (2*L*dgama*tan(gama)*(tan(gama)^2 + 1))/r) - c5*((dL*(tan(gama)^2 + 1))/r - (L*dr*(tan(gama)^2 + 1))/r^2 + (2*L*dgama*tan(gama)*(tan(gama)^2 + 1))/r) + 2*pi*dP*r^3*(cot(gama)^2 + 1) + (2*L*c4*(tan(gama)^2 + 1)*((dL*tan(gama))/r + (L*dgama*(tan(gama)^2 + 1))/r - (L*dr*tan(gama))/r^2))/r + 6*pi*P*dr*r^2*(cot(gama)^2 + 1) - 4*pi*P*dgama*r^3*cot(gama)*(cot(gama)^2 + 1), c5*((dL*tan(gama))/r^2 + (L*dgama*(tan(gama)^2 + 1))/r^2 - (2*L*dr*tan(gama))/r^3) - 2*c4*((L*tan(gama))/r - (L0*tan(gama0))/r0)*((dL*tan(gama))/r^2 + (L*dgama*(tan(gama)^2 + 1))/r^2 - (2*L*dr*tan(gama))/r^3) - 6*pi*dP*r^2*cot(gama) - 12*pi*P*dr*r*cot(gama) + 6*pi*P*dgama*r^2*(cot(gama)^2 + 1) - (2*L*c4*tan(gama)*((dL*tan(gama))/r + (L*dgama*(tan(gama)^2 + 1))/r - (L*dr*tan(gama))/r^2))/r^2, 2*c4*((dgama*(tan(gama)^2 + 1))/r - (dr*tan(gama))/r^2)*((L*tan(gama))/r - (L0*tan(gama0))/r0) - c5*((dgama*(tan(gama)^2 + 1))/r - (dr*tan(gama))/r^2) + (2*c4*tan(gama)*((dL*tan(gama))/r + (L*dgama*(tan(gama)^2 + 1))/r - (L*dr*tan(gama))/r^2))/r;...
+%             0,                                                                                                                                                                                                                                                                                                                                                                                                                                                                        dgama*cos(gama),                                                                                                                                                                                                                                                                                                                                                                                                         0,                                                                                                                                                                                                                                                     0];
+%    
+%     dfdu = [1*0.5;...
+%             0;...
+%             0;...
+%             0];
+%         
+%     df_ddxdt = [-1,                                                                                                                               0,                                                                                                           0,                                                                            0;...
+%                 pi*r^2 - 2*pi*r^2*cot(gama)^2, 4*pi*P*r^2*cot(gama)*(cot(gama)^2 + 1), 2*pi*P*r - 4*pi*P*r*cot(gama)^2, c2 + 2*L*c1;...
+%                 -2*pi*r^3*cot(gama), 2*pi*P*r^3*(cot(gama)^2 + 1) - (L*c5*(tan(gama)^2 + 1))/r + (2*L*c4*((L*tan(gama))/r - (L0*tan(gama0))/r0)*(tan(gama)^2 + 1))/r, (L*c5*tan(gama))/r^2 - 6*pi*P*r^2*cot(gama) - (2*L*c4*tan(gama)*((L*tan(gama))/r - (L0*tan(gama0))/r0))/r^2, (2*c4*tan(gama)*((L*tan(gama))/r - (L0*tan(gama0))/r0))/r - (c5*tan(gama))/r;...
+%                 0,                                                                                                                       sin(gama),                                                                                                           0,                                                                cos(gama0)/L0]; 
+%     
     
 %% Regular Version, except phi was multiplied by -1 in original force balance equations    
 %     f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary
@@ -117,7 +117,7 @@ function [f, dfdx, dfdu, df_ddxdt] = vf(x, u, dxdt, params)
 %                 pi*r^2 - 2*pi*r^2*cot(gama)^2, 4*pi*P*r^2*cot(gama)*(cot(gama)^2 + 1), 2*pi*P*r - 4*pi*P*r*cot(gama)^2, 0;...
 %                 -2*pi*r^3*cot(gama), 2*pi*P*r^3*(cot(gama)^2 + 1), -6*pi*P*r^2*cot(gama), 0;...
 %                 0,                                                                                                                       sin(gama),                                                                                                           0,                                                                cos(gama0)/L0]; 
-%          
+         
 %% Version where F_elast = (L-L0), M_elast = theta (1/12/2017)
 %     f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary
 %          dL + pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
@@ -224,6 +224,62 @@ function [f, dfdx, dfdu, df_ddxdt] = vf(x, u, dxdt, params)
 % dfdx = [0];     % not needed for ode15i
 % dfdu = [0];     % not needed for ode15i
 % df_ddxdt = [0]; % not needed for ode15i
+
+
+%% F_elast = c1*(L0-L), M_elast = c4*(-1)*phi, with correct sign conventions (1/15/2017)
+% f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary 
+%      pi*r^2*dP - c1*dL + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
+%      c4*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) + 2*pi*cot(gama)*r^3*dP - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + 6*pi*cot(gama)*P*r^2*dr;...
+%      sin(gama)*dgama + (cos(gama0)*dL)/L0];
+% 
+% dfdx = [0];     % not needed for ode15i 
+% dfdu = [0];     % not needed for ode15i
+% df_ddxdt = [0]; % not needed for ode15i
+%  
+
+
+%% 1/15/2017: F_elast = M_elast = 0, with correct sign conventions in place
+% f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary 
+%      pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
+%      2*pi*cot(gama)*r^3*dP - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + 6*pi*cot(gama)*P*r^2*dr;...
+%      sin(gama)*dgama + (cos(gama0)*dL)/L0];
+%  
+% dfdx = [0];     % not needed for ode15i
+% dfdu = [0];     % not needed for ode15i
+% df_ddxdt = [0]; % not needed for ode15i
+
+%% Pressure dependence incorporated: F_elast = c1*(L0-L)*P, M_elast = c4*(-1)*phi*P (1/16/2017)
+% f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary 
+%      c1*dP*(L0 - L) - c1*P*dL + pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
+%      c4*P*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) - c4*((L0*tan(gama0))/r0 - (tan(gama)*L)/r)*dP + 2*pi*cot(gama)*r^3*dP - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + 6*pi*cot(gama)*P*r^2*dr;...
+%      sin(gama)*dgama + (cos(gama0)*dL)/L0];
+%  
+% dfdx = [0];     % not needed for ode15i
+% dfdu = [0];     % not needed for ode15i
+% df_ddxdt = [0]; % not needed for ode15i
+
+%% F_elast = c1*(L0-L), M_elast = c4*(-1)*phi,  3rd equation is 0 == -(r/r0)*(L/cos(gama)) + L0/cos(gama0)  (1/16/17)
+
+% f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary 
+%      pi*r^2*dP - c1*dL + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
+%      c4*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2) + 2*pi*cot(gama)*r^3*dP - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + 6*pi*cot(gama)*P*r^2*dr;...
+%      - (L*dr)/(r0*cos(gama)) - (r*dL)/(r0*cos(gama)) - (sin(gama)*L*r*dgama)/(r0*cos(gama)^2)];
+% 
+% 
+% dfdx = [0];     % not needed for ode15i 
+% dfdu = [0];     % not needed for ode15i
+% df_ddxdt = [0]; % not needed for ode15i
+
+
+%% Trying to recreate correct results pre-ICRA:  Kf = (c1*r - c2)/L0; Kt = (c3*r + c4)/L0; F_elast = Kf*(L0-L); M_elast = Kt*phi; (1/16/2017)
+f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary 
+     ((c2 - c1*r)*dL)/L0 + pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP + (c1*dr*(L0 - L))/L0 - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
+     (c3*((L0*tan(gama0))/r0 - (tan(gama)*L)/r)*dr)/L0 - ((c4 + c3*r)*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2))/L0 + 2*pi*cot(gama)*r^3*dP - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + 6*pi*cot(gama)*P*r^2*dr;...
+     sin(gama)*dgama + (cos(gama0)*dL)/L0];
+ 
+dfdx = [0];     % not needed for ode15i 
+dfdu = [0];     % not needed for ode15i
+df_ddxdt = [0]; % not needed for ode15i
 
 end
 

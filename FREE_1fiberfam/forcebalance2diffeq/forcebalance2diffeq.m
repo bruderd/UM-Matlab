@@ -32,19 +32,34 @@ assumeAlso(gama, 'real')
 assumeAlso(r, 'real')
 assumeAlso(L, 'real')
 
-% Definition of elastomer spring force functions, constants from sys id
-% experimental data
+%% Definition of elastomer spring force functions, constants from sys id experimental data
 % F_elast = [c1 c2 c3] * [L^2, L, 1]';
 % M_elast = [c4 c5 c6] * [phi^2, phi, 1]';
-F_elast = c1*(r/r0 + 1)*(L0-L) * 1;    % simpler version
-M_elast = c4*(r/r0 + 1)*(-1) * phi * 1;    % simpler version
+
+% %simpler version
+% F_elast = c1*(L0-L);    
+% M_elast = c4*(-1) * phi;    
+
+% %simplest version
+% F_elast = 0;   
+% M_elast = 0;  
+
+% %linear version with pressure dependence added
+% F_elast = c1*(L0-L) * P;   
+% M_elast = c4*(-1) * phi * P;   
+
+% Attempt to recreate positive results from before ICRA
+Kf = (c1*r - c2)/L0;
+Kt = (c3*r + c4)/L0;
+F_elast = Kf*(L0-L);
+M_elast = Kt*phi;
 
 
-
-% Differentiates the system of equations wrt time
+%% Differentiates the system of equations wrt time
 force_balance = diff( 0 == P*pi*r^2 - 2*P*pi*r^2*cot(gama)^2 + F_elast ,  t);   % changed sign of first 2 terms to match pre-ICRA simulations
 torque_balance = diff( 0 == 2*P*pi*r^3*cot(gama) + M_elast ,  t);               % changed signs back to match ICRA
 geometry_constraint = diff( 0 == -cos(gama) + (L/L0)*cos(gama0) ,  t);
+% geometry_constraint = diff( 0 == -(r/r0)*(L/cos(gama)) +L0/cos(gama0),t);     % changed r to r0. This actually does not make sense to do
 
 System = [force_balance; torque_balance; geometry_constraint];
 
