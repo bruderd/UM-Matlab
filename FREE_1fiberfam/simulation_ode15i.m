@@ -10,7 +10,7 @@ x0 = params.x0;       % initial point
 xdot0 = [0 0 0 0]';
 u = 10;
 
-options = odeset('abstol', 1e-6, 'reltol', 1e-6);
+options = odeset('abstol', 1e-6, 'reltol', 1e-6, 'NonNegative', 1);
 
 fixed_x0 = [1 1 1 1];
 fixed_xdot0 = [0 0 0 0];

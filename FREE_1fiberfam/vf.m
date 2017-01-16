@@ -235,7 +235,7 @@ function [f, dfdx, dfdu, df_ddxdt] = vf(x, u, dxdt, params)
 % dfdx = [0];     % not needed for ode15i 
 % dfdu = [0];     % not needed for ode15i
 % df_ddxdt = [0]; % not needed for ode15i
-%  
+ 
 
 
 %% 1/15/2017: F_elast = M_elast = 0, with correct sign conventions in place
