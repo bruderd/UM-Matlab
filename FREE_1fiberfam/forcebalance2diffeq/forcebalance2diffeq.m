@@ -33,8 +33,8 @@ assumeAlso(r, 'real')
 assumeAlso(L, 'real')
 
 %% Definition of elastomer spring force functions, constants from sys id experimental data
-% F_elast = [c1 c2 c3] * [L^2, L, 1]';
-% M_elast = [c4 c5 c6] * [phi^2, phi, 1]';
+F_elast = [c1 c2 c3] * [L^2, L, 1]';
+M_elast = [c4 c5 c6] * [theta^2, theta, 1]';
 
 % %simpler version
 % F_elast = c1*(L0-L);    
@@ -48,11 +48,11 @@ assumeAlso(L, 'real')
 % F_elast = c1*(L0-L) * P;   
 % M_elast = c4*(-1) * phi * P;   
 
-% Attempt to recreate positive results from before ICRA
-Kf = (c1*r - c2)/L0;
-Kt = (c3*r + c4)/L0;
-F_elast = Kf*(L0-L);
-M_elast = Kt*phi;
+% % Attempt to recreate positive results from before ICRA
+% Kf = (c1*r - c2)/L0;
+% Kt = (c3*r + c4)/L0;
+% F_elast = Kf*(L0-L);
+% M_elast = Kt*phi;
 
 
 %% Differentiates the system of equations wrt time

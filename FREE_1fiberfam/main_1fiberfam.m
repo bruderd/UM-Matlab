@@ -16,7 +16,7 @@ params = struct;
 params.phi_desired = deg2rad(130);
 % params.len_desired = 7;
 
-params.x_rest = [0.001, deg2rad(40), 3/16, 3.152]';    % resting state, P = 0 psi
+params.x_rest = [0.001, deg2rad(40), 3/16, 5.68]';    % resting state, P = 0 psi
 
 % params.x0 = [10.02, 0.67163, 0.21484, 5.8316]';     % state vector initial condition
 params.x0 = params.x_rest;     % state vector initial condition, same as resting condition
@@ -31,14 +31,14 @@ params.n = length(params.x0);  %dimension of state vector x
 params.m = length(params.u0);  %dimension of state vector u
 
 % Set values of elastomer constants
-% params.Felast_consts = [14.32402, -149.8227, 389.7264];     % force elastomer constants (L0 = 5.68 in)
-% params.Melast_consts = [0.0197989, -1.11737, 15.6772];     % moment elastomer constants (L0 = 5.68 in)   
+params.Felast_consts = [14.32402, -149.8227, 389.7264];     % force elastomer constants (L0 = 5.68 in)
+params.Melast_consts = -[0.0197989, -1.11737, 15.6772];     % moment elastomer constants (L0 = 5.68 in)   
 
-params.Felast_consts = [1, 60, -5.6038];     % Me tweaking it to fit pre ICRA results
-params.Melast_consts = [-0.2483, 0, 0];     % Me tweaking it to fit pre ICRA results
+% params.Felast_consts = [1, 60, -5.6038];     % Me tweaking it to fit pre ICRA results
+% params.Melast_consts = [-0.2483, 0, 0];     % Me tweaking it to fit pre ICRA results
 
-% params.Felast_consts = [0, 0, 0];     % force elastomer constants (L0 = 5.68 in)
-% params.Melast_consts = [0, 0, 0];     % moment elastomer constants (L0 = 5.68 in)
+% params.Felast_consts = [1, 0, 0];     % force elastomer constants (L0 = 5.68 in)
+% params.Melast_consts = [1, 0, 0];     % moment elastomer constants (L0 = 5.68 in)
 
 % params.Felast_consts = [102.793, -636.9886, 987.7724];     % force elastomer constants (L0 = 3.152 in)
 % params.Melast_consts = [0.0502413, -1.67107, 13.6699];     % moment elastomer constants (L0 = 3.152 in) 

@@ -272,14 +272,27 @@ function [f, dfdx, dfdu, df_ddxdt] = vf(x, u, dxdt, params)
 
 
 %% Trying to recreate correct results pre-ICRA:  Kf = (c1*r - c2)/L0; Kt = (c3*r + c4)/L0; F_elast = Kf*(L0-L); M_elast = Kt*phi; (1/16/2017)
+% f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary 
+%      ((c2 - c1*r)*dL)/L0 + pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP + (c1*dr*(L0 - L))/L0 - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
+%      (c3*((L0*tan(gama0))/r0 - (tan(gama)*L)/r)*dr)/L0 - ((c4 + c3*r)*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2))/L0 + 2*pi*cot(gama)*r^3*dP - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + 6*pi*cot(gama)*P*r^2*dr;...
+%      sin(gama)*dgama + (cos(gama0)*dL)/L0];
+%  
+% dfdx = [0];     % not needed for ode15i 
+% dfdu = [0];     % not needed for ode15i
+% df_ddxdt = [0]; % not needed for ode15i
+% 
+
+
+%% Another attempt to match ICRA: F_elast = [c1 c2 c3]*[L^2 L 1]?; M_elast = [c4 c5 c6]*[theta^2 theta 1];
 f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary 
-     ((c2 - c1*r)*dL)/L0 + pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP + (c1*dr*(L0 - L))/L0 - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
-     (c3*((L0*tan(gama0))/r0 - (tan(gama)*L)/r)*dr)/L0 - ((c4 + c3*r)*((tan(gama)*dL)/r + (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*L*dr)/r^2))/L0 + 2*pi*cot(gama)*r^3*dP - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + 6*pi*cot(gama)*P*r^2*dr;...
+     c2*dL + 2*c1*L*dL + pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);...
+     2*pi*cot(gama)*r^3*dP + (c5*tan(gama)*dL)/r + (2*c4*tan(gama)^2*L*dL)/r^2 - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + (c5*L*(tan(gama)^2 + 1)*dgama)/r - (2*c4*tan(gama)^2*L^2*dr)/r^3 + 6*pi*cot(gama)*P*r^2*dr - (c5*tan(gama)*L*dr)/r^2 + (2*c4*tan(gama)*L^2*(tan(gama)^2 + 1)*dgama)/r^2;...
      sin(gama)*dgama + (cos(gama0)*dL)/L0];
- 
+
 dfdx = [0];     % not needed for ode15i 
 dfdu = [0];     % not needed for ode15i
 df_ddxdt = [0]; % not needed for ode15i
+
 
 end
 
