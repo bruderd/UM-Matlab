@@ -46,8 +46,13 @@ xdot = [dP dgama dr dL];
 % f4 = sin(gama)*dgama + (cos(gama0)*dL)/L0;
 
 %% 1/12/2017: Flipped the sign of first two terms in first equation (makes more sense, but doesn't match ICRA)
-f2 = dL - pi*r^2*dP - 2*pi*P*r*dr + 2*pi*cot(gama)^2*r^2*dP + 4*pi*cot(gama)^2*P*r*dr - 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);
-f3 = (tan(gama)*L*dr)/r^2 - (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*dL)/r - 2*pi*cot(gama)*r^3*dP + 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) - 6*pi*cot(gama)*P*r^2*dr;
+% f2 = dL - pi*r^2*dP - 2*pi*P*r*dr + 2*pi*cot(gama)^2*r^2*dP + 4*pi*cot(gama)^2*P*r*dr - 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);
+% f3 = (tan(gama)*L*dr)/r^2 - (L*(tan(gama)^2 + 1)*dgama)/r - (tan(gama)*dL)/r - 2*pi*cot(gama)*r^3*dP + 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) - 6*pi*cot(gama)*P*r^2*dr;
+% f4 = sin(gama)*dgama + (cos(gama0)*dL)/L0;
+
+%% Another attempt to match ICRA: F_elast = [c1 c2 c3]*[L^2 L 1]?; M_elast = [c4 c5 c6]*[theta^2 theta 1];
+f2 = c2*dL + 2*c1*L*dL + pi*r^2*dP + 2*pi*P*r*dr - 2*pi*cot(gama)^2*r^2*dP - 4*pi*cot(gama)^2*P*r*dr + 4*pi*cot(gama)*P*r^2*dgama*(cot(gama)^2 + 1);
+f3 = 2*pi*cot(gama)*r^3*dP + (c5*tan(gama)*dL)/r + (2*c4*tan(gama)^2*L*dL)/r^2 - 2*pi*P*r^3*dgama*(cot(gama)^2 + 1) + (c5*L*(tan(gama)^2 + 1)*dgama)/r - (2*c4*tan(gama)^2*L^2*dr)/r^3 + 6*pi*cot(gama)*P*r^2*dr - (c5*tan(gama)*L*dr)/r^2 + (2*c4*tan(gama)*L^2*(tan(gama)^2 + 1)*dgama)/r^2;
 f4 = sin(gama)*dgama + (cos(gama0)*dL)/L0;
 
 
