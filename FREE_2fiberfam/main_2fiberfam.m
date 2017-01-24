@@ -16,7 +16,7 @@ params = struct;
 params.phi_desired = deg2rad(130);
 % params.len_desired = 7;
 
-params.x_rest = [0.001, deg2rad(89), deg2rad(-30), 3/16, 5.62]';    % resting state, P = 0 psi
+params.x_rest = [0.001, deg2rad(40), deg2rad(-30), 3/16, 5.62]';    % resting state, P = 0 psi
 
 % params.x0 = [10.02, 0.67163, 0.21484, 5.8316]';     % state vector initial condition
 params.x0 = params.x_rest;     % state vector initial condition, same as resting condition
