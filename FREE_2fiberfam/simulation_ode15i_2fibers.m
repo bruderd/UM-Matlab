@@ -8,7 +8,7 @@ x0 = params.x0;       % initial point
 % x0 = [0.06	0.71892	0.18821	5.6084]';
 % xdot0 = [3	-0.017	0.007	0.05]';             % ss value calculated from ICRA 
 xdot0 = [0 0 0 0 0]';
-u = 100;
+u = 10;
 
 % options = odeset('abstol', 1e-6, 'reltol', 1e-6, 'NonNegative', 1);
 

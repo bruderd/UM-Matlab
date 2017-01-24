@@ -59,12 +59,12 @@ M_elast = c4*(-1) * phi;
 
 
 %% Differentiates the system of equations wrt time (1 fiber)
-force_balance = diff( 0 == P*pi*r^2 - 2*P*pi*r^2*cot(gama)^2 + F_elast ,  t);   % changed sign of first 2 terms to match pre-ICRA simulations
-torque_balance = diff( 0 == 2*P*pi*r^3*cot(gama) + M_elast ,  t);               % changed signs back to match ICRA
-geometry_constraint = diff( 0 == -cos(gama) + (L/L0)*cos(gama0) ,  t);
-
-System_1fib = [force_balance; torque_balance; geometry_constraint];
-
+% force_balance = diff( 0 == P*pi*r^2 - 2*P*pi*r^2*cot(gama)^2 + F_elast ,  t);   % changed sign of first 2 terms to match pre-ICRA simulations
+% torque_balance = diff( 0 == 2*P*pi*r^3*cot(gama) + M_elast ,  t);               % changed signs back to match ICRA
+% geometry_constraint = diff( 0 == -cos(gama) + (L/L0)*cos(gama0) ,  t);
+% 
+% System_1fib = [force_balance; torque_balance; geometry_constraint];
+% 
 
 
 %% Differentiates the system of equations wrt time (2 fibers)
@@ -76,16 +76,27 @@ System_1fib = [force_balance; torque_balance; geometry_constraint];
 % 
 % System_2fib = [force_balance; torque_balance; geometry_constraint1; geometry_constraint2];
 
-% I think there needs to be a 1/2 in front of the gama-betta summation terms
+% % 1/2 in front of the gama-betta summation terms
+% force_balance = diff( 0 == P*pi*r^2 - P*pi*r^2*(cot(gama)^2 + cot(betta)^2) + F_elast ,  t);   
+% torque_balance = diff( 0 == P*pi*r^3*(cot(gama) + cot(betta)) + M_elast ,  t);               
+% geometry_constraint1 = diff( 0 == -cos(gama) + (L/L0)*cos(gama0) ,  t);
+% geometry_constraint2 = diff( 0 == -cos(betta) + (L/L0)*cos(betta0) ,  t);
+% 
+% System_2fib = [force_balance; torque_balance; geometry_constraint1; geometry_constraint2];
+
+%% Differentiates the system of equations wrt time (2 fibers)
+%   Addition constraint phi_gama = phi_betta
+phi_gama = (-tan(gama)*L/r + tan(gama0)*L0/r0); 
+phi_betta = (-tan(betta)*L/r + tan(betta0)*L0/r0);
+
 force_balance = diff( 0 == P*pi*r^2 - P*pi*r^2*(cot(gama)^2 + cot(betta)^2) + F_elast ,  t);   
 torque_balance = diff( 0 == P*pi*r^3*(cot(gama) + cot(betta)) + M_elast ,  t);               
-geometry_constraint1 = diff( 0 == -cos(gama) + (L/L0)*cos(gama0) ,  t);
-geometry_constraint2 = diff( 0 == -cos(betta) + (L/L0)*cos(betta0) ,  t);
-
-System_2fib = [force_balance; torque_balance; geometry_constraint1; geometry_constraint2];
-
+fiber_inextensible_gama = diff( 0 == -cos(gama) + (L/L0)*cos(gama0) ,  t);
+fiber_inextensible_betta = diff( 0 == -cos(betta) + (L/L0)*cos(betta0) ,  t);
+geometry_constraint = diff( 0 == phi_gama - phi_betta, t);
 
 
+System_2fib = [force_balance; torque_balance; fiber_inextensible_gama; fiber_inextensible_betta; geometry_constraint];
 
 
 
