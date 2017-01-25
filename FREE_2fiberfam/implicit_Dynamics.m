@@ -29,7 +29,7 @@ function [con, coneq, grad_con, grad_coneq] = implicit_Dynamics(s, params)
         con(3, (N+1)+p) = -x(3,p)*sign(x(3,p)) + 0;            %fiber angle cannot cross over 0 degrees   
         con(4, (N+1)+p) = -x(4,p) + x0(4)*0.5;           %radius cannot decrease in real life but ALLOW THIS FOR NOW (1/6/2017)
         con(5, (N+1)+p) = -x(5,p) + (x0(5)*0.5);     %length cannot decrease more than 50%
-    
+             
     end
     
     for q = 1:N+1
@@ -46,11 +46,12 @@ function [con, coneq, grad_con, grad_coneq] = implicit_Dynamics(s, params)
         grad_con(3, (N+1)+q, n*(q-1)+3) = -1*sign(x(3,p));
         grad_con(4, (N+1)+q, n*(q-1)+4) = -1;
         grad_con(5, (N+1)+q, n*(q-1)+5) = -1;
+        
     end
     
     %% Calculate equality constraints (coneq) and gradient (grad_coneq)
-    coneq = zeros(n, 2*N+1);
-    grad_coneq = zeros(n, (2*N+1), (2*N+1)*n + (N+1)*m);
+    coneq = zeros(n + 1, 2*N+1);
+    grad_coneq = zeros(n + 1, (2*N+1), (2*N+1)*n + (N+1)*m);
 
     % IC equality constraint
     coneq(1:n , 1) = x(:,1) - x0;
@@ -79,6 +80,18 @@ function [con, coneq, grad_con, grad_coneq] = implicit_Dynamics(s, params)
       
     end
     
+    for j = 1:N
+        % Constraint to ensure that the twist of the end-point is consistent for both fibers
+        coneq(6, j) = ( x(5,j)/x(4,j) )*(tan(x(2,j)) - tan(x(3,j))) - ( x0(5)/x0(4) )*(tan(x0(2)) - tan(x0(3)));
+        coneq(6, (N+1)+j) = 0;
+    
+        % Gradient of extra twist constraint
+        grad_coneq(6, j, n*(j-1)+1) = 0;
+        grad_coneq(6, j, n*(j-1)+2) = ( x(5,j)/x(4,j) )*sec(x(2,j))^2;
+        grad_coneq(6, j, n*(j-1)+3) = -( x(5,j)/x(4,j) )*sec(x(3,j))^2;
+        grad_coneq(6, j, n*(j-1)+4) = -( x(5,j)/x(4,j)^2 )*(tan(x(2,j)) - tan(x(3,j)));
+        grad_coneq(6, j, n*(j-1)+5) = ( 1/x(4,j) )*(tan(x(2,j)) - tan(x(3,j)));   
+    end
 
     %% Converts constraints into form that fmincon likes
     coneq = matrix2vector(coneq);

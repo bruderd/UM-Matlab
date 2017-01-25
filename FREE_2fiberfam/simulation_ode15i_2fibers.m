@@ -1,5 +1,5 @@
 %% ODE15i Simulation - 2 fibers
-%   Use this to check of the dynamics are broken, or if it's something else
+%   Use this to check if the dynamics are broken, or if it's something else
 
 tspan = [0, 100];
 x_rest = params.x_rest;     % resting point
