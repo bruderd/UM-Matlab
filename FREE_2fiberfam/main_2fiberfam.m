@@ -44,7 +44,12 @@ params.m = length(params.u0);  %dimension of state vector u
 % params.Melast_consts = [0.0502413, -1.67107, 13.6699];     % moment elastomer constants (L0 = 3.152 in) 
 
 params.Felast_consts = [7.21992225409945, 0, 0];     % force elastomer constants
-params.Melast_consts = [1, 0, 0];     % moment elastomer constants     
+params.Melast_consts = [1, 0, 0];     % moment elastomer constants 
+
+% params.Felast_consts = [0, 0, 0];     % No elastomer
+% params.Melast_consts = [0, 0, 0];     % No elastomer
+
+
 
 params.vf = @( x, u ) vf( x, u );
 

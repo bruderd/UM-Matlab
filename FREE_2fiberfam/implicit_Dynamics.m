@@ -50,7 +50,7 @@ function [con, coneq, grad_con, grad_coneq] = implicit_Dynamics(s, params)
     end
     
     % Extra twist constraint, relaxed with fudge-factor
-    fudge = 1e-2;
+    fudge = 10;
     for j = 1:N+1
         % Constraint to ensure that the twist of the end-point is consistent for both fibers (upper and lower bounds, respectively)
         con(6, j) = ( x(5,j)/x(4,j) )*(tan(x(2,j)) - tan(x(3,j))) - ( x0(5)/x0(4) )*(tan(x0(2)) - tan(x0(3))) - fudge;

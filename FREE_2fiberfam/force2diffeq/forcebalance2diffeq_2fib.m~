@@ -93,7 +93,7 @@ M_elast = c4 * phi;    % removed (-1) becasue I changed phi up there (1/26/2017)
 % 
 % System_2fib = [force_balance; torque_balance; fiber_inextensible_gama; fiber_inextensible_betta; geometry_constraint];
 
-%% Case 1: gama,betta>0, gama>betta. Differentiates the system of equations wrt time (2 fibers)
+% %% Case 1: gama,betta>0, gama>betta. Differentiates the system of equations wrt time (2 fibers)
 % 
 % T_gama = (2*(pi*P*r^2*cot(gama) + P*r^2*pi*cos((pi*tan(betta))/tan(gama))*cot(betta)))/(sin(gama)*(cos((pi*tan(betta))/tan(gama)) + 1));
 % T_betta = (2*(pi*P*r^2*cot(betta) - pi*P*r^2*cot(gama)))/(sin(betta) + cos((pi*tan(betta))/tan(gama))*sin(betta));
