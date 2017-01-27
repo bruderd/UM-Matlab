@@ -46,6 +46,12 @@ fun = @(x)staticeq_2fib(x,P,x0);
 
 sol = lsqnonlin(fun,x0,[9,gama0*0.5,betta0*0.5,r0*1.1,L0*0.5,-Inf],[11,gama0*1.5,betta0*1.5,r0*5,L0*1.5,Inf]);
 
+P = sol(1);
+gama = sol(2);
+betta = sol(3);
+r = sol(4);
+L = sol(5);
+phi = sol(6);
 
 
 %% Case 1: gama,betta>0, gama>betta. Differentiates the system of equations wrt time (2 fibers)

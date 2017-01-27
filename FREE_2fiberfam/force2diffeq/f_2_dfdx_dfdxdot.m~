@@ -2,10 +2,10 @@
 
 clear
 
-syms r0 L0 gama0 betta0 P gama betta r L dP dgama dbetta dr dL c1 c2 c3 c4 c5 c6 x u phi dphi
+syms r0 L0 gama0 betta0 P gama betta r L dP dgama dbetta dr dL c1 c2 c3 c4 c5 c6 x u
 
 x = [P gama betta r L phi];
-xdot = [dP dgama dbetta dr dL dphi];
+xdot = [dP dgama dbetta dr dL];
 
 %% 2 families of fibers (1/24/2017)
 % f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary 
@@ -21,7 +21,7 @@ xdot = [dP dgama dbetta dr dL dphi];
 %      sin(gama)*dgama + (cos(gama0)*dL)/L0;...
 %      sin(betta)*dbetta + (cos(betta0)*dL)/L0];
 
- %% Case 1: gama,betta>0, gam>betta, 2*l_gama<l_betta (UPDATED: added phi state and geometric constraint for phi)
+ %% Case 1: gama,betta>0, gam>betta, 2*l_gama<l_betta (UPDATED: added geometric constraint for phi)
 f = [-dP + 0.5*(u - P);...  % The constant in front of (u-P) is arbitrary 
     ((2*pi*cot(gama)*P*r^2 + 2*pi*cos((pi*tan(betta))/tan(gama))*cot(betta)*P*r^2)*dgama)/(cos((pi*tan(betta))/tan(gama)) + 1) - c1*dL + pi*r^2*dP - (cos(betta)*(2*pi*cot(betta)*r^2*dP - 2*pi*cot(gama)*r^2*dP + 4*pi*cot(betta)*P*r*dr - 4*pi*cot(gama)*P*r*dr - 2*pi*P*r^2*dbetta*(cot(betta)^2 + 1) + 2*pi*P*r^2*dgama*(cot(gama)^2 + 1)))/(sin(betta) + cos((pi*tan(betta))/tan(gama))*sin(betta)) + 2*pi*P*r*dr + (cos(betta)*(2*pi*cot(betta)*P*r^2 - 2*pi*cot(gama)*P*r^2)*(cos(betta)*dbetta + cos((pi*tan(betta))/tan(gama))*cos(betta)*dbetta - sin((pi*tan(betta))/tan(gama))*sin(betta)*((pi*(tan(betta)^2 + 1)*dbetta)/tan(gama) - (pi*tan(betta)*(tan(gama)^2 + 1)*dgama)/tan(gama)^2)))/(sin(betta) + cos((pi*tan(betta))/tan(gama))*sin(betta))^2 + (sin(betta)*(2*pi*cot(betta)*P*r^2 - 2*pi*cot(gama)*P*r^2)*dbetta)/(sin(betta) + cos((pi*tan(betta))/tan(gama))*sin(betta)) - (cos(gama)*(2*pi*cot(gama)*r^2*dP + 4*pi*cot(gama)*P*r*dr - 2*pi*P*r^2*dgama*(cot(gama)^2 + 1) + 2*pi*cos((pi*tan(betta))/tan(gama))*cot(betta)*r^2*dP + 4*pi*cos((pi*tan(betta))/tan(gama))*cot(betta)*P*r*dr - 2*pi*cos((pi*tan(betta))/tan(gama))*P*r^2*dbetta*(cot(betta)^2 + 1) - 2*pi*sin((pi*tan(betta))/tan(gama))*cot(betta)*P*r^2*((pi*(tan(betta)^2 + 1)*dbetta)/tan(gama) - (pi*tan(betta)*(tan(gama)^2 + 1)*dgama)/tan(gama)^2)))/(sin(gama)*(cos((pi*tan(betta))/tan(gama)) + 1)) + (cos(gama)^2*(2*pi*cot(gama)*P*r^2 + 2*pi*cos((pi*tan(betta))/tan(gama))*cot(betta)*P*r^2)*dgama)/(sin(gama)^2*(cos((pi*tan(betta))/tan(gama)) + 1)) - (sin((pi*tan(betta))/tan(gama))*cos(gama)*(2*pi*cot(gama)*P*r^2 + 2*pi*cos((pi*tan(betta))/tan(gama))*cot(betta)*P*r^2)*((pi*(tan(betta)^2 + 1)*dbetta)/tan(gama) - (pi*tan(betta)*(tan(gama)^2 + 1)*dgama)/tan(gama)^2))/(sin(gama)*(cos((pi*tan(betta))/tan(gama)) + 1)^2);...
     c4*dphi + (2*pi*cot(gama)*r^2*dP + 4*pi*cot(gama)*P*r*dr - 2*pi*P*r^2*dgama*(cot(gama)^2 + 1) + 2*pi*cos((pi*tan(betta))/tan(gama))*cot(betta)*r^2*dP + 4*pi*cos((pi*tan(betta))/tan(gama))*cot(betta)*P*r*dr - 2*pi*cos((pi*tan(betta))/tan(gama))*P*r^2*dbetta*(cot(betta)^2 + 1) - 2*pi*sin((pi*tan(betta))/tan(gama))*cot(betta)*P*r^2*((pi*(tan(betta)^2 + 1)*dbetta)/tan(gama) - (pi*tan(betta)*(tan(gama)^2 + 1)*dgama)/tan(gama)^2))/(cos((pi*tan(betta))/tan(gama)) + 1) + (sin(betta)*(2*pi*cot(betta)*r^2*dP - 2*pi*cot(gama)*r^2*dP + 4*pi*cot(betta)*P*r*dr - 4*pi*cot(gama)*P*r*dr - 2*pi*P*r^2*dbetta*(cot(betta)^2 + 1) + 2*pi*P*r^2*dgama*(cot(gama)^2 + 1)))/(sin(betta) + cos((pi*tan(betta))/tan(gama))*sin(betta)) + (cos(betta)*(2*pi*cot(betta)*P*r^2 - 2*pi*cot(gama)*P*r^2)*dbetta)/(sin(betta) + cos((pi*tan(betta))/tan(gama))*sin(betta)) - (sin(betta)*(2*pi*cot(betta)*P*r^2 - 2*pi*cot(gama)*P*r^2)*(cos(betta)*dbetta + cos((pi*tan(betta))/tan(gama))*cos(betta)*dbetta - sin((pi*tan(betta))/tan(gama))*sin(betta)*((pi*(tan(betta)^2 + 1)*dbetta)/tan(gama) - (pi*tan(betta)*(tan(gama)^2 + 1)*dgama)/tan(gama)^2)))/(sin(betta) + cos((pi*tan(betta))/tan(gama))*sin(betta))^2 + (sin((pi*tan(betta))/tan(gama))*(2*pi*cot(gama)*P*r^2 + 2*pi*cos((pi*tan(betta))/tan(gama))*cot(betta)*P*r^2)*((pi*(tan(betta)^2 + 1)*dbetta)/tan(gama) - (pi*tan(betta)*(tan(gama)^2 + 1)*dgama)/tan(gama)^2))/(cos((pi*tan(betta))/tan(gama)) + 1)^2;...

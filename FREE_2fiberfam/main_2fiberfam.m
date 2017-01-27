@@ -16,7 +16,7 @@ params = struct;
 params.phi_desired = deg2rad(130);
 % params.len_desired = 7;
 
-params.x_rest = [0.0001, deg2rad(40), deg2rad(30), 3/16, 5.62]';    % resting state, P = 0 psi
+params.x_rest = [0.0001, deg2rad(40), deg2rad(30), 3/16, 5.62, 0]';    % resting state, P = 0 psi
 
 % params.x0 = [10.02, 0.67163, 0.21484, 5.8316]';     % state vector initial condition
 params.x0 = params.x_rest;     % state vector initial condition, same as resting condition
@@ -44,7 +44,7 @@ params.m = length(params.u0);  %dimension of state vector u
 % params.Melast_consts = [0.0502413, -1.67107, 13.6699];     % moment elastomer constants (L0 = 3.152 in) 
 
 params.Felast_consts = [7.21992225409945, 0, 0];     % force elastomer constants
-params.Melast_consts = [1, 0, 0];     % moment elastomer constants 
+params.Melast_consts = [7, 0, 0];     % moment elastomer constants 
 
 % params.Felast_consts = [0, 0, 0];     % No elastomer
 % params.Melast_consts = [0, 0, 0];     % No elastomer

@@ -15,7 +15,7 @@ function [ic, dicdx, dicdu] = instant_cost(x, u, params)
     % Desired input
     u_desired = 10;
     ic =  (u_desired - u)^2;
-    dicdx = [0 0 0 0 0];
+    dicdx = [0 0 0 0 0 0];
     dicdu = -2*(u_desired - u);
 
 

@@ -26,14 +26,14 @@ function [F] = staticeq_2fib(x,u,x0)
     T_betta = (2*(pi*P*r^2*cot(betta) - pi*P*r^2*cot(gama)))/(sin(betta) + cos((pi*tan(betta))/tan(gama))*sin(betta));
     theta_gama0 = tan(gama0)*L0/r0;
     theta_betta0 = tan(betta0)*L0/r0;
-
     
+    % Set of force balance and geometric constraint equations
     inputeq = P - u;
     force_balance = P*pi*r^2 - (T_gama*cos(gama) + T_betta*cos(betta)) + F_elast;   
     torque_balance = (T_gama*sin(gama) + T_betta*sin(betta)) + M_elast;               
     geometry_constraint1 = L/cos(gama) - r*(theta_gama0 + phi)/sin(gama);
     geometry_constraint2 = L/cos(betta) - r*(theta_betta0 + phi)/sin(betta);
     geometry_constraint3 = (L/r)*tan(gama) - (L0/r0)*tan(gama0) - phi;
-    geometry_constraint4 = (L/r)*tan(betta) - (L0/r0)*tan(betta0) - phi;
+%    geometry_constraint4 = (L/r)*tan(betta) - (L0/r0)*tan(betta0) - phi;
     
     F = [inputeq; force_balance; torque_balance; geometry_constraint1; geometry_constraint2; geometry_constraint3];

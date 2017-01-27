@@ -117,7 +117,9 @@ force_balance = diff( 0 == P*pi*r^2 - (T_gama*cos(gama) + T_betta*cos(betta)) + 
 torque_balance = diff( 0 == (T_gama*sin(gama) + T_betta*sin(betta)) + M_elast ,  t);               
 geometry_constraint1 = diff( 0 == L/cos(gama) - r*(theta_gama0 + phi)/sin(gama) ,  t);
 geometry_constraint2 = diff( 0 == L/cos(betta) - r*(theta_betta0 + phi)/sin(betta) ,  t);
+geometry_constraint3 = diff( 0 == (L/r)*tan(gama) - (L0/r0)*tan(gama0) - phi ,  t);
 
-System_2fib = [force_balance; torque_balance; geometry_constraint1; geometry_constraint2];
+
+System_2fib = [force_balance; torque_balance; geometry_constraint1; geometry_constraint2; geometry_constraint3];
 
 
