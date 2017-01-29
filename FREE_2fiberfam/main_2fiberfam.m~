@@ -16,7 +16,7 @@ params = struct;
 params.phi_desired = deg2rad(130);
 % params.len_desired = 7;
 
-params.x_rest = [0.0001, deg2rad(40), deg2rad(20), 3/16, 5.62, 0]';    % resting state, P = 0 psi
+params.x_rest = [0.0001, deg2rad(80), deg2rad(20), 3/16, 5.62, 0]';    % resting state, P = 0 psi
 
 params.nrat = 1;   % nrat is the closest integer less than tan(gama)/tan(betta)
 
@@ -48,8 +48,8 @@ params.m = length(params.u0);  %dimension of state vector u
 params.Felast_consts = [7.21992225409945, 0, 0];     % force elastomer constants
 params.Melast_consts = [7, 0, 0];     % moment elastomer constants 
 
-% params.Felast_consts = [1, 0, 0];     % weak elastomer
-% params.Melast_consts = [1, 0, 0];     % weak elastomer 
+params.Felast_consts = [7.21992225409945, 0, 0];     % force elastomer constants
+params.Melast_consts = [7, 0, 0];     % moment elastomer constants 
 
 % params.Felast_consts = [0, 0, 0];     % No elastomer
 % params.Melast_consts = [0, 0, 0];     % No elastomer
@@ -81,29 +81,3 @@ s_star = fmincon(@(s)obj(s, params), s0, [], [],[],[], lb, ub, @(s)implicit_Dyna
 
 % convert results of optimization to states and inputs
 [x_star, u_star] = state_decode(s_star, params);
-
-% create plot of the outputs
-figure
-subplot(2,3,1)       
-plot(x_star(1,:)')
-title('Pressure')
-
-subplot(2,3,2)       
-plot(rad2deg(x_star(2,:)'))
-title('gamma')
-
-subplot(2,3,3)       
-plot(rad2deg(x_star(3,:)'))
-title('beta')
-
-subplot(2,3,4)       
-plot(x_star(4,:)')
-title('radius')
-
-subplot(2,3,5)       
-plot(x_star(5,:)')
-title('Length')
-
-subplot(2,3,6)       
-plot(x_star(6,:)')
-title('phi')
