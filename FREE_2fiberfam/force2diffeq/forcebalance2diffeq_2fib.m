@@ -45,7 +45,7 @@ assumeAlso(phi, 'real')
 
 %simpler version
 F_elast = c1*(L0-L);    
-M_elast = c4 * phi;    % removed (-1) becasue I changed phi up there (1/26/2017)
+M_elast = c4 * (-1) * phi;    % removed (-1) becasue I changed phi up there (1/26/2017). Put it back (1/30/2017)
 
 % %simplest version
 % F_elast = 0;   
@@ -135,8 +135,8 @@ theta_gama = -tan(gama)*L/r;       % (-) fixes sign convention (1/28/2017)
 
 force_balance = diff( 0 == P*pi*r^2 - (T_gama*cos(gama) + T_betta*cos(betta)) + F_elast ,  t);   
 torque_balance = diff( 0 == (T_gama*sin(gama) + T_betta*sin(betta)) + M_elast ,  t);               
-geometry_constraint1 = diff( 0 == L/cos(gama) - r*(theta_gama0 + phi)/sin(gama) ,  t);
-geometry_constraint2 = diff( 0 == L/cos(betta) - r*(theta_betta0 + phi)/sin(betta) ,  t);
+geometry_constraint1 = diff( 0 == L/cos(gama) + r*(theta_gama0 + phi)/sin(gama) ,  t);
+geometry_constraint2 = diff( 0 == L/cos(betta) + r*(theta_betta0 + phi)/sin(betta) ,  t);
 geometry_constraint3 = diff( 0 == (theta_gama - theta_gama0) - phi ,  t);        
 
 

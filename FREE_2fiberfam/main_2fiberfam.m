@@ -16,7 +16,7 @@ params = struct;
 params.phi_desired = deg2rad(130);
 % params.len_desired = 7;
 
-params.x_rest = [0.0001, deg2rad(40), deg2rad(20), 3/16, 5.62, 0]';    % resting state, P = 0 psi
+params.x_rest = [0.0001, deg2rad(40), deg2rad(30), 3/16, 5.62, 0]';    % resting state, P = 0 psi
 
 params.nrat = 1;   % nrat is the closest integer less than tan(gama)/tan(betta)
 
@@ -27,7 +27,7 @@ params.u0 = [0]';        %input vector initial condition
 
 params.Pmax = 100;  % maximum pressure allowed
 params.T = 10;   %final time
-params.N = 30; %number of steps
+params.N = 200; %number of steps
 params.dt = params.T/params.N;    %size of one time step
 params.n = length(params.x0);  %dimension of state vector x
 params.m = length(params.u0);  %dimension of state vector u
@@ -105,5 +105,5 @@ plot(x_star(5,:)')
 title('Length')
 
 subplot(2,3,6)       
-plot(x_star(6,:)')
+plot(rad2deg(x_star(6,:)'))
 title('phi')
