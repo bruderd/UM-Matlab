@@ -4,7 +4,10 @@
 tspan = [0, 10];
 x_rest = params.x_rest;     % resting point
 x0 = params.x0;       % initial point 
-x0 = [1.6667    0.9731    0.5344    0.1895    5.5099    0.0866];    % inital point. Taken from optimization, rather than resting condition
+% x0 = [1.6667    0.9731    0.5344    0.1895    5.5099    0.0866];    % inital point. Taken from optimization, rather than resting condition
+% x0 = [0.8334    0.7753    0.3967    0.2049    2.2310    0.0712];
+% x0 = [1.6667    0.8602    0.4545    0.2222    2.0514    0.0100];
+x0 = [    0.2501    1.0477    0.2621    0.1876    4.9956    0.0003];
 xdot0 = [0 0 0 0 0 0]';
 u = 10;
 
@@ -13,9 +16,9 @@ u = 10;
 fixed_x0 = [1 1 1 1 1 1];
 fixed_xdot0 = [0 0 0 0 0 0];
 
-[x0_new,xdot0_new] = decic(@(t, x, dxdt)vf2(x,u,dxdt,params),0,x0,fixed_x0,xdot0,fixed_xdot0);
+[x0_new,xdot0_new] = decic(@(t, x, dxdt)vf(x,u,dxdt,params),0,x0,fixed_x0,xdot0,fixed_xdot0);
 
-[t, y] = ode15i(@(t, x, dxdt)vf2(x,u,dxdt,params), tspan, x0_new, xdot0_new);
+[t, y] = ode15i(@(t, x, dxdt)vf(x,u,dxdt,params), tspan, x0_new, xdot0_new);
 
 
 % Plot the results

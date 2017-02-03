@@ -1,13 +1,18 @@
 %
-% main_2fiberfam
-%   Script that finds optimal control inputs to drive system to target set
+% main_2fiberfam_func.m
+%   Script that finds optimal control inputs to drive system to target set,
+%   in function form.
 %   
 %   states: x = [P gama betta r L phi]'
 %   inputs: u = P_desired
 %
+%   x_rest = x at resting configuration (P=0)
+%   Num = number of steps
+%   T = total time
 
+function [x_star, u_star] = main_2fiberfam_func(x_rest, Num, T)
 %% Set value of params
-clear
+
 clc
 
 params = struct;
@@ -17,7 +22,7 @@ params.phi_desired = deg2rad(130);
 % params.len_desired = 7;
 
 %SET RESTING GEOMETRY OF FREE HERE:
-params.x_rest = [0.0001, deg2rad(-80), deg2rad(80), 3/16, 5, 0]';    % resting state, P = 0 psi. States are [P, gama, betta, r, L, phi]. By convention abs(gama)>abs(betta)
+params.x_rest = x_rest;    % resting state, P = 0 psi. States are [P, gama, betta, r, L, phi]. By convention abs(gama)>abs(betta)
 
 params.nrat = floor(abs(tan(params.x_rest(2))/tan(params.x_rest(3))));   % nrat is the closest integer less than abs(tan(gama))/abs(tan(betta))
 
@@ -51,8 +56,8 @@ params.x0 = params.x_rest;     % state vector initial condition, same as resting
 params.u0 = [0]';        %input vector initial condition
 
 params.Pmax = 100;  % maximum pressure allowed
-params.T = 0.5;   %final time
-params.N = 10; %number of steps
+params.T = T;   %final time
+params.N = Num; %number of steps
 params.dt = params.T/params.N;    %size of one time step
 params.n = length(params.x0);  %dimension of state vector x
 params.m = length(params.u0);  %dimension of state vector u

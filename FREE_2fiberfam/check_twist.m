@@ -6,10 +6,15 @@ betta0 = x0(3);
 r0 = x0(4);
 L0 = x0(5);
 
+% gama0 = params.x_rest(2);
+% betta0 = params.x_rest(3);
+% r0 = params.x_rest(4);
+% L0 = params.x_rest(5);
+
 gama = y(end,2);
 betta = y(end,3);
 r = y(end,4);
 L = y(end,5);
 
-phi_gama = (tan(gama)*L/r - tan(gama0)*L0/r0);
-phi_betta = (tan(betta)*L/r - tan(betta0)*L0/r0);
+phi_gama = (-tan(gama)*L/r + tan(gama0)*L0/r0);
+phi_betta = (-tan(betta)*L/r + tan(betta0)*L0/r0);

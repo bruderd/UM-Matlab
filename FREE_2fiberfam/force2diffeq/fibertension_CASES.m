@@ -17,7 +17,7 @@ case1 = solve(0 == eq_lbetta1, 0 == eq_lgama1, T_gama, T_betta);
 %% Case 2: gama,betta<0
 Fup_gama2 = 4*pi*P*r^2*cot(-gama);
 Fup_betta2 = 4*pi*P*r^2*cot(-betta);
-psi2 = pi*(tan(gama)/tan(betta) - nrat);
+psi2 = pi*(tan(-gama)/tan(-betta) - nrat);
 eq_lgama2 = Fup_gama2 - 2*T_gama*sin(-gama) - T_betta*sin(-betta)*(1 - cos(pi*tan(-betta)/tan(-gama)));
 eq_lbetta2 = Fup_betta2 - 2*T_betta*sin(-betta) - T_gama*sin(-gama)*((nrat+1) - cos(psi1));
 

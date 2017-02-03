@@ -83,7 +83,7 @@ function [con, coneq, grad_con, grad_coneq] = implicit_Dynamics(s, params)
     % Dynamics as equality constraints
     for k = 1:N
         
-        [f, dfdx, dfdu, df_ddxdt] = vf2(x(:,k), u(:,k), dxdt(:,k), params);
+        [f, dfdx, dfdu, df_ddxdt] = vf(x(:,k), u(:,k), dxdt(:,k), params);
         
         [h, dh_ddxdt, dhdx_k, dhdx_kplus1, dhdu] = vh(dxdt(:,k), x(:,k), x(:,k+1), u(:,k), params);
         
