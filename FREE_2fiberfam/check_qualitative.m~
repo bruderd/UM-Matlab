@@ -28,7 +28,7 @@ for k = 1:length(qual(:,1))
 
     count = count + 1;
     if (abs(qual(k,1)) > abs(qual(k,2)))
-        qplot(count,:) = [qual(k,1), qual(k,2), 2*qual(k,3) + 1*qual(k,4)];
+        qplot(count,:) = [qual(k,1), qual(k,2), 200*qual(k,3) + 100*qual(k,4)];
     end
 
 %    qplot(qual(k,1) + 91,:) = [qual(k,1), qual(k,2), 200*qual(k,3) + 100*qual(k,4)];
@@ -48,14 +48,10 @@ end
 
 % create a colormap having RGB values of dark green,
 %light green, white, dark red and light red.
-map2 = [1 0 0; 0 1 0; 1 1 1; 0 0 1; 0 1 1];
+map2 = [1 0 0; 0 1 0; 0 0 1; 1 1 0; 1 0 1 ];
 %use the user defined colormap for figure.
 colormap(map2);
 %plot the figure
 shading('faceted');
-h = pcolor(X,Y,M);
-set(h, 'EdgeColor', 'none');
-colorbar('Ticks',[-3,-1,0,1,3],...
-         'TickLabels',{'Contrace/Clockwise','Contract/Counter Clockwise','Unknown','Extend/Clockwise','Extend/Counter Clockwise'})
-
+pcolor(X,Y,M);
 

@@ -3,8 +3,8 @@ function [f, dfdx, dfdu, df_ddxdt] = vf_CASES(x, u, dxdt, params)
     n = params.n;
     m = params.m;
     
-    nrat = params.nrat;
-    cases = params.case;
+   nrat = params.nrat;
+   cases = params.case;
     
     [c1, c2, c3] = deal(params.Felast_consts(1), params.Felast_consts(2), params.Felast_consts(3));
     [c4, c5, c6] = deal(params.Melast_consts(1), params.Melast_consts(2), params.Melast_consts(3));
@@ -18,6 +18,31 @@ function [f, dfdx, dfdu, df_ddxdt] = vf_CASES(x, u, dxdt, params)
     [P0, gama0, betta0, r0, L0, phi0] = deal(params.x_rest(1), params.x_rest(2), params.x_rest(3), params.x_rest(4), params.x_rest(5), params.x_rest(6));
     [P, gama, betta, r, L, phi] = deal(x(1), x(2), x(3), x(4), x(5), x(6));
     [dP, dgama, dbetta, dr, dL, dphi] = deal(dxdt(1), dxdt(2), dxdt(3), dxdt(4), dxdt(5), dxdt(6));
+    
+%     nrat = floor(abs(tan(gama)/tan(betta)));   % nrat is the closest integer less than abs(tan(gama))/abs(tan(betta))
+%     
+%     % Determine which dynamics apply to this problem
+%     if mod(params.nrat,2)==0    % is nrat even?
+%         if gama > 0 && betta > 0
+%             cases = 1;
+%         elseif gama < 0 && betta < 0
+%             cases = 2;
+%         elseif gama > 0 && betta < 0
+%             cases = 3;
+%         elseif gama < 0 && betta > 0
+%             cases = 4;
+%         end
+%     elseif mod(params.nrat,2)==1    % is nrat odd?
+%         if gama > 0 && betta > 0
+%             cases = 5;
+%         elseif gama < 0 && betta < 0
+%             cases = 6;
+%         elseif gama > 0 && betta < 0
+%             cases = 7;
+%         elseif gama < 0 && betta > 0
+%             cases = 8;
+%         end
+%     end
     
     
 %% Cases
