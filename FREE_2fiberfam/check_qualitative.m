@@ -48,7 +48,7 @@ end
 
 % create a colormap having RGB values of dark green,
 %light green, white, dark red and light red.
-map2 = [1 0 0; 0 1 0; 1 1 1; 0 0 1; 0 1 1];
+map2 = [1 0 0; 0 1 0; 1 1 1; 1 0.64 0; 0 0 1];
 %use the user defined colormap for figure.
 colormap(map2);
 %plot the figure
