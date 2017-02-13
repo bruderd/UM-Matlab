@@ -17,7 +17,7 @@ params.phi_desired = deg2rad(130);
 % params.len_desired = 7;
 
 %SET RESTING GEOMETRY OF FREE HERE:
-params.x_rest = [0.0001, deg2rad(-50), deg2rad(25), 3/16, 5, 0]';    % resting state, P = 0 psi. States are [P, gama, betta, r, L, phi]. By convention abs(gama)>abs(betta)
+params.x_rest = [0.0001, deg2rad(50), deg2rad(30), 3/16, 5, 0]';    % resting state, P = 0 psi. States are [P, gama, betta, r, L, phi]. By convention abs(gama)>abs(betta)
 
 params.nrat = floor(abs(tan(params.x_rest(2))/tan(params.x_rest(3))));   % nrat is the closest integer less than abs(tan(gama))/abs(tan(betta))
 

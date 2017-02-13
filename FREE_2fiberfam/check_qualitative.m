@@ -7,8 +7,8 @@ qual = [0 0 0 0];
 
 % for i = -17:17
 %     for j = -17:17
-for i = -10:10
-    for j = -10:10
+for i = 1:10
+    for j = 1:10
         L0 = 5;
         gama0 = 8*i + 1;
         betta0 = 8*j + 2;

@@ -114,32 +114,32 @@ s_star = fmincon(@(s)obj(s, params), s0, [], [],[],[], lb, ub, @(s)implicit_Dyna
 [x_star, u_star] = state_decode(s_star, params);
 
 
-% create plot of the outputs
-tvec = [0:length(x_star')-1].*params.dt;    % time vector
-
-figure
-set(gcf,'numbertitle','off','name','Control Optimization Results') % See the help for GCF
-
-subplot(2,3,1)       
-plot(tvec, x_star(1,:)')
-title('Pressure (psi)')
-
-subplot(2,3,2)       
-plot(tvec, rad2deg(x_star(2,:)'))
-title('gamma (deg)')
-
-subplot(2,3,3)       
-plot(tvec, rad2deg(x_star(3,:)'))
-title('beta (deg)')
-
-subplot(2,3,4)       
-plot(tvec, x_star(4,:)')
-title('radius (in)')
-
-subplot(2,3,5)       
-plot(tvec, x_star(5,:)')
-title('Length (in)')
-
-subplot(2,3,6)       
-plot(tvec, rad2deg(x_star(6,:)'))
-title('phi (deg)')
+%% create plot of the outputs (comment out for iterative calls
+% tvec = [0:length(x_star')-1].*params.dt;    % time vector
+% 
+% figure
+% set(gcf,'numbertitle','off','name','Control Optimization Results') % See the help for GCF
+% 
+% subplot(2,3,1)       
+% plot(tvec, x_star(1,:)')
+% title('Pressure (psi)')
+% 
+% subplot(2,3,2)       
+% plot(tvec, rad2deg(x_star(2,:)'))
+% title('gamma (deg)')
+% 
+% subplot(2,3,3)       
+% plot(tvec, rad2deg(x_star(3,:)'))
+% title('beta (deg)')
+% 
+% subplot(2,3,4)       
+% plot(tvec, x_star(4,:)')
+% title('radius (in)')
+% 
+% subplot(2,3,5)       
+% plot(tvec, x_star(5,:)')
+% title('Length (in)')
+% 
+% subplot(2,3,6)       
+% plot(tvec, rad2deg(x_star(6,:)'))
+% title('phi (deg)')
