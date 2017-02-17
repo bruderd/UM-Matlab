@@ -17,7 +17,7 @@ params.phi_desired = deg2rad(130);
 % params.len_desired = 7;
 
 %SET RESTING GEOMETRY OF FREE HERE:
-params.x_rest = [0.0001, deg2rad(50), deg2rad(30), 3/16, 5, 0]';    % resting state, P = 0 psi. States are [P, gama, betta, r, L, phi]. By convention abs(gama)>abs(betta)
+params.x_rest = [0.0001, deg2rad(40), deg2rad(-38), 3/16, 5, 0]';    % resting state, P = 0 psi. States are [P, gama, betta, r, L, phi]. By convention abs(gama)>abs(betta)
 
 params.nrat = floor(abs(tan(params.x_rest(2))/tan(params.x_rest(3))));   % nrat is the closest integer less than abs(tan(gama))/abs(tan(betta))
 
@@ -52,8 +52,8 @@ params.x0 = params.x_rest;     % state vector initial condition, same as resting
 params.u0 = [0]';        %input vector initial condition
 
 params.Pmax = 100;  % maximum pressure allowed
-params.T = 0.5;   %final time
-params.N = 5; %number of steps
+params.T = 0.1;   %final time
+params.N = 100; %number of steps
 params.dt = params.T/params.N;    %size of one time step
 params.n = length(params.x0);  %dimension of state vector x
 params.m = length(params.u0);  %dimension of state vector u
@@ -94,7 +94,7 @@ A = eye(length(s0));
 B = ones(length(s0),1)*100;
 
 % % defining options for fmincon
-options = optimoptions('fmincon','Algorithm','sqp',...
+options = optimoptions('fmincon','Algorithm','interior-point',...
    'GradObj', 'on', 'GradConstr', 'on', 'Display', 'iter',  ...
    'MaxIter', 1000, 'ScaleProblem', 'obj-and-constr', 'Hessian', 'lbfgs'  );
 

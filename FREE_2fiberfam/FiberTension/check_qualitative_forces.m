@@ -1,23 +1,39 @@
-% Check qualitative behavior of FREEs
+% check_qualitative_forces.m
+%   Generate a plot accross all combinations of fiber angles of the 
+%   directions of the net force and torque on a FREE at its relaxed
+%   configuration.
+%
+%   Calls solveFB.m to determine values of parameters at test pressure P.
 
-Num = 5;
-T = 1;
+% choose the test pressure
+P_test = 1;
+% choosing resting parameters for FREE
+r_rest = 3/16;
+L_rest = 5;
+
 qual = [0 0 0 0];
 
+for i = -44:44
+    for j = -44:44
+        
+        if i == 0
+            gama0 = 1;
+        else
+            gama0 = 2*i;
+        end
+        
+        if j == 0
+            betta0 = 1;
+        else
+            betta0 = 2*j;
+        end
+        
+        
+        x_rest = [0, deg2rad(gama0), deg2rad(betta0), r_rest, L_rest, 0];
 
-% for i = -17:17
-%     for j = -17:17
-for i = 1:17
-    for j = 1:17
-        L0 = 5;
-        gama0 = 5*i + 1;
-        betta0 = 5*j + 2;
-        x_rest = [0.0001, deg2rad(gama0), deg2rad(betta0), 3/16, L0, 0]';
-        [x_star, u_star] = main_2fiberfam_func(x_rest, Num, T);
+        [dL, dphi] = qual_FB(P_test, x_rest);
         
-        close all
-        
-        qual = [qual; gama0, betta0, sign(x_star(5,end)-L0), sign(x_star(6,end))];
+        qual = [qual; gama0, betta0, dL, dphi];
     end
 end
 
@@ -47,6 +63,7 @@ for m = 1:length(qplot(:,1))
    
 end
 
+figure
 [X,Y] = meshgrid(-90:90,-90:90);
 
 % create a colormap having RGB values of dark green,
@@ -56,7 +73,7 @@ map2 = [1 0 0; 0 1 0; 1 1 1; 1 0.64 0; 0 0 1];
 colormap(map2);
 %plot the figure
 shading('faceted');
-h = pcolor(X,Y,M);
+h = pcolor(X,Y,M');
 set(h, 'EdgeColor', 'none');
 colorbar('Ticks',[-3,-1,0,1,3],...
          'TickLabels',{'Contrace/Clockwise','Contract/Counter Clockwise','Unknown','Extend/Clockwise','Extend/Counter Clockwise'})

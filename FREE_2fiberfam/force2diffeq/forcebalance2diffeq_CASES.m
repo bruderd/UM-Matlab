@@ -82,73 +82,73 @@ dynamics_dif = [force_balance; torque_balance; geometry_constraint1; geometry_co
 
 %% Case 1 and 2: gama,betta same sign, nrat even. Differentiates the system of equations wrt time (2 fibers)
 
-T_gama = (4*P*r^2*pi*(2*cot(gama) - cot(betta) + cos((pi*tan(betta))/tan(gama))*cot(betta)))/(sin(gama)*(cos((pi*tan(betta))/tan(gama)) - nrat + cos(pi*(nrat - tan(gama)/tan(betta))) - cos((pi*tan(betta))/tan(gama))*cos(pi*(nrat - tan(gama)/tan(betta))) + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
-T_betta = (4*P*r^2*pi*(2*cot(betta) - cot(gama) + cos(pi*(nrat - tan(gama)/tan(betta)))*cot(gama) - nrat*cot(gama)))/(sin(betta)*(cos((pi*tan(betta))/tan(gama)) - nrat + cos(pi*(nrat - tan(gama)/tan(betta))) - cos((pi*tan(betta))/tan(gama))*cos(pi*(nrat - tan(gama)/tan(betta))) + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
-theta_gama0 = -tan(gama0)*L0/r0;     % (-) fixes sign convention (1/28/2017)
-theta_betta0 = -tan(betta0)*L0/r0;   % (-) fixes sign convention (1/28/2017)
-theta_gama = -tan(gama)*L/r;       % (-) fixes sign convention (1/28/2017)
-
-force_balance = diff( 0 == P*pi*r^2 - (T_gama*cos(gama) + T_betta*cos(betta)) + F_elast ,  t);   
-torque_balance = diff( 0 == r*(T_gama*sin(gama) + T_betta*sin(betta)) + M_elast ,  t);              % put (r) in front of tensions to fix units (2/2/2017)           
-geometry_constraint1 = diff( 0 == L/cos(gama) + r*(theta_gama0 + phi)/sin(gama) ,  t);
-geometry_constraint2 = diff( 0 == L/cos(betta) + r*(theta_betta0 + phi)/sin(betta) ,  t);
-geometry_constraint3 = diff( 0 == (theta_gama - theta_gama0) - phi ,  t);        
-
-
-case12_diff = [force_balance; torque_balance; geometry_constraint1; geometry_constraint2; geometry_constraint3];
-
-%% Case 3 and 4: gama,betta different sign, nrat even. Differentiates the system of equations wrt time (2 fibers)
-   
-% T_gama = (2*pi*P*r^2*cot(gama))/sin(gama);
-% T_betta = (P*r^2*pi*(2*cot(betta) + nrat*cot(gama)))/sin(betta);
-T_gama = (4*P*r^2*pi*(2*cot(gama) - cot(betta) + cos((pi*tan(betta))/tan(gama))*cot(betta)))/(sin(gama)*(cos((pi*tan(betta))/tan(gama)) - nrat + cos(pi*(nrat - tan(gama)/tan(betta))) - cos((pi*tan(betta))/tan(gama))*cos(pi*(nrat - tan(gama)/tan(betta))) + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
-T_betta = (4*P*r^2*pi*(2*cot(betta) - cot(gama) + cos(pi*(nrat - tan(gama)/tan(betta)))*cot(gama) - nrat*cot(gama)))/(sin(betta)*(cos((pi*tan(betta))/tan(gama)) - nrat + cos(pi*(nrat - tan(gama)/tan(betta))) - cos((pi*tan(betta))/tan(gama))*cos(pi*(nrat - tan(gama)/tan(betta))) + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
-theta_gama0 = -tan(gama0)*L0/r0;     % (-) fixes sign convention (1/28/2017)
-theta_betta0 = -tan(betta0)*L0/r0;   % (-) fixes sign convention (1/28/2017)
-theta_gama = -tan(gama)*L/r;       % (-) fixes sign convention (1/28/2017)
-
-force_balance = diff( 0 == P*pi*r^2 - (T_gama*cos(gama) + T_betta*cos(betta)) + F_elast ,  t);   
-torque_balance = diff( 0 == r*(T_gama*sin(gama) + T_betta*sin(betta)) + M_elast ,  t);              % put (r) in front of tensions to fix units (2/2/2017)             
-geometry_constraint1 = diff( 0 == L/cos(gama) + r*(theta_gama0 + phi)/sin(gama) ,  t);
-geometry_constraint2 = diff( 0 == L/cos(betta) + r*(theta_betta0 + phi)/sin(betta) ,  t);           % put (-) in front of phi (2/1/2017). Reverted back (2/2/2017)
-geometry_constraint3 = diff( 0 == (theta_gama - theta_gama0) - phi ,  t);        
-
-
-case34_diff = [force_balance; torque_balance; geometry_constraint1; geometry_constraint2; geometry_constraint3];
-
-%% Case 5 and 6: gama,betta same sign, nrat odd. Differentiates the system of equations wrt time (2 fibers)
-   
-T_gama = (4*P*r^2*pi*(2*cot(gama) - cot(betta) + cos((pi*tan(betta))/tan(gama))*cot(betta)))/(sin(gama)*(cos((pi*tan(betta))/tan(gama)) - nrat + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
-T_betta = -(4*P*r^2*pi*(cot(gama) - 2*cot(betta) + nrat*cot(gama)))/(sin(betta)*(cos((pi*tan(betta))/tan(gama)) - nrat + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
-theta_gama0 = -tan(gama0)*L0/r0;     % (-) fixes sign convention (1/28/2017)
-theta_betta0 = -tan(betta0)*L0/r0;   % (-) fixes sign convention (1/28/2017)
-theta_gama = -tan(gama)*L/r;       % (-) fixes sign convention (1/28/2017)
-
-force_balance = diff( 0 == P*pi*r^2 - (T_gama*cos(gama) + T_betta*cos(betta)) + F_elast ,  t);   
-torque_balance = diff( 0 == r*(T_gama*sin(gama) + T_betta*sin(betta)) + M_elast ,  t);           % put (r) in front of tensions to fix units (2/2/2017)              
-geometry_constraint1 = diff( 0 == L/cos(gama) + r*(theta_gama0 + phi)/sin(gama) ,  t);
-geometry_constraint2 = diff( 0 == L/cos(betta) + r*(theta_betta0 + phi)/sin(betta) ,  t);
-geometry_constraint3 = diff( 0 == (theta_gama - theta_gama0) - phi ,  t);        
-
-
-case56_diff = [force_balance; torque_balance; geometry_constraint1; geometry_constraint2; geometry_constraint3];
-
-%% Case 7 and 8: gama,betta different sign, nrat odd. Differentiates the system of equations wrt time (2 fibers)
-   
-% T_gama = (2*pi*P*r^2*cot(gama))/sin(gama);
-% T_betta = (P*r^2*pi*(2*cot(betta) - cos(pi*(nrat + tan(gama)/tan(betta)))*cot(gama) + nrat*cot(gama)))/sin(betta);
-T_gama = (4*P*r^2*pi*(2*cot(gama) - cot(betta) + cos((pi*tan(betta))/tan(gama))*cot(betta)))/(sin(gama)*(cos((pi*tan(betta))/tan(gama)) - nrat + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
-T_betta = -(4*P*r^2*pi*(cot(gama) - 2*cot(betta) + nrat*cot(gama)))/(sin(betta)*(cos((pi*tan(betta))/tan(gama)) - nrat + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
-theta_gama0 = -tan(gama0)*L0/r0;     % (-) fixes sign convention (1/28/2017)
-theta_betta0 = -tan(betta0)*L0/r0;   % (-) fixes sign convention (1/28/2017)
-theta_gama = -tan(gama)*L/r;       % (-) fixes sign convention (1/28/2017)
-
-force_balance = diff( 0 == P*pi*r^2 - (T_gama*cos(gama) + T_betta*cos(betta)) + F_elast ,  t);   
-torque_balance = diff( 0 == r*(T_gama*sin(gama) + T_betta*sin(betta)) + M_elast ,  t);               % put (r) in front of tensions to fix units (2/2/2017)               
-geometry_constraint1 = diff( 0 == L/cos(gama) + r*(theta_gama0 + phi)/sin(gama) ,  t);
-geometry_constraint2 = diff( 0 == L/cos(betta) + r*(theta_betta0 + phi)/sin(betta) ,  t);            % put (-) in front of phi (2/1/2017). Reverted back (2/2/2017)     
-geometry_constraint3 = diff( 0 == (theta_gama - theta_gama0) - phi ,  t);        
-
-
-case78_diff = [force_balance; torque_balance; geometry_constraint1; geometry_constraint2; geometry_constraint3];
-
+% T_gama = (4*P*r^2*pi*(2*cot(gama) - cot(betta) + cos((pi*tan(betta))/tan(gama))*cot(betta)))/(sin(gama)*(cos((pi*tan(betta))/tan(gama)) - nrat + cos(pi*(nrat - tan(gama)/tan(betta))) - cos((pi*tan(betta))/tan(gama))*cos(pi*(nrat - tan(gama)/tan(betta))) + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
+% T_betta = (4*P*r^2*pi*(2*cot(betta) - cot(gama) + cos(pi*(nrat - tan(gama)/tan(betta)))*cot(gama) - nrat*cot(gama)))/(sin(betta)*(cos((pi*tan(betta))/tan(gama)) - nrat + cos(pi*(nrat - tan(gama)/tan(betta))) - cos((pi*tan(betta))/tan(gama))*cos(pi*(nrat - tan(gama)/tan(betta))) + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
+% theta_gama0 = -tan(gama0)*L0/r0;     % (-) fixes sign convention (1/28/2017)
+% theta_betta0 = -tan(betta0)*L0/r0;   % (-) fixes sign convention (1/28/2017)
+% theta_gama = -tan(gama)*L/r;       % (-) fixes sign convention (1/28/2017)
+% 
+% force_balance = diff( 0 == P*pi*r^2 - (T_gama*cos(gama) + T_betta*cos(betta)) + F_elast ,  t);   
+% torque_balance = diff( 0 == r*(T_gama*sin(gama) + T_betta*sin(betta)) + M_elast ,  t);              % put (r) in front of tensions to fix units (2/2/2017)           
+% geometry_constraint1 = diff( 0 == L/cos(gama) + r*(theta_gama0 + phi)/sin(gama) ,  t);
+% geometry_constraint2 = diff( 0 == L/cos(betta) + r*(theta_betta0 + phi)/sin(betta) ,  t);
+% geometry_constraint3 = diff( 0 == (theta_gama - theta_gama0) - phi ,  t);        
+% 
+% 
+% case12_diff = [force_balance; torque_balance; geometry_constraint1; geometry_constraint2; geometry_constraint3];
+% 
+% %% Case 3 and 4: gama,betta different sign, nrat even. Differentiates the system of equations wrt time (2 fibers)
+%    
+% % T_gama = (2*pi*P*r^2*cot(gama))/sin(gama);
+% % T_betta = (P*r^2*pi*(2*cot(betta) + nrat*cot(gama)))/sin(betta);
+% T_gama = (4*P*r^2*pi*(2*cot(gama) - cot(betta) + cos((pi*tan(betta))/tan(gama))*cot(betta)))/(sin(gama)*(cos((pi*tan(betta))/tan(gama)) - nrat + cos(pi*(nrat - tan(gama)/tan(betta))) - cos((pi*tan(betta))/tan(gama))*cos(pi*(nrat - tan(gama)/tan(betta))) + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
+% T_betta = (4*P*r^2*pi*(2*cot(betta) - cot(gama) + cos(pi*(nrat - tan(gama)/tan(betta)))*cot(gama) - nrat*cot(gama)))/(sin(betta)*(cos((pi*tan(betta))/tan(gama)) - nrat + cos(pi*(nrat - tan(gama)/tan(betta))) - cos((pi*tan(betta))/tan(gama))*cos(pi*(nrat - tan(gama)/tan(betta))) + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
+% theta_gama0 = -tan(gama0)*L0/r0;     % (-) fixes sign convention (1/28/2017)
+% theta_betta0 = -tan(betta0)*L0/r0;   % (-) fixes sign convention (1/28/2017)
+% theta_gama = -tan(gama)*L/r;       % (-) fixes sign convention (1/28/2017)
+% 
+% force_balance = diff( 0 == P*pi*r^2 - (T_gama*cos(gama) + T_betta*cos(betta)) + F_elast ,  t);   
+% torque_balance = diff( 0 == r*(T_gama*sin(gama) + T_betta*sin(betta)) + M_elast ,  t);              % put (r) in front of tensions to fix units (2/2/2017)             
+% geometry_constraint1 = diff( 0 == L/cos(gama) + r*(theta_gama0 + phi)/sin(gama) ,  t);
+% geometry_constraint2 = diff( 0 == L/cos(betta) + r*(theta_betta0 + phi)/sin(betta) ,  t);           % put (-) in front of phi (2/1/2017). Reverted back (2/2/2017)
+% geometry_constraint3 = diff( 0 == (theta_gama - theta_gama0) - phi ,  t);        
+% 
+% 
+% case34_diff = [force_balance; torque_balance; geometry_constraint1; geometry_constraint2; geometry_constraint3];
+% 
+% %% Case 5 and 6: gama,betta same sign, nrat odd. Differentiates the system of equations wrt time (2 fibers)
+%    
+% T_gama = (4*P*r^2*pi*(2*cot(gama) - cot(betta) + cos((pi*tan(betta))/tan(gama))*cot(betta)))/(sin(gama)*(cos((pi*tan(betta))/tan(gama)) - nrat + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
+% T_betta = -(4*P*r^2*pi*(cot(gama) - 2*cot(betta) + nrat*cot(gama)))/(sin(betta)*(cos((pi*tan(betta))/tan(gama)) - nrat + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
+% theta_gama0 = -tan(gama0)*L0/r0;     % (-) fixes sign convention (1/28/2017)
+% theta_betta0 = -tan(betta0)*L0/r0;   % (-) fixes sign convention (1/28/2017)
+% theta_gama = -tan(gama)*L/r;       % (-) fixes sign convention (1/28/2017)
+% 
+% force_balance = diff( 0 == P*pi*r^2 - (T_gama*cos(gama) + T_betta*cos(betta)) + F_elast ,  t);   
+% torque_balance = diff( 0 == r*(T_gama*sin(gama) + T_betta*sin(betta)) + M_elast ,  t);           % put (r) in front of tensions to fix units (2/2/2017)              
+% geometry_constraint1 = diff( 0 == L/cos(gama) + r*(theta_gama0 + phi)/sin(gama) ,  t);
+% geometry_constraint2 = diff( 0 == L/cos(betta) + r*(theta_betta0 + phi)/sin(betta) ,  t);
+% geometry_constraint3 = diff( 0 == (theta_gama - theta_gama0) - phi ,  t);        
+% 
+% 
+% case56_diff = [force_balance; torque_balance; geometry_constraint1; geometry_constraint2; geometry_constraint3];
+% 
+% %% Case 7 and 8: gama,betta different sign, nrat odd. Differentiates the system of equations wrt time (2 fibers)
+%    
+% % T_gama = (2*pi*P*r^2*cot(gama))/sin(gama);
+% % T_betta = (P*r^2*pi*(2*cot(betta) - cos(pi*(nrat + tan(gama)/tan(betta)))*cot(gama) + nrat*cot(gama)))/sin(betta);
+% T_gama = (4*P*r^2*pi*(2*cot(gama) - cot(betta) + cos((pi*tan(betta))/tan(gama))*cot(betta)))/(sin(gama)*(cos((pi*tan(betta))/tan(gama)) - nrat + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
+% T_betta = -(4*P*r^2*pi*(cot(gama) - 2*cot(betta) + nrat*cot(gama)))/(sin(betta)*(cos((pi*tan(betta))/tan(gama)) - nrat + nrat*cos((pi*tan(betta))/tan(gama)) + 3));
+% theta_gama0 = -tan(gama0)*L0/r0;     % (-) fixes sign convention (1/28/2017)
+% theta_betta0 = -tan(betta0)*L0/r0;   % (-) fixes sign convention (1/28/2017)
+% theta_gama = -tan(gama)*L/r;       % (-) fixes sign convention (1/28/2017)
+% 
+% force_balance = diff( 0 == P*pi*r^2 - (T_gama*cos(gama) + T_betta*cos(betta)) + F_elast ,  t);   
+% torque_balance = diff( 0 == r*(T_gama*sin(gama) + T_betta*sin(betta)) + M_elast ,  t);               % put (r) in front of tensions to fix units (2/2/2017)               
+% geometry_constraint1 = diff( 0 == L/cos(gama) + r*(theta_gama0 + phi)/sin(gama) ,  t);
+% geometry_constraint2 = diff( 0 == L/cos(betta) + r*(theta_betta0 + phi)/sin(betta) ,  t);            % put (-) in front of phi (2/1/2017). Reverted back (2/2/2017)     
+% geometry_constraint3 = diff( 0 == (theta_gama - theta_gama0) - phi ,  t);        
+% 
+% 
+% case78_diff = [force_balance; torque_balance; geometry_constraint1; geometry_constraint2; geometry_constraint3];
+% 
