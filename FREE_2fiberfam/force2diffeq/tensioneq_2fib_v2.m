@@ -1,4 +1,4 @@
-function [F] = staticeq_2fib_v2(x,u,x0)
+function [F] = tensioneq_2fib_v2(x,u,x0)
 
     gama0 = x0(2);
     betta0 = x0(3);
@@ -22,8 +22,10 @@ function [F] = staticeq_2fib_v2(x,u,x0)
     c4 = 7;
     
     %Elastomer forces: simpler version
-    F_elast = c1*(L0-L);    
-    M_elast = c4 * (-1) * phi;   
+%     F_elast = c1*(L0-L);    
+%     M_elast = c4 * phi;    % removed (-1) becasue I changed phi up there (1/26/2017)
+    F_elast = 0;    
+    M_elast = 0;    % removed (-1) becasue I changed phi up there (1/26/2017)
     
 
     theta_gama0 = -tan(gama0)*L0/r0;     % (-) fixes sign convention (1/28/2017)
@@ -31,7 +33,7 @@ function [F] = staticeq_2fib_v2(x,u,x0)
     theta_gama = -tan(gama)*L/r;       % (-) fixes sign convention (1/28/2017)
     theta_betta = -tan(betta)*L/r;       % (-) fixes sign convention (1/28/2017)
 
-    % Static force balance equations
+    % Case 1: gama, betta > 0
     inputeq = u - P;
     force_balance = P*pi*r^2 - 2*(T_gama*cos(gama) + T_betta*cos(betta)) + F_elast;
     torque_balance = 2*r*(T_gama*sin(gama) + T_betta*sin(betta)) + M_elast;             % put (r) in front of tensions to fix units (2/2/2017)
