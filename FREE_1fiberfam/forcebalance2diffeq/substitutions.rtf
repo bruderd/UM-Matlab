@@ -7,18 +7,21 @@
 \f0\fs24 \cf0 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\
 %\
 % This file contains the time derivative of the force balance equations (computed by Matlab) with the following substitutions made:\
-%	diff(P(t), t) \'97> dP\
-%	diff(gama(t), t) \'97> dgama\
-%	diff(betta(t), t) \'97> dbetta\
-%	diff(r(t), t) \'97> dr\
-%	diff(L(t), t) \'97> dL\
-%	diff(phi(t), t) \'97> dphi\
-%	P(t) \'97> P\
-%	gama(t) \'97> gama\
-%	betta(t) \'97> betta\
-%	r(t) \'97> r\
-%	L(t) \'97> L\
-%	phi(t) \'97> phi\
+%	diff(P, t) \'97> dP\
+%	dgama \'97> dgama\
+%	dbetta \'97> dbetta\
+%	dr \'97> dr\
+%	dL \'97> dL\
+%	dphi \'97> dphi\
+%	P \'97> P\
+%	gama \'97> gama\
+%	betta \'97> betta\
+%	r \'97> r\
+%	L \'97> L\
+%	phi \'97> phi\
+%\
+%	diff(T_gama(t), t) \'97> dT_gama\
+%	diff(T_betta(t), t) \'97> dT_betta	\
 %\
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\
 \
@@ -645,6 +648,55 @@ dL/cos(gama) + ((phi - (L0*tan(gama0))/r0)*dr)/sin(gama) + (r*dphi)/sin(gama) + 
 dL/cos(betta) + ((phi - (L0*tan(betta0))/r0)*dr)/sin(betta) + (r*dphi)/sin(betta) + (sin(betta)*L*dbetta)/cos(betta)^2 - (cos(betta)*r*(phi - (L0*tan(betta0))/r0)*dbetta)/sin(betta)^2;\'85\
 \
 (tan(gama)*L*dr)/r^2 - (tan(gama)*dL)/r - (L*(tan(gama)^2 + 1)*dgama)/r - dphi];\
+\
+\
+\
+\
+\
+\
+\
+\
+%% NEW DYNAMICS. T_gama and T_betta are now considered states.\
+\
+>> f_case1\
+f_case1 =\
+2*sin(betta)*T_betta*dbetta - 2*cos(gama)*dT_gama - c1*dL - 2*cos(betta)*dT_betta + 2*sin(gama)*T_gama*dgama + pi*r^2*dP + 2*pi*P*r*dr\
+2*(sin(betta)*T_betta + sin(gama)*T_gama)*dr + 2*r*(sin(betta)*dT_betta + sin(gama)*dT_gama + cos(betta)*T_betta*dbetta + cos(gama)*T_gama*dgama) - c4*dphi\
+dL/cos(gama) + ((phi - (L0*tan(gama0))/r0)*dr)/sin(gama) + (r*dphi)/sin(gama) + (sin(gama)*L*dgama)/cos(gama)^2 - (cos(gama)*r*(phi - (L0*tan(gama0))/r0)*dgama)/sin(gama)^2\
+dL/cos(betta) + ((phi - (L0*tan(betta0))/r0)*dr)/sin(betta) + (r*dphi)/sin(betta) + (sin(betta)*L*dbetta)/cos(betta)^2 - (cos(betta)*r*(phi - (L0*tan(betta0))/r0)*dbetta)/sin(betta)^2\
+(tan(gama)*L*dr)/r^2 - (tan(gama)*dL)/r - (L*(tan(gama)^2 + 1)*dgama)/r - dphi\
+(tan(betta)*L*dr)/r^2 - (tan(betta)*dL)/r - (L*(tan(betta)^2 + 1)*dbetta)/r - dphi\
+P*dr - sin(gama)*dT_gama - sin(betta)*dT_betta + r*dP - cos(betta)*T_betta*dbetta - cos(gama)*T_gama*dgama\
+ \
+>> f_case2\
+ f_case2 =\
+2*sin(betta)*T_betta*dbetta - 2*cos(gama)*dT_gama - c1*dL - 2*cos(betta)*dT_betta + 2*sin(gama)*T_gama*dgama + pi*r^2*dP + 2*pi*P*r*dr\
+2*(sin(betta)*T_betta + sin(gama)*T_gama)*dr + 2*r*(sin(betta)*dT_betta + sin(gama)*dT_gama + cos(betta)*T_betta*dbetta + cos(gama)*T_gama*dgama) - c4*dphi\
+dL/cos(gama) + ((phi - (L0*tan(gama0))/r0)*dr)/sin(gama) + (r*dphi)/sin(gama) + (sin(gama)*L*dgama)/cos(gama)^2 - (cos(gama)*r*(phi - (L0*tan(gama0))/r0)*dgama)/sin(gama)^2\
+dL/cos(betta) + ((phi - (L0*tan(betta0))/r0)*dr)/sin(betta) + (r*dphi)/sin(betta) + (sin(betta)*L*dbetta)/cos(betta)^2 - (cos(betta)*r*(phi - (L0*tan(betta0))/r0)*dbetta)/sin(betta)^2\
+(tan(gama)*L*dr)/r^2 - (tan(gama)*dL)/r - (L*(tan(gama)^2 + 1)*dgama)/r - dphi\
+(tan(betta)*L*dr)/r^2 - (tan(betta)*dL)/r - (L*(tan(betta)^2 + 1)*dbetta)/r - dphi\
+sin(betta)*dT_betta + sin(gama)*dT_gama + P*dr + r*dP + cos(betta)*T_betta*dbetta + cos(gama)*T_gama*dgama\
+ \
+>> f_case3\
+f_case3 =\
+2*sin(betta)*T_betta*dbetta - 2*cos(gama)*dT_gama - c1*dL - 2*cos(betta)*dT_betta + 2*sin(gama)*T_gama*dgama + pi*r^2*dP + 2*pi*P*r*dr\
+2*(sin(betta)*T_betta + sin(gama)*T_gama)*dr + 2*r*(sin(betta)*dT_betta + sin(gama)*dT_gama + cos(betta)*T_betta*dbetta + cos(gama)*T_gama*dgama) - c4*dphi\
+dL/cos(gama) + ((phi - (L0*tan(gama0))/r0)*dr)/sin(gama) + (r*dphi)/sin(gama) + (sin(gama)*L*dgama)/cos(gama)^2 - (cos(gama)*r*(phi - (L0*tan(gama0))/r0)*dgama)/sin(gama)^2\
+dL/cos(betta) + ((phi - (L0*tan(betta0))/r0)*dr)/sin(betta) + (r*dphi)/sin(betta) + (sin(betta)*L*dbetta)/cos(betta)^2 - (cos(betta)*r*(phi - (L0*tan(betta0))/r0)*dbetta)/sin(betta)^2\
+(tan(gama)*L*dr)/r^2 - (tan(gama)*dL)/r - (L*(tan(gama)^2 + 1)*dgama)/r - dphi\
+(tan(betta)*L*dr)/r^2 - (tan(betta)*dL)/r - (L*(tan(betta)^2 + 1)*dbetta)/r - dphi\
+sin(betta)*dT_betta - sin(gama)*dT_gama + P*dr + r*dP + cos(betta)*T_betta*dbetta - cos(gama)*T_gama*dgama\
+ \
+>> f_case4\
+f_case4 =\
+2*sin(betta)*T_betta*dbetta - 2*cos(gama)*dT_gama - c1*dL - 2*cos(betta)*dT_betta + 2*sin(gama)*T_gama*dgama + pi*r^2*dP + 2*pi*P*r*dr\
+2*(sin(betta)*T_betta + sin(gama)*T_gama)*dr + 2*r*(sin(betta)*dT_betta + sin(gama)*dT_gama + cos(betta)*T_betta*dbetta + cos(gama)*T_gama*dgama) - c4*dphi\
+dL/cos(gama) + ((phi - (L0*tan(gama0))/r0)*dr)/sin(gama) + (r*dphi)/sin(gama) + (sin(gama)*L*dgama)/cos(gama)^2 - (cos(gama)*r*(phi - (L0*tan(gama0))/r0)*dgama)/sin(gama)^2\
+dL/cos(betta) + ((phi - (L0*tan(betta0))/r0)*dr)/sin(betta) + (r*dphi)/sin(betta) + (sin(betta)*L*dbetta)/cos(betta)^2 - (cos(betta)*r*(phi - (L0*tan(betta0))/r0)*dbetta)/sin(betta)^2\
+(tan(gama)*L*dr)/r^2 - (tan(gama)*dL)/r - (L*(tan(gama)^2 + 1)*dgama)/r - dphi\
+(tan(betta)*L*dr)/r^2 - (tan(betta)*dL)/r - (L*(tan(betta)^2 + 1)*dbetta)/r - dphi\
+sin(gama)*dT_gama - sin(betta)*dT_betta + P*dr + r*dP - cos(betta)*T_betta*dbetta + cos(gama)*T_gama*dgama \
  \
  \
  }

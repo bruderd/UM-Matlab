@@ -1,4 +1,6 @@
-% Check qualitative behavior of FREEs
+% Check qualitative behavior of FREEs. This is an older version that calls
+% the control optimizer so it runs slow and generates poor results. For
+% better and faster version see check_qualitative_forces.m
 
 Num = 5;
 T = 1;

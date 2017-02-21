@@ -22,13 +22,17 @@ function [con, coneq, grad_con, grad_coneq] = implicit_Dynamics(s, params)
         con(3, p) = x(3,p)*sign(x(3,p)) - 1.5;          %fiber angle cannot exceed 90 degrees in magnitude  
         con(4, p) = x(4,p) - x0(4)*5;      %radius can triple, but no more
         con(5, p) = x(5,p) - (x0(5)*1.5);   %length cannot increase more than 50%
- 
+        con(7, p) = x(7,p) - 10000;         % fiber tension is basically unbounded above 
+        con(8, p) = x(8,p) - 10000;         % fiber tension is basically unbounded above 
+        
         % Lower bounds on states
         con(1, (N+1)+p) = -x(1,p) + 0;
         con(2, (N+1)+p) = -x(2,p)*sign(x(2,p)) + 0;            %fiber angle cannot cross over 0 degrees 
         con(3, (N+1)+p) = -x(3,p)*sign(x(3,p)) + 0;            %fiber angle cannot cross over 0 degrees   
         con(4, (N+1)+p) = -x(4,p) + x0(4)*1;           %radius cannot decrease in real life but ALLOW THIS FOR NOW (1/6/2017)
         con(5, (N+1)+p) = -x(5,p) + (x0(5)*0.5);     %length cannot decrease more than 50%
+        con(7, (N+1)+p) = -x(7,p) + 0;     %fiber tension cannot be negative
+        con(8, (N+1)+p) = -x(8,p) + 0;     %fiber tension cannot be negative
              
     end
     
@@ -39,6 +43,8 @@ function [con, coneq, grad_con, grad_coneq] = implicit_Dynamics(s, params)
         grad_con(3, q, n*(q-1)+3) = 1*sign(x(3,q));
         grad_con(4, q, n*(q-1)+4) = 1;
         grad_con(5, q, n*(q-1)+5) = 1;
+        grad_con(7, q, n*(q-1)+7) = 1;
+        grad_con(8, q, n*(q-1)+8) = 1;        
 
         % Gradient of lower bounds on states
         grad_con(1, (N+1)+q, n*(q-1)+1) = -1;
@@ -46,29 +52,31 @@ function [con, coneq, grad_con, grad_coneq] = implicit_Dynamics(s, params)
         grad_con(3, (N+1)+q, n*(q-1)+3) = -1*sign(x(3,q));
         grad_con(4, (N+1)+q, n*(q-1)+4) = -1;
         grad_con(5, (N+1)+q, n*(q-1)+5) = -1;
+        grad_con(7, (N+1)+q, n*(q-1)+7) = -1;
+        grad_con(8, (N+1)+q, n*(q-1)+8) = -1;
         
     end
     
-    % Extra twist constraint, relaxed with fudge-factor
-    fudge = 10;
-    for j = 1:N+1
-        % Constraint to ensure that the twist of the end-point is consistent for both fibers (upper and lower bounds, respectively)
-        con(6, j) = ( x(5,j)/x(4,j) )*(tan(x(2,j)) - tan(x(3,j))) - ( x0(5)/x0(4) )*(tan(x0(2)) - tan(x0(3))) - fudge;
-        con(6, (N+1)+j) = -(( x(5,j)/x(4,j) )*(tan(x(2,j)) - tan(x(3,j))) - ( x0(5)/x0(4) )*(tan(x0(2)) - tan(x0(3)))) - fudge;
-    
-        % Gradient of extra twist constraint
-        grad_con(6, j, n*(j-1)+1) = 0;
-        grad_con(6, j, n*(j-1)+2) = ( x(5,j)/x(4,j) )*sec(x(2,j))^2;
-        grad_con(6, j, n*(j-1)+3) = -( x(5,j)/x(4,j) )*sec(x(3,j))^2;
-        grad_con(6, j, n*(j-1)+4) = -( x(5,j)/x(4,j)^2 )*(tan(x(2,j)) - tan(x(3,j)));
-        grad_con(6, j, n*(j-1)+5) = ( 1/x(4,j) )*(tan(x(2,j)) - tan(x(3,j)));   
-        
-        grad_con(6, (N+1)+j, n*(j-1)+1) = 0;
-        grad_con(6, (N+1)+j, n*(j-1)+2) = -( x(5,j)/x(4,j) )*sec(x(2,j))^2;
-        grad_con(6, (N+1)+j, n*(j-1)+3) = ( x(5,j)/x(4,j) )*sec(x(3,j))^2;
-        grad_con(6, (N+1)+j, n*(j-1)+4) = ( x(5,j)/x(4,j)^2 )*(tan(x(2,j)) - tan(x(3,j)));
-        grad_con(6, (N+1)+j, n*(j-1)+5) = -( 1/x(4,j) )*(tan(x(2,j)) - tan(x(3,j)));   
-    end
+%     % Extra twist constraint, relaxed with fudge-factor
+%     fudge = 10;
+%     for j = 1:N+1
+%         % Constraint to ensure that the twist of the end-point is consistent for both fibers (upper and lower bounds, respectively)
+%         con(6, j) = ( x(5,j)/x(4,j) )*(tan(x(2,j)) - tan(x(3,j))) - ( x0(5)/x0(4) )*(tan(x0(2)) - tan(x0(3))) - fudge;
+%         con(6, (N+1)+j) = -(( x(5,j)/x(4,j) )*(tan(x(2,j)) - tan(x(3,j))) - ( x0(5)/x0(4) )*(tan(x0(2)) - tan(x0(3)))) - fudge;
+%     
+%         % Gradient of extra twist constraint
+%         grad_con(6, j, n*(j-1)+1) = 0;
+%         grad_con(6, j, n*(j-1)+2) = ( x(5,j)/x(4,j) )*sec(x(2,j))^2;
+%         grad_con(6, j, n*(j-1)+3) = -( x(5,j)/x(4,j) )*sec(x(3,j))^2;
+%         grad_con(6, j, n*(j-1)+4) = -( x(5,j)/x(4,j)^2 )*(tan(x(2,j)) - tan(x(3,j)));
+%         grad_con(6, j, n*(j-1)+5) = ( 1/x(4,j) )*(tan(x(2,j)) - tan(x(3,j)));   
+%         
+%         grad_con(6, (N+1)+j, n*(j-1)+1) = 0;
+%         grad_con(6, (N+1)+j, n*(j-1)+2) = -( x(5,j)/x(4,j) )*sec(x(2,j))^2;
+%         grad_con(6, (N+1)+j, n*(j-1)+3) = ( x(5,j)/x(4,j) )*sec(x(3,j))^2;
+%         grad_con(6, (N+1)+j, n*(j-1)+4) = ( x(5,j)/x(4,j)^2 )*(tan(x(2,j)) - tan(x(3,j)));
+%         grad_con(6, (N+1)+j, n*(j-1)+5) = -( 1/x(4,j) )*(tan(x(2,j)) - tan(x(3,j)));   
+%     end
     
     
     %% Calculate equality constraints (coneq) and gradient (grad_coneq)

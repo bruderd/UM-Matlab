@@ -1,6 +1,5 @@
 function [F] = staticeq_2fib(x,u,x0)
 
-    P = u;
     
     gama0 = x0(2);
     betta0 = x0(3);
@@ -8,6 +7,7 @@ function [F] = staticeq_2fib(x,u,x0)
     L0 = x0(5);
     phi0 = x0(6);
 
+    P = x(1);
     gama = x(2);
     betta = x(3);
     r = x(4);
