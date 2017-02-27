@@ -13,19 +13,22 @@ L_rest = 5;
 
 qual = [0 0 0 0];
 
-for i = -44:44
-    for j = -44:44
+step = 4;
+bound = 22;
+
+for i = -bound:bound
+    for j = -bound:bound
         
         if i == 0
             gama0 = 1;
         else
-            gama0 = 2*i;
+            gama0 = step*i;
         end
         
         if j == 0
             betta0 = 1;
         else
-            betta0 = 2*j;
+            betta0 = step*j;
         end
         
         

@@ -15,6 +15,7 @@ params = struct;
 % % Desired twist and/or length
 % params.phi_desired = deg2rad(130);
 % params.len_desired = 7;
+params.u = 10;
 
 %SET RESTING GEOMETRY OF FREE HERE:
 params.x_rest = [0.0001, deg2rad(40), deg2rad(20), 3/16, 5, 0, 0, 0]';    % resting state, P = 0 psi. States are [P, gama, betta, r, L, phi, T_gama, T_betta]. By convention abs(gama)>abs(betta)

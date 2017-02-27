@@ -4,12 +4,12 @@
 clear
 
 %% Set desired parameter values
-Pss = 1;     % steady state pressure (input)
+Pss = 5;     % steady state pressure (input)
 
 % Relaxed parameters (when P = 0)
 P_rest = 0;
 gama_rest = deg2rad(40);
-betta_rest = deg2rad(-40); 
+betta_rest = deg2rad(30); 
 r_rest = 3/16;
 L_rest = 5;
 phi_rest = 0;
@@ -17,7 +17,7 @@ T_gama_rest = 0;
 T_betta_rest = 0;
 x_rest = [P_rest, gama_rest, betta_rest, r_rest, L_rest, phi_rest, T_gama_rest, T_betta_rest];
 
-N = 100;        % number of pressure steps to reach steady state value
+N = 1000;        % number of pressure steps to reach steady state value
 dP = (Pss/N);   % pressure step size
 
 
@@ -25,8 +25,8 @@ dP = (Pss/N);   % pressure step size
 
 x = zeros(N+1,8);
 x(1,:) = x_rest;
-dx = 0.1;
-dtens = 0.1;
+dx = 0.01;
+dtens = 0.01;
 
 for k = 1:N
     u = dP*k;
@@ -44,7 +44,7 @@ for k = 1:N
     fun = @(x)staticeq_2fib_v2(x, u, x0);
     T_gama = tens(7);
     T_betta = tens(8);
-    LB = [u-1, -pi/2, -pi/2, r0*1.01, L0*0.4, -Inf, T_gama-dtens, T_betta-dtens];
+    LB = [u-1, -pi/2, -pi/2, r0*1.0, L0*0.4, -Inf, T_gama-dtens, T_betta-dtens];
     UB = [u+1, pi/2, pi/2, r0*5, L0*2, Inf, T_gama+dtens, T_betta+dtens];
     x(k+1,:) = lsqnonlin(fun, x0, LB, UB);
     
