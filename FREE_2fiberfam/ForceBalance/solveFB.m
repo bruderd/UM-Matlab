@@ -1,7 +1,7 @@
-% solveFB_grad - just solves for the tension forces given a pressure and a given
-%   FREE geometry, but uses analytic gradients to do so
+% solve_FB- just solves for the tension forces given a pressure and a given
+%   FREE geometry
 
-%% HAVEN'T CHANGE ANYTHING JUST QUITE YET
+
 function [Tgama, Tbetta, P, gama, betta, r, L, phi] = solveFB(P_test, x_rest)
 
 
@@ -9,13 +9,13 @@ function [Tgama, Tbetta, P, gama, betta, r, L, phi] = solveFB(P_test, x_rest)
 
 x_test = [P_test, gama0, betta0, r0, L0, phi0];
 
-% LB = [0, 0, P_test+1e-3, -pi/2, -pi/2, r0, 0, -inf]; 
-% UB = [inf, inf, P_test+1e-3, pi/2, pi/2, inf, inf, inf];
+LB = [0, 0, P_test+1e-3, -pi/2, -pi/2, r0, 0, -inf]; 
+UB = [inf, inf, P_test+1e-3, pi/2, pi/2, inf, inf, inf];
 
 dx = 1e-3;
 
-LB = [0, 0, P_test-dx, gama0-dx, betta0-dx, r0-dx, L0-dx, phi0-dx]; 
-UB = [inf, inf, P_test+dx, gama0+dx, betta0+dx, r0-dx, L0+dx, phi0+dx];
+% LB = [0, 0, P_test-dx, gama0-dx, betta0-dx, r0-dx, L0-dx, phi0-dx]; 
+% UB = [inf, inf, P_test+dx, gama0+dx, betta0+dx, r0-dx, L0+dx, phi0+dx];
 
 % solver variable
 Tx = lsqnonlin(@(Tx) FB(P_test, Tx(1:2), Tx(3:8), x_rest), [0, 0, x_rest], LB, UB);

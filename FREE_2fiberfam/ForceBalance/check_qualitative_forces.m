@@ -6,10 +6,10 @@
 %   Calls solveFB.m to determine values of parameters at test pressure P.
 
 % choose the test pressure
-P_test = 1;
+P_test = 0.001;
 % choosing resting parameters for FREE
 r_rest = 3/16;
-L_rest = 5;
+L_rest = 10;
 
 qual = [0 0 0 0];
 

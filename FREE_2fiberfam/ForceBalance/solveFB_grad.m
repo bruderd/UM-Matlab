@@ -1,8 +1,8 @@
-% solve_FB- just solves for the tension forces given a pressure and a given
-%   FREE geometry
+% solveFB_grad - just solves for the tension forces given a pressure and a given
+%   FREE geometry, but uses analytic gradients to do so
 
-
-function [Tgama, Tbetta, P, gama, betta, r, L, phi] = solveFB(P_test, x_rest)
+%% HAVEN'T CHANGE ANYTHING JUST QUITE YET
+function [P, gama, betta, r, L, phi, T_gama, T_betta] = solveFB_grad(P_test, x_rest)
 
 
 [P0, gama0, betta0, r0, L0, phi0] = deal(x_rest(1), x_rest(2), x_rest(3), x_rest(4), x_rest(5), x_rest(6));

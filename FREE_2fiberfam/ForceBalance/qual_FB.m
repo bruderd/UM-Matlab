@@ -3,6 +3,7 @@
 %   behavior of a FREE when pressurized
 %
 %   Calls solveFB.m to determine values of parameters at pressure P_test
+%   Or you can change it to call solveFB_v2.m to solve newer version of it.
 
 function [dL, dphi] = qual_FB(P_test, x_rest)
 
@@ -14,13 +15,18 @@ function [dL, dphi] = qual_FB(P_test, x_rest)
 
 % Determine the direction of deformation:
 
+% % Quick test: What if I fix the tensions for all anlges?
+% P = P_test;
+% T_gama = 0;
+% T_betta = 2*P*pi*r0^2/(4*cos(deg2rad(54.7)));
+
 % via forces:
 dL = sign(P*pi*r0^2 - 2*(T_gama*cos(gama0) + T_betta*cos(betta0)));
 
 if abs(phi) < 1e-8
     dphi = 0;
 else
-    dphi = sign(2*r*(T_gama*sin(gama0) + T_betta*sin(betta0)));
+    dphi = sign(2*r0*(T_gama*sin(gama0) + T_betta*sin(betta0)));
 end
 
 % % via displacements:

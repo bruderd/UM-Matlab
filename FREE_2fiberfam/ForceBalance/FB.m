@@ -37,9 +37,9 @@ ngama = floor(L*tan(abs(gama))/(r*pi));
 nbetta = floor(L*tan(abs(betta))/(r*pi));
 psigama = L*tan(abs(gama))/r - ngama*pi;
 psibetta = L*tan(abs(betta))/r - nbetta*pi;
-
 extra_constraint1 = 4*P*r*L - ( T_gama*sin(abs(gama)) * (2*ngama + 1 + cos(psigama)) + T_betta*sin(abs(betta)) * (2*nbetta + 1 + cos(psibetta)) );  
 extra_constraint2 = 4*P*r*L - ( T_gama*sin(abs(-gama)) * (2*ngama + 1 + cos(psigama)) + T_betta*sin(abs(-betta)) * (2*nbetta + 1 + cos(psibetta)) );
+
 
 
 FB = [force_balance;...

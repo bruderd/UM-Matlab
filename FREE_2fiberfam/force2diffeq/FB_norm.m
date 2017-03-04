@@ -1,4 +1,7 @@
-function [F] = staticeq_2fib_v2(x,u,x0)
+% Takes the norm of the force balance expressions (one version of them at
+% least, this corresponds to version in staticeq_2fib_v2.m)
+
+function FB_norm = FB_norm(x,u,x0)
 
     gama0 = x0(2);
     betta0 = x0(3);
@@ -44,3 +47,7 @@ function [F] = staticeq_2fib_v2(x,u,x0)
     
 
     F = [inputeq; force_balance; torque_balance; geometry_constraint1; geometry_constraint2; geometry_constraint3; geometry_constraint4; extra_constraint1];
+   
+    FB_norm = norm(F(2:8));
+    
+end

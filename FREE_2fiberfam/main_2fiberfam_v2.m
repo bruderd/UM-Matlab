@@ -18,7 +18,7 @@ params = struct;
 params.u = 10;
 
 %SET RESTING GEOMETRY OF FREE HERE:
-params.x_rest = [0.0001, deg2rad(40), deg2rad(20), 3/16, 5, 0, 0, 0]';    % resting state, P = 0 psi. States are [P, gama, betta, r, L, phi, T_gama, T_betta]. By convention abs(gama)>abs(betta)
+params.x_rest = [0.0001, deg2rad(35), deg2rad(-20), 3/16, 5, 0, 0, 0]';    % resting state, P = 0 psi. States are [P, gama, betta, r, L, phi, T_gama, T_betta]. By convention abs(gama)>abs(betta)
 
 % Determine which set of dynamics apply to this problem
 if params.x_rest(2) > 0 && params.x_rest(3) > 0
@@ -38,7 +38,7 @@ params.u0 = [0]';        %input vector initial condition
 
 params.Pmax = 100;  % maximum pressure allowed
 params.T = 0.01;   %final time
-params.N = 50; %number of steps
+params.N = 10; %number of steps
 params.dt = params.T/params.N;    %size of one time step
 params.n = length(params.x0);  %dimension of state vector x
 params.m = length(params.u0);  %dimension of state vector u

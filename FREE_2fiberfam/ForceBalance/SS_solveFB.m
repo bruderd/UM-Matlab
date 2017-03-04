@@ -14,8 +14,11 @@ dx = 1e-3;
 LB = [0, 0, u-dx, -pi/2, -pi/2, r0*1.001, L0*0.6, -Inf]; 
 UB = [inf, inf, u+dx, pi/2, pi/2, r0*3, Inf, Inf];
 
+% set solver tolerance
+options = optimset('TolFun',1e-14);
+
 % solver variable
-Tx = lsqnonlin(@(Tx) FB(u, Tx(1:2), Tx(3:8), x_rest), [0, 0, x_rest], LB, UB);
+Tx = lsqnonlin(@(Tx) FB(u, Tx(1:2), Tx(3:8), x_rest), [0, 0, x_rest], LB, UB, options);
 
 Tgama = Tx(1);
 Tbetta = Tx(2);

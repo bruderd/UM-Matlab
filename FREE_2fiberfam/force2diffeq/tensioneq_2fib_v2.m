@@ -33,7 +33,7 @@ function [F] = tensioneq_2fib_v2(x,u,x0)
     theta_gama = -tan(gama)*L/r;       % (-) fixes sign convention (1/28/2017)
     theta_betta = -tan(betta)*L/r;       % (-) fixes sign convention (1/28/2017)
 
-    % Case 1: gama, betta > 0
+    % Static force balance equations
     inputeq = u - P;
     force_balance = P*pi*r^2 - 2*(T_gama*cos(gama) + T_betta*cos(betta)) + F_elast;
     torque_balance = 2*r*(T_gama*sin(gama) + T_betta*sin(betta)) + M_elast;             % put (r) in front of tensions to fix units (2/2/2017)
@@ -41,7 +41,7 @@ function [F] = tensioneq_2fib_v2(x,u,x0)
     geometry_constraint2 = L/cos(betta) + r*(theta_betta0 + phi)/sin(betta);
     geometry_constraint3 = (theta_gama - theta_gama0) - phi;
     geometry_constraint4 = (theta_betta - theta_betta0) - phi;
-    extra_constraint1 = P*r - (T_gama*sin(abs(gama)) + T_betta*sin(abs(betta)));
-    
+    % extra_constraint1 = P*r - (T_gama*sin(abs(gama)) + T_betta*sin(abs(betta)));
+    extra_constraint1 = 2*pi*P*r^2 - (T_gama*sin(abs(gama))*tan(abs(gama)) + T_betta*sin(abs(betta))*tan(abs(betta)));  % tweaked constraint (2/27/2017)
 
     F = [inputeq; force_balance; torque_balance; geometry_constraint1; geometry_constraint2; geometry_constraint3; geometry_constraint4; extra_constraint1];

@@ -13,10 +13,10 @@ theta_betta0 = -tan(betta0)*L0/r0;
 theta_gama = -tan(gama)*L/r; 
 theta_betta = -tan(betta)*L/r; 
 
-F_elast = 1*(L0-L);
-M_elast = 1*(-1)*phi;
-% F_elast = 0;
-% M_elast = 0;
+% F_elast = 1*(L0-L);
+% M_elast = 1*(-1)*phi;
+F_elast = 0;
+M_elast = 0;
 
 force_balance = P*pi*r^2 - 2*(T_gama*cos(gama) + T_betta*cos(betta)) + F_elast;   
 torque_balance = 2*r*(T_gama*sin(gama) + T_betta*sin(betta)) + M_elast;             % put (r) in front of tensions to fix units (2/2/2017)           
@@ -37,10 +37,12 @@ ngama = floor(L*tan(abs(gama))/(r*pi));
 nbetta = floor(L*tan(abs(betta))/(r*pi));
 psigama = L*tan(abs(gama))/r - ngama*pi;
 psibetta = L*tan(abs(betta))/r - nbetta*pi;
+extra_constraint1 = 4*P*r*L - ( T_gama*sin(abs(gama)) * (2*ngama + 1 + cos(psigama)) + T_betta*sin(abs(betta)) * (2*nbetta + 1 + cos(psibetta)) );  
+%extra_constraint2 = 4*P*r*L - ( T_gama*sin(abs(-gama)) * (2*ngama + 1 + cos(psigama)) + T_betta*sin(abs(-betta)) * (2*nbetta + 1 + cos(psibetta)) );
+extra_constraint2 = T_betta;
 
-extra_constraint1 = 4*P*r*L - (  );  
-extra_constraint2 = 4*P*r*L - ();
-
+% virtual work constraint pdV = 
+virtualwork = P*(
 
 FB = [force_balance;...
       torque_balance;...
