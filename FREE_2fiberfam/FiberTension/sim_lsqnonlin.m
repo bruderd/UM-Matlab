@@ -1,4 +1,4 @@
-% sim_fsolve.m
+% sim_lsqnonlin.m
 
 
 clear
@@ -27,7 +27,7 @@ x = zeros(N+1,8);
 error = zeros(1,length(x(:,1)));
 x(1,:) = x_rest;
 dx = 1;
-dtens = 0.01;
+dtens = 0.1;
 delta = 1.0;
 
 for k = 1:N
@@ -52,16 +52,16 @@ for k = 1:N
     fun = @(x)FB_v2(x, u, x_prev, x_rest);
 %     T_gama = tens(7);
 %     T_betta = tens(8);
-%     LB = [u-dx, -pi/2, -pi/2, r0*1.0, L0*0.4, -Inf, T_gama-dtens, T_betta-dtens];
-%     UB = [u+dx, pi/2, pi/2, r0*5, L0*2, Inf, T_gama+dtens, T_betta+dtens];
+    LB = [u-dx, -pi/2, -pi/2, r0*1.0, L0*0.4, -Inf, T_gama0-dtens, T_betta0-dtens];
+    UB = [u+dx, pi/2, pi/2, r0*5, L0*2, Inf, T_gama0+dtens, T_betta0+dtens];
 
     % Try bounds that impose small changes between time/pressure steps
 %     LB = [u-dx, gama0-delta, betta0-delta, r0*1.0, L0-delta, phi0-delta, T_gama-dtens, T_betta-dtens];
 %     UB = [u+dx, gama0+delta, betta0+delta, r0*(1+delta), L0+delta, phi0+delta, T_gama+dtens, T_betta+dtens];
 % %    UB = [u+dx, gama0+delta, betta0+delta, r_rest*3, L0+delta, phi0+delta, T_gama+dtens, T_betta+dtens];
 
-    options = optimoptions('fsolve', 'Display', 'iter' );
-    x(k+1,:) = fsolve(fun, x0, options);
+    options = optimoptions('lsqnonlin', 'Display', 'iter' );
+    x(k+1,:) = lsqnonlin(fun, x0, LB, UB, options);
     
     % Calculate error
     Fval = FB_v2(x(k+1,:), u, x_prev, x_rest);

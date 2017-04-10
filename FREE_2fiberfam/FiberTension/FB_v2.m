@@ -19,9 +19,12 @@ M_elast = 0.08*(-1)*phi;
 % F_elast = 0;
 % M_elast = 0;
 
+%% Force Balance Equations
 inputeq = u - P;
 force_balance = P*pi*r^2 - 2*(T_gama*cos(gama) + T_betta*cos(betta)) + F_elast;   
 torque_balance = 2*r*(T_gama*sin(gama) + T_betta*sin(betta)) + M_elast;             % put (r) in front of tensions to fix units (2/2/2017)           
+
+%% Geometric Constraints
 gama_inextensible = L/cos(gama) + r*(theta_gama0 + phi)/sin(gama);
 betta_inextensible = L/cos(betta) + r*(theta_betta0 + phi)/sin(betta);
 twist_gama = (theta_gama - theta_gama0) - phi; 
@@ -31,12 +34,7 @@ eta = sqrt(L0^2 + (r0*theta_gama0)^2)/sqrt(L0^2 + (r0*theta_betta0)^2);
 fibers_coupled = gama - acos(cos(betta)/eta);
 
 
-% Let's try some new things with the extra constraints
-% %version 1
-% extra_constraint1 = 2*pi*P*r^2 - (tan(abs(gama))*T_gama*sin(abs(gama)) + tan(abs(betta))*T_betta*sin(abs(betta)));  
-% extra_constraint2 = 2*pi*P*r^2 - (tan(abs(-gama))*T_gama*sin(abs(-gama)) + tan(abs(-betta))*T_betta*sin(abs(-betta))); 
-
-%version 2
+%% Fiber Tension Constraints
 ngama = floor(L*tan(abs(gama))/(r*pi));
 nbetta = floor(L*tan(abs(betta))/(r*pi));
 psigama = L*tan(abs(gama))/r - ngama*pi;
@@ -44,10 +42,10 @@ psibetta = L*tan(abs(betta))/r - nbetta*pi;
 extra_constraint1 = 4*P*r*L - ( T_gama*sin(abs(gama)) * (2*ngama + 1 + cos(psigama)) + T_betta*sin(abs(betta)) * (2*nbetta + 1 + cos(psibetta)) );  
 extra_constraint2 = 4*P*r*L - ( T_gama*sin(abs(-gama)) * (2*ngama + 1 + cos(psigama)) + T_betta*sin(abs(-betta)) * (2*nbetta + 1 + cos(psibetta)) );
 
-% virtual work constraint PdV = FdL + Mdphi (DOESN'T WORK)
+%% Virtual work constraint PdV = FdL + Mdphi (DOESN'T WORK)
 virtualwork = P*pi*(L*r^2 - L_prev*r_prev^2) - (force_balance - F_elast)*(L - L_prev) - (torque_balance - M_elast)*(phi - phi_prev);
 
-% Volumetric transduction constraints
+%% Volumetric transduction constraints
 % Decide whether to used dV/dL or -dV/dL expression
 if sign(gama_prev) == sign(betta_prev)
     alpha = betta;
@@ -91,15 +89,17 @@ end
 vol_length = P*pi*(L*r^2 - L_prev*r_prev^2) - vl * pi*r0^2*(1 - 2*cot(gama)^2)*(L - L_prev);
 vol_twist = P*pi*(L*r^2 - L_prev*r_prev^2) + vt * 2*pi*r0^3*cot(alpha)*(phi - phi_prev);
 
+
+%% Create system of equations
 FB = [force_balance;...
       torque_balance;...
 %      virtualwork;...
       inputeq;...
       gama_inextensible;...
-      betta_inextensible;...
-      twist_gama;...
-      twist_betta;...
-%      fibers_coupled;...
+%      betta_inextensible;...
+%      twist_gama;...
+%      twist_betta;...
+      fibers_coupled;...
       extra_constraint1;...
 %       extra_constraint2;...
       vol_length;...
