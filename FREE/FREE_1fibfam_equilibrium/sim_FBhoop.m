@@ -1,4 +1,4 @@
-% solve_FBhoop.m
+% sim_FBhoop.m
 
 clear
 

@@ -146,48 +146,48 @@ end
 %% Set Loads and other Parameter values
 
 params.theta_rest = -L_rest*tan(gama_rest)/(r_rest);
-params.x_rest = [P_rest, gama_rest, r_rest, L_rest, phi_rest];
+params.x_rest = [P_rest, gama_rest, r_rest, L_rest, phi_rest, 0];
 params.xmin = [-pi/2, r_rest, 1, -Inf];
 params.xmax = [pi/2, 0.75, 10, Inf];
-params.Pmin = 0;
-params.Pmax = 15;        % maximum pressure tested
+params.Pmin = 3;
+params.Pmax = 3.01;        % maximum pressure tested
 
 % % Set the values of the external loads
 % params.load = [0, 0];        % [F_load, M_load];
 
-x(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
-x1bolt(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
-x2bolt(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
+x(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
+x1bolt(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
+x2bolt(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
 
 % Number of points at which to evaluate the steady state behavior
-res = 150;  
+res = 2;  
 
 
 %% Simulates steady state behavior of FREE for pressures from 0-15 psi
 % Mload = Fload = 0
 params.load = [0, 0];        % [F_load, M_load];
 for i = 1:res
-    P_des(i+1) = params.Pmin + (params.Pmax/res) * i;
+    P_des(i+1) = params.Pmin + ((params.Pmax-params.Pmin)/res) * i;
     x0 = x(i,:);    %set initial guess of solution as state at last P_des
-    [x(i+1,1), x(i+1,2), x(i+1,3), x(i+1,4), x(i+1,5), T]  = solve_FBhoop(P_des(i+1), [params.x_rest, 0]);
+    [x(i+1,1), x(i+1,2), x(i+1,3), x(i+1,4), x(i+1,5), x(i+1,6)]  = solve_FBhoop(P_des(i+1), x0, params.load);
 end
 
 % Mload = 1 bolt, Fload = 0
 params.load = [0, -(0.117933525 + 0.0)];        % [F_load, M_load];
 % params.load = [0, -(0.117933525 + 0.1)];        % [F_load, M_load];
 for j = 1:res
-    P_des(j+1) = params.Pmin + (params.Pmax/res) * j;
+    P_des(j+1) = params.Pmin + ((params.Pmax-params.Pmin)/res) * j;
     x0 = x1bolt(j,:);    %set initial guess of solution as state at last P_des
-    [x1bolt(j+1,1), x1bolt(j+1,2), x1bolt(j+1,3), x1bolt(j+1,4), x1bolt(j+1,5), T] = solve_FBhoop(P_des(j+1), [params.x_rest, 0]);
+    [x1bolt(j+1,1), x1bolt(j+1,2), x1bolt(j+1,3), x1bolt(j+1,4), x1bolt(j+1,5), x1bolt(j+1,6)] = solve_FBhoop(P_des(j+1), x0, params.load);
 end
 
 % Mload = 2 bolts, Fload = 0
 params.load = [0, -(0.23586705 + 0.0)];        % [F_load, M_load];
 % params.load = [0, -(0.23586705 + 0.1)];        % [F_load, M_load];
 for k = 1:res
-    P_des(k+1) = params.Pmin + (params.Pmax/res) * k;
+    P_des(k+1) = params.Pmin + ((params.Pmax-params.Pmin)/res) * k;
     x0 = x2bolt(k,:);    %set initial guess of solution as state at last P_des
-    [x2bolt(k+1,1), x2bolt(k+1,2), x2bolt(k+1,3), x2bolt(i+1,4), x(i+1,5), T] = solve_FBhoop(P_des(k+1), [params.x_rest, 0]);
+    [x2bolt(k+1,1), x2bolt(k+1,2), x2bolt(k+1,3), x2bolt(k+1,4), x2bolt(k+1,5), x2bolt(k+1,6)] = solve_FBhoop(P_des(k+1), x0, params.load);
 end
 
 
@@ -233,12 +233,12 @@ set(gca,'fontsize', 32);
 
 hold on
 plot(Psim_kPa, rad2deg(x(:,5)),'k')
-% plot(Psim_kPa_1bolt, rad2deg(x1bolt(:,5)),'r')
-% plot(Psim_kPa_2bolt, rad2deg(x2bolt(:,5)),'b')
+plot(Psim_kPa_1bolt, rad2deg(x1bolt(:,5)),'r')
+plot(Psim_kPa_2bolt, rad2deg(x2bolt(:,5)),'b')
 
 plot(Pemp_kPa, rad2deg(dphi),'*k')
-% plot(Pemp_kPa_1bolt, rad2deg(Pvphi_1bolt(:,2)),'*r')
-% plot(Pemp_kPa_2bolt, rad2deg(Pvphi_2bolt(:,2)),'*b')
+plot(Pemp_kPa_1bolt, rad2deg(Pvphi_1bolt(:,2)),'*r')
+plot(Pemp_kPa_2bolt, rad2deg(Pvphi_2bolt(:,2)),'*b')
 
 
 
