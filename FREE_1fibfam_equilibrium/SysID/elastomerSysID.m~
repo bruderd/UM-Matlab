@@ -114,19 +114,17 @@ gama = atan(r.*(-theta)./L);
 
 
 % Generates T, E, and G at each time step
-t = 1/32 - P*(1/64)/15;   % thickness of tube (made up thinning)
+t = 1/32 * ones(size(P)); % + P*(1/32)/15;   % thickness of tube (made up)
 for k = 1:length(P)
     
-    % with tube thickness inclued (assumed constant)
-    E(k) = (L_rest*P(k)*r(k)*r_rest*(sin(gama(k)) - 2*cos(gama(k))*cot(gama(k))))/(2*t(k)*(L(k)*r_rest*sin(gama(k)) - L_rest*r_rest*sin(gama(k)) - L_rest*r(k)*cos(gama(k))*cot(gama(k)) + L_rest*r_rest*cos(gama(k))*cot(gama(k))));
-    G(k) = -(L(k)*P(k)*cot(gama(k))*(L_rest*r(k)*sin(gama(k)) - 2*L(k)*r_rest*sin(gama(k)) + L_rest*r_rest*sin(gama(k))))/(2*phi(k)*t(k)*(L(k)*r_rest*sin(gama(k)) - L_rest*r_rest*sin(gama(k)) - L_rest*r(k)*cos(gama(k))*cot(gama(k)) + L_rest*r_rest*cos(gama(k))*cot(gama(k))));
+%     % with tube thickness inclued (assumed constant)
+%     E(k) = (L_rest*P(k)*r(k)*r_rest*(sin(gama(k)) - 2*cos(gama(k))*cot(gama(k))))/(2*t(k)*(L(k)*r_rest*sin(gama(k)) - L_rest*r_rest*sin(gama(k)) - L_rest*r(k)*cos(gama(k))*cot(gama(k)) + L_rest*r_rest*cos(gama(k))*cot(gama(k))));
+%     G(k) = -(L(k)*P(k)*cot(gama(k))*(L_rest*r(k)*sin(gama(k)) - 2*L(k)*r_rest*sin(gama(k)) + L_rest*r_rest*sin(gama(k))))/(2*phi(k)*t(k)*(L(k)*r_rest*sin(gama(k)) - L_rest*r_rest*sin(gama(k)) - L_rest*r(k)*cos(gama(k))*cot(gama(k)) + L_rest*r_rest*cos(gama(k))*cot(gama(k))));
     
-%     E(k) = (L_rest*P(k)*r(k)*r_rest*(sin(gama(k)) - 2*cos(gama(k))*cot(gama(k))))/(2*(L(k)*r_rest*sin(gama(k)) - L_rest*r_rest*sin(gama(k)) - L_rest*r(k)*cos(gama(k))*cot(gama(k)) + L_rest*r_rest*cos(gama(k))*cot(gama(k))));
-%     G(k) = -(L(k)*P(k)*cot(gama(k))*(L_rest*r(k)*sin(gama(k)) - 2*L(k)*r_rest*sin(gama(k)) + L_rest*r_rest*sin(gama(k))))/(2*phi(k)*(L(k)*r_rest*sin(gama(k)) - L_rest*r_rest*sin(gama(k)) - L_rest*r(k)*cos(gama(k))*cot(gama(k)) + L_rest*r_rest*cos(gama(k))*cot(gama(k))));
+   % without tube thickness (2D planar stresses)
+    E(k) = (L_rest*P(k)*r(k)*r_rest*(sin(gama(k)) - 2*cos(gama(k))*cot(gama(k))))/(2*(L(k)*r_rest*sin(gama(k)) - L_rest*r_rest*sin(gama(k)) - L_rest*r(k)*cos(gama(k))*cot(gama(k)) + L_rest*r_rest*cos(gama(k))*cot(gama(k))));
+    G(k) = -(L(k)*P(k)*cot(gama(k))*(L_rest*r(k)*sin(gama(k)) - 2*L(k)*r_rest*sin(gama(k)) + L_rest*r_rest*sin(gama(k))))/(2*phi(k)*(L(k)*r_rest*sin(gama(k)) - L_rest*r_rest*sin(gama(k)) - L_rest*r(k)*cos(gama(k))*cot(gama(k)) + L_rest*r_rest*cos(gama(k))*cot(gama(k))));
     
-%     E(k) = (70368744177664*L_rest*P(k)*r(k)*r_rest*pi*(sin(gama(k)) - 2*cos(gama(k))*cot(gama(k))))/(140737488355328*pi*L(k)*r_rest*sin(gama(k)) - 140737488355328*pi*L_rest*r_rest*sin(gama(k)) - 2778046668940015*L_rest*r(k)*cos(gama(k))*cot(gama(k)) + 2778046668940015*L_rest*r_rest*cos(gama(k))*cot(gama(k)));
-%     G(k) = -(L(k)*P(k)*cot(gama(k))*(2778046668940015*L_rest*r(k)*sin(gama(k)) - 2778046668940015*L_rest*r_rest*sin(gama(k)) - 281474976710656*pi*L(k)*r_rest*sin(gama(k)) + 281474976710656*pi*L_rest*r_rest*sin(gama(k))))/(2*phi(k)*(140737488355328*pi*L(k)*r_rest*sin(gama(k)) - 140737488355328*pi*L_rest*r_rest*sin(gama(k)) - 2778046668940015*L_rest*r(k)*cos(gama(k))*cot(gama(k)) + 2778046668940015*L_rest*r_rest*cos(gama(k))*cot(gama(k))));
-
 end
     
 

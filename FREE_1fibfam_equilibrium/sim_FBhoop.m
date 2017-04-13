@@ -4,6 +4,7 @@ clear
 
 %% Set desired parameter values
 Pss = 10;     % steady state pressure (input)
+load = [0, 0];  % set axial and torsional loads respectively
 
 % Relaxed parameters (when P = 0)
 P_rest = 0;
@@ -24,7 +25,7 @@ dP = (Pss/N);   % pressure step size
 for k = 1:N
     u = dP*k;
     
-    [P(k), gama(k), r(k), L(k), phi(k), T(k)] = solve_FBhoop(u, x_rest);
+    [P(k), gama(k), r(k), L(k), phi(k), T(k)] = solve_FBhoop(u, x_rest, load);
 end
 
 
