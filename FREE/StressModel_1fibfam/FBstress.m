@@ -25,8 +25,14 @@ theta_gama = -tan(gama)*L/r;
 
 
 %% Stress/strain equations
-E = params.modulus(1);
-G = params.modulus(2);
+dL_norm = (L - L0)/L0;
+dphi_norm = atan(r*phi)/L0;
+
+% E = params.modulus(1);    % constant modulus
+% G = params.modulus(2);    % constant modulus
+E = params.modulus(1,1)*dL_norm + params.modulus(1,2);  % varying modulus
+G = params.modulus(2,1)*dphi_norm + params.modulus(2,2);    % varying modulus
+
 
 sig_z = E * (L - L0)/L0;
 sig_theta = E * (r - r0)/r0;        % removed factor of 2*pi

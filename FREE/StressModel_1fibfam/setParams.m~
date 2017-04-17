@@ -1,13 +1,15 @@
-% plots_FBstress.m
-%   Steady State Iterative Simulation
-%   Define FREE parameters
-%   Iterate through pressures and calculate states at each one
+% setParams.m
+%   Defines FREE parameters and measured values
+%   Should run this before plots_FBstress and elastomerSysID
 
 clear
-
 params = struct;
 
-% Set values of relaxed parameters (except gamma, that comes in sections 3)
+%% CHOOSE THE RELAXED FIBER ANGLE
+%   1 = 20deg, 2 = 40deg, 3 = 50deg, 4 = 60deg
+choice = 2;
+
+%% Set values of relaxed parameters (except gamma, that comes in sections 3)
 P_rest = 0;
 r_rest = 0.1875;    % 3/16 in
 L_rest = 3.4;     % medium one
@@ -66,8 +68,6 @@ dphi_40v2 = [0, 0.3581415625, 0.5504070329, 0.736389318, 0.9022654101, 1.1988317
 %       rcoeff: coefficients of relationship between r and P. r = c1 + c2*P.
 %       modulus: Young's (E) and shear (G) moduli: [E, G]
 
-choice = 5; % MAKE YOUR CHOICE HERE
-
 if choice == 1
     gama_rest = deg2rad(20);
     P = P_20;
@@ -78,12 +78,12 @@ if choice == 1
     [loadbolts,loadNm,loadP,loadphi] = importfile_loads('data/load20deg_v2.csv',2,46);
 elseif choice == 2
     gama_rest = deg2rad(40);
-    P = P_40;
-    dL = dL_40;
-    dphi = dphi_40;
+    P = P_40v2;
+    dL = dL_40v2;
+    dphi = dphi_40v2;
     params.rcoeff = [r_rest, 0.0038/2];     % 40 degree FREE
     params.modulus = [1200, 700];
-    [loadbolts,loadNm,loadP,loadphi] = importfile_loads('data/load40deg_v2.csv',2,48);
+    [loadbolts,loadNm,loadP,loadphi] = importfile_loads('data/load40deg_v3.csv',2,44);
 elseif choice == 3
     gama_rest = deg2rad(60);
     P = P_60;
@@ -100,14 +100,6 @@ elseif choice == 4
     params.rcoeff = [r_rest, 0.0038/2];     % 50 degree FREE
     params.modulus = [1200, 700];
     [loadbolts,loadNm,loadP,loadphi] = importfile_loads('data/load50deg_v2.csv',2,48);
-elseif choice == 5
-    gama_rest = deg2rad(40);
-    P = P_40v2;
-    dL = dL_40v2;
-    dphi = dphi_40v2;
-    params.rcoeff = [r_rest, 0.0038/2];     % 40 degree FREE
-    params.modulus = [1200, 700];
-    [loadbolts,loadNm,loadP,loadphi] = importfile_loads('data/load40deg_v3.csv',2,44);
 end
 
 %% Measured data at each fiber angle, with loads. Separate data by load
@@ -125,7 +117,7 @@ for index = 1:length(loadbolts)
     end
 end
 
-%% Set Loads and other Parameter values
+%% Set loads, elastic modulus, and other parameter values
 
 params.theta_rest = -L_rest*tan(gama_rest)/(r_rest);
 params.x_rest = [P_rest, gama_rest, r_rest, L_rest, phi_rest, T_rest];
@@ -142,137 +134,4 @@ params.load = [0, 0];        % [F_load, M_load];
 params.modulus = [3117, 218.5; -150/0.2, 200]; % Linear coefficients for moduli: [c1, c2; c3, c4] --> E = c1*dLnorm + c2, G = c3*dphinorm + c4 (varying modulus)
 
 params.t_rest = t_rest;   % tube wall thickness
-
-x(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
-x1bolt(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
-x2bolt(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
-
-% Number of points at which to evaluate the steady state behavior
-res = 500;  
-
-
-%% Simulates steady state behavior of FREE for pressures from 0-15 psi
-% Mload = Fload = 0
-params.load = [0, 0];        % [F_load, M_load];
-for i = 1:res
-    P_des(i+1) = params.Pmin + ((params.Pmax-params.Pmin)/res) * i;
-    x0 = x(i,:);    %set initial guess of solution as state at last P_des
-    [x(i+1,1), x(i+1,2), x(i+1,3), x(i+1,4), x(i+1,5), x(i+1,6)]  = solve_FBstress(P_des(i+1), params);
-end
-
-% Mload = 1 bolt, Fload = 0
-params.load = [0, -(0.117933525 + 0.0)];        % [F_load, M_load];
-for j = 1:res
-    P_des(j+1) = params.Pmin + ((params.Pmax-params.Pmin)/res) * j;
-    x0 = x1bolt(j,:);    %set initial guess of solution as state at last P_des
-    [x1bolt(j+1,1), x1bolt(j+1,2), x1bolt(j+1,3), x1bolt(j+1,4), x1bolt(j+1,5), x1bolt(j+1,6)] = solve_FBstress(P_des(j+1), params);
-end
-
-% Mload = 2 bolts, Fload = 0
-params.load = [0, -(0.23586705 + 0.0)];        % [F_load, M_load];
-for k = 1:res
-    P_des(k+1) = params.Pmin + ((params.Pmax-params.Pmin)/res) * k;
-    x0 = x2bolt(k,:);    %set initial guess of solution as state at last P_des
-    [x2bolt(k+1,1), x2bolt(k+1,2), x2bolt(k+1,3), x2bolt(k+1,4), x2bolt(k+1,5), x2bolt(k+1,6)] = solve_FBstress(P_des(k+1), params);
-end
-
-
-%% Plots of steady state values at different pressures
-% figure
-% plot(x(:,1), rad2deg(x(:,2)))
-% title('SS fiber angle vs pressure')
-% 
-% figure
-% plot(x(:,1), x(:,3))
-% title('SS radius vs pressure')
-% 
-% figure
-% hold on
-% plot(x(:,1), x(:,4) - L_rest)
-% title('SS length change vs pressure')
-% plot(P, dL,'*')
-% hold off
-% 
-% figure
-% hold on
-% plot(x(:,1), rad2deg(x(:,5)))
-% title('SS FREE twist vs pressure')
-% plot(P, rad2deg(dphi),'*')
-% hold off
-
-%% Generates Rotation vs. Pressure Plots Suitable for publication
-
-% Convert psi to kPa
-Psim_kPa = x(:,1) * 6.89476;
-Psim_kPa_1bolt = x1bolt(:,1) * 6.89476;
-Psim_kPa_2bolt = x2bolt(:,1) * 6.89476;
-
-Pemp_kPa = P * 6.89476;
-Pemp_kPa_1bolt = Pvphi_1bolt(:,1) * 6.89476;
-Pemp_kPa_2bolt = Pvphi_2bolt(:,1) * 6.89476;
-
-
-% plot it
-figure
-set(gca,'fontsize', 32);
-%axis([5, 12*6, -100, 150]);
-
-hold on
-plot(Psim_kPa, rad2deg(x(:,5)),'k')
-plot(Psim_kPa_1bolt, rad2deg(x1bolt(:,5)),'r')
-plot(Psim_kPa_2bolt, rad2deg(x2bolt(:,5)),'b')
-
-plot(Pemp_kPa, rad2deg(dphi),'*k')
-plot(Pemp_kPa_1bolt, rad2deg(Pvphi_1bolt(:,2)),'*r')
-plot(Pemp_kPa_2bolt, rad2deg(Pvphi_2bolt(:,2)),'*b')
-
-
-%legend('No Load','Load = 9.73e-3 Nm','Load = 19.46e-3 Nm','Load = 29.61e-3 Nm','Location','southeast');
-xlabel('Pressure, $P$ (kPa)', 'fontsize', 32, 'Interpreter', 'LaTex');
-ylabel('Rotation, $\Phi$ (degrees)', 'fontsize', 32, 'Interpreter', 'LaTex');
-hold off
-
-%% Caluclate average absolute error for each loading case
-fudge = 0.01;   % tolerance for equality comparisons
-
-% No load error
-for j = 1:length(P)
-    for k = 1:length(x(:,1))
-        if P(j) < x(k,1)+fudge && P(j) > x(k,1)-fudge
-            error_noload(j) = abs(rad2deg(dphi(j) - x(k,5)));
-        end
-    end
-end  
-abserror_noload = sum(error_noload) / length(P);
-
-
-% 1 bolt load error
-for j = 1:length(Pvphi_1bolt(:,1))
-    for k = 1:length(x1bolt(:,1))
-        if Pvphi_1bolt(j,1) < x1bolt(k,1)+fudge && Pvphi_1bolt(j,1) > x1bolt(k,1)-fudge
-            error_1bolt(j) = abs(rad2deg(Pvphi_1bolt(j,2) - x1bolt(k,5)));
-        end
-    end
-end  
-abserror_1bolt = sum(error_1bolt) / length(Pvphi_1bolt(:,1));
-
-
-% 2 bolt load error
-for j = 1:length(Pvphi_2bolt(:,1))
-    for k = 1:length(x2bolt(:,1))
-        if Pvphi_2bolt(j,1) < x2bolt(k,1)+fudge && Pvphi_2bolt(j,1) > x2bolt(k,1)-fudge
-            error_2bolt(j) = abs(rad2deg(Pvphi_2bolt(j,2) - x2bolt(k,5)));
-        end
-    end
-end  
-abserror_2bolt = sum(error_2bolt) / length(Pvphi_2bolt(:,1));
-
-% Put all errors into a matrix so it's easy to read later
-error = [0, abserror_noload;...
-         1, abserror_1bolt;...
-         2, abserror_2bolt];
-     
-maxerror = [0, max(error_noload);...
-            1, max(error_1bolt);...
-            2, max(error_2bolt)];
 
