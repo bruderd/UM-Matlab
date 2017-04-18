@@ -1,28 +1,13 @@
 % sim_FBstress.m
+%
+% NOTE: Must run setParams.m before using this script
 
-clear
 
-params = struct;
-
-%% Set desired parameter values
+% Set desired input values
 Pss = 10;     % steady state pressure (input)
-params.load = [0, 0];  % set axial and torsional loads respectively
-
-% Relaxed parameters (when P = 0)
-P_rest = 0;
-gama_rest = deg2rad(40);
-r_rest = 3/16;
-L_rest = 5;
-phi_rest = 0;
-T_rest = 0;
-params.x_rest = [P_rest, gama_rest, r_rest, L_rest, phi_rest, T_rest];
-params.t_rest = 1/16;
-
-params.modulus = [1200, 700]; % Young's and shear modulus of elastomer: [E, G]
 
 N = 100;        % number of pressure steps to reach steady state value
 dP = (Pss/N);   % pressure step size
-
 
 %% Iteratively solve for state at each pressure step
 

@@ -11,7 +11,7 @@
 %
 %   NOTE: This is for a FREE with 1 fiber family
 
-function FB = FBstress(x, u, params)
+function [FB] = FBstress(x, u, params)
 
 [Fload, Mload] = deal(params.load(1), params.load(2));
 
@@ -28,10 +28,10 @@ theta_gama = -tan(gama)*L/r;
 dL_norm = (L - L0)/L0;
 dphi_norm = atan(r*phi)/L0;
 
-% E = params.modulus(1);    % constant modulus
-% G = params.modulus(2);    % constant modulus
-E = params.modulus(1,1)*dL_norm + params.modulus(1,2);  % varying modulus
-G = params.modulus(2,1)*dphi_norm + params.modulus(2,2);    % varying modulus
+E = params.modulus(1);    % constant modulus
+G = params.modulus(2);    % constant modulus
+% E = params.modulus(1,1)*dL_norm + params.modulus(1,2);  % varying modulus
+% G = params.modulus(2,1)*dphi_norm + params.modulus(2,2);    % varying modulus
 
 
 sig_z = E * (L - L0)/L0;
@@ -107,5 +107,12 @@ FB = [hoop_balance;...
 %      vol_length;...
 %      vol_twist;...
       ];
+
+%% The Jacobian of FB, or dFB/dx where x = [P, gama, r, L, phi, T]
+% if nargout > 1   % Two output arguments
+%     % Jacobian of the function evaluated at x 
+%    [Fsym, Jsym] = FBsym;
+% end
+
 
 end

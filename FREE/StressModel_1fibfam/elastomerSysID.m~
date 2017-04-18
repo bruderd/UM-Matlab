@@ -1,8 +1,6 @@
-% elastomerSysID.m    
+% elastomerSysID.m      CHANGE ME!!!!!!!
 % Uses polynomial fits of P vs L and P vs theta to determine the spring
 % constant functions of the system.
-%
-% NOTE: Must run setParams.m before using this script
 
 
 %% Generate elastomer force/torques (Fs and Ms) at each pressure
