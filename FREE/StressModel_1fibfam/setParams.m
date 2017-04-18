@@ -7,7 +7,7 @@ params = struct;
 
 %% CHOOSE THE RELAXED FIBER ANGLE
 %   1 = 20deg, 2 = 40deg, 3 = 50deg, 4 = 60deg
-choice = 2;
+choice = 3;
 
 %% Set values of relaxed parameters (except gamma, which you chose above)
 P_rest = 0;
@@ -21,16 +21,17 @@ params.t_rest = t_rest;   % tube wall thickness
 
 %% Set pressure range, loads, elastic modulus and other parameters
 params.Pmin = 0;
-params.Pmax = 15;        % maximum pressure tested
+params.Pmax = 10;        % maximum pressure tested
 
 % Set the values of the external loads
 params.load = [0, 0];        % [F_load, M_load];
 
 % Set values of moduli of elastomer (if not being set specifically for different angles below)
 % params.modulus = [500, 200]; % Young's and shear modulus of elastomer: [E, G] (constant modulus)
-% params.modulus = [270, 200];
-% params.modulus = [3117, 218.5; -440.4, 129.3]; % Linear coefficients for moduli: [c1, c2; c3, c4] --> E = c1*dLnorm + c2, G = c3*dphinorm + c4 (varying modulus)
-% params.modulus = [3117, 218.5; -150/0.2, 200]; % Linear coefficients for moduli: [c1, c2; c3, c4] --> E = c1*dLnorm + c2, G = c3*dphinorm + c4 (varying modulus)
+
+% Linear coefficients for moduli: [c1, c2; c3, c4] --> E = c1*dLnorm + c2, G = c3*dphinorm + c4 (varying modulus)
+params.modulus = [4.3105e3, 0.1029e3; -381.6858, 136.7244];     % 50 deg FREE
+% params.modulus = [1.4188e4, -0.1134e4; -2.7352e3, 0.8910e3];     % 60 deg FREE
 
 
 %% Measured data points at each fiber angle (no load)
@@ -52,7 +53,7 @@ dphi_40 = [0.3254689989, 0.511451284, 0.6810972873, 0.9060353213, 1.129716718, 1
        
 % 60 deg FREE
 P_60 = [2.5, 4, 5, 6.5, 7.5, 8.5, 10, 11, 12, 13, 2.5, 4, 5, 6.5, 7.5, 8.5, 10, 11, 12, 13, 10, 12, 8.5, 5, 2.5];
-dL_60 = [0, 0, 0.012, 0.032, 0.052, 0.064, 0.084, 0.108, 0.132, 0.164, 0, 0, 0.012, 0.024, 0.04, 0.056, 0.084, 0.108, 0.136, 0.144, 0.136, 0.144, 0.104, 0.064, 0.024, 0, 0, 0];
+dL_60 = [0, 0, 0.012, 0.032, 0.052, 0.064, 0.084, 0.108, 0.132, 0.164, 0, 0, 0.012, 0.024, 0.04, 0.056, 0.084, 0.108, 0.136, 0.144, 0.136, 0.144, 0.104, 0.064, 0.024];
 dphi_60 = [0.3154159024, 0.5767964112, 0.8004778081, 1.105840614, 1.306902544, 1.5054512, 1.851026391, 2.084760885,...
            2.481858196, 2.8651325, 0.4033804967, 0.6094689748, 0.879645943, 1.080707873, 1.290566262, 1.577079512,...
            1.888725503, 2.222990962, 2.618831636, 2.84376967, 2.168955568, 2.648990926, 1.734159145, 1.024159205, 0.5026548246];
@@ -89,7 +90,7 @@ if choice == 1
     dL = dL_20;
     dphi = dphi_20;
     params.rcoeff = [r_rest, 0.0118/2];     % 20 degree FREE
-    params.modulus = [1200, 700];
+%     params.modulus = [1200, 700];
     [loadbolts,loadNm,loadP,loadphi] = importfile_loads('data/load20deg_v2.csv',2,46);
 elseif choice == 2
     gama_rest = deg2rad(40);
@@ -97,23 +98,23 @@ elseif choice == 2
     dL = dL_40v2;
     dphi = dphi_40v2;
     params.rcoeff = [r_rest, 0.0038/2];     % 40 degree FREE
-    params.modulus = [1200, 700];
+%     params.modulus = [1200, 700];
     [loadbolts,loadNm,loadP,loadphi] = importfile_loads('data/load40deg_v3.csv',2,44);
-elseif choice == 3
+elseif choice == 4
     gama_rest = deg2rad(60);
     P = P_60;
     dL = dL_60;
     dphi = dphi_60;
     params.rcoeff = [r_rest, 0.0038/2];     % 60 degree FREE
-    params.modulus = [1200, 700];
+%     params.modulus = [1200, 700];
     [loadbolts,loadNm,loadP,loadphi] = importfile_loads('data/load60deg_v2.csv',2,50);
-elseif choice == 4
+elseif choice == 3
     gama_rest = deg2rad(50);
     P = P_50;
     dL = dL_50;
     dphi = dphi_50;
     params.rcoeff = [r_rest, 0.0038/2];     % 50 degree FREE
-    params.modulus = [1200, 700];
+%     params.modulus = [1200, 700];
     [loadbolts,loadNm,loadP,loadphi] = importfile_loads('data/load50deg_v2.csv',2,48);
 end
 
@@ -136,4 +137,8 @@ end
 
 params.theta_rest = -L_rest*tan(gama_rest)/(r_rest);
 params.x_rest = [P_rest, gama_rest, r_rest, L_rest, phi_rest, T_rest];
+
+%% Define system of Force Balance Equations and functions (must change FBsymbolic.m to edit these)
+FBsymbolic;
+
 

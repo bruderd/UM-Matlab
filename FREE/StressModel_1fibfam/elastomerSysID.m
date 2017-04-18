@@ -4,7 +4,6 @@
 %
 % NOTE: Must run setParams.m before using this script
 
-
 %% Generate elastomer force/torques (Fs and Ms) at each pressure
 
 % Generates r at each pressure in P from linear equation fit
