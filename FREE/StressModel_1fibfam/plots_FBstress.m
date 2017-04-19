@@ -6,7 +6,7 @@
 %   NOTE: Must run setParams.m before using this script
 
 %% Number of points at which to evaluate the steady state behavior
-res = 1000; 
+res = 500; 
 
 %% Simulates steady state behavior of FREE for pressures from Pmin-Pmax psi
 x(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)

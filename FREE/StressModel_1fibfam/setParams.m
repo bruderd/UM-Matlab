@@ -3,6 +3,7 @@
 %   Should run this before plots_FBstress and elastomerSysID
 
 clear
+clc
 params = struct;
 
 %% CHOOSE THE RELAXED FIBER ANGLE
@@ -20,8 +21,8 @@ t_rest = 1/16;   % tube wall thickness
 params.t_rest = t_rest;   % tube wall thickness
 
 %% Set pressure range, loads, elastic modulus and other parameters
-params.Pmin = 0;
-params.Pmax = 10;        % maximum pressure tested
+params.Pmin = 3;
+params.Pmax = 5;        % maximum pressure tested
 
 % Set the values of the external loads
 params.load = [0, 0];        % [F_load, M_load];

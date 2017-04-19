@@ -4,9 +4,9 @@
 
 
 % Set desired input values
-Pss = 1;     % steady state pressure (input)
+Pss = 5;     % steady state pressure (input)
 
-N = 1000;        % number of pressure steps to reach steady state value
+N = 500;        % number of pressure steps to reach steady state value
 dP = (Pss/N);   % pressure step size
 
 %% Iteratively solve for state at each pressure step
@@ -23,6 +23,7 @@ for k = 2:N+1
     end
 end
 
+%% Pull out parts of x
 P = x(:,1);
 gama = x(:,2);
 r = x(:,3);
