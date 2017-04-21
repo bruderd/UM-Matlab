@@ -7,22 +7,27 @@ x = [P, gama, r, L, phi, T];
 theta_gama0 = -tan(gama0)*L0/r0;       
 theta_gama = -tan(gama)*L/r; 
 
+%% Tube wall thickness equation
+t = -r + sqrt(r^2 + 2*r0*t0 +t0^2); 
+
 %% Stress/strain equations
 dL_norm = (L - L0)/L0;
 dphi_norm = atan(r*phi)/L0;
 
 sig_z = E * (L - L0)/L0;
 sig_theta = E * (r - r0)/r0;        % removed factor of 2*pi
-tau_ztheta = G * atan(r*phi/L);     % added atan since x ~= tan(x) only for small x
-
-%% Tube wall thickness equation
-t = -r + sqrt(r^2 + 2*r0*t0 +t0^2); 
+tau_ztheta = G * atan((r+t/2)*phi/L);     % added atan since x ~= tan(x) only for small x
 
 %% Force Balance Equations
 inputeq = u - P;    % not sure if needed or can just set value of P directly
-hoop_balance = 2*pi*P*r^2*cot(gama) - 2*T*sin(gama) - 2*sig_theta*(pi*r*cot(gama))*t;
-force_balance = P*pi*r^2 - 2*T*cos(gama) - pi*(2*r*t + t^2)*sig_z + Fload;
-torque_balance = 2*(r+t)*T*sin(gama) - pi*(2*r*t + t^2)*(r + t/2)*tau_ztheta + Mload;
+% hoop_balance = 2*pi*P*r^2*cot(gama) - 2*T*sin(gama) - 2*sig_theta*(pi*r*cot(gama))*t;
+% force_balance = P*pi*r^2 - 2*T*cos(gama) - pi*(2*r*t + t^2)*sig_z + Fload;
+% torque_balance = 2*(r+t)*T*sin(gama) - pi*(2*r*t + t^2)*(r + t/2)*tau_ztheta + Mload;
+
+% JUST TRYING SOME SHIT TO HOPEFULLY FIX GRADIENT (replacing sigmas with their symbolic equivalents)
+hoop_balance = 2*pi*P*r^2*cot(gama) - 2*T*sin(gama) - 2*(E * (r - r0)/r0)*(pi*r*cot(gama))*t;
+force_balance = P*pi*r^2 - 2*T*cos(gama) - pi*(2*r*t + t^2)*(E * (L - L0)/L0) + Fload;
+torque_balance = 2*(r+t)*T*sin(gama) - pi*(2*r*t + t^2)*(r + t/2)*(G * atan((r+t/2)*phi/L)) + Mload;
 
 %% Geometric Constraints
 gama_inextensible = L/cos(gama) + r*(theta_gama0 + phi)/sin(gama);

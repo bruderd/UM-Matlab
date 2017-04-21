@@ -10,7 +10,8 @@ LB = [u-dx, -pi/2, r_rest, L_rest*0.25, -Inf, 0];
 UB = [u+dx, pi/2, r_rest*4, L_rest*2, Inf, Inf];
 
 % solve FB stress and return solution x
-options = optimoptions(@lsqnonlin, 'Jacobian', 'on', 'Display', 'iter-detailed', 'TolX', 1e-12, 'TolFun', 1e-12);
+% options = optimoptions(@lsqnonlin, 'Jacobian', 'on', 'DerivativeCheck', 'on', 'Display', 'iter-detailed', 'TolX', 1e-12, 'TolFun', 1e-12);
+options = optimoptions(@lsqnonlin, 'Jacobian', 'on', 'TolX', 1e-12, 'TolFun', 1e-12);
 if nargin > 2 % if the user supplies an initial condition for solver, use it
     x = lsqnonlin( @(x) FBstress(x, u, params), x0, LB, UB, options );
 else
