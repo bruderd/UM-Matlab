@@ -1,6 +1,6 @@
-function [Fsymbolic, Jsymbolic] = FBsymbolic
+function [Fsymbolic, Jsymbolic] = FBsymbolic(params)
 
-syms P gama r L phi T P0 gama0 r0 L0 phi0 T0 t0 E G Fload Mload u
+syms P gama r L phi T P0 gama0 r0 L0 phi0 T0 t0 Fload Mload u
 
 x = [P, gama, r, L, phi, T];
 
@@ -14,20 +14,18 @@ t = -r + sqrt(r^2 + 2*r0*t0 +t0^2);
 dL_norm = (L - L0)/L0;
 dphi_norm = atan(r*phi)/L0;
 
+E = params.modulus(1,1)*dL_norm + params.modulus(1,2);  % varying modulus
+G = params.modulus(2,1)*dphi_norm + params.modulus(2,2);    % varying modulus
+
 sig_z = E * (L - L0)/L0;
 sig_theta = E * (r - r0)/r0;        % removed factor of 2*pi
 tau_ztheta = G * atan((r+t/2)*phi/L);     % added atan since x ~= tan(x) only for small x
 
 %% Force Balance Equations
 inputeq = u - P;    % not sure if needed or can just set value of P directly
-% hoop_balance = 2*pi*P*r^2*cot(gama) - 2*T*sin(gama) - 2*sig_theta*(pi*r*cot(gama))*t;
-% force_balance = P*pi*r^2 - 2*T*cos(gama) - pi*(2*r*t + t^2)*sig_z + Fload;
-% torque_balance = 2*(r+t)*T*sin(gama) - pi*(2*r*t + t^2)*(r + t/2)*tau_ztheta + Mload;
-
-% JUST TRYING SOME SHIT TO HOPEFULLY FIX GRADIENT (replacing sigmas with their symbolic equivalents)
-hoop_balance = 2*pi*P*r^2*cot(gama) - 2*T*sin(gama) - 2*(E * (r - r0)/r0)*(pi*r*cot(gama))*t;
-force_balance = P*pi*r^2 - 2*T*cos(gama) - pi*(2*r*t + t^2)*(E * (L - L0)/L0) + Fload;
-torque_balance = 2*(r+t)*T*sin(gama) - pi*(2*r*t + t^2)*(r + t/2)*(G * atan((r+t/2)*phi/L)) + Mload;
+hoop_balance = 2*pi*P*r^2*cot(gama) - 2*T*sin(gama) - 2*sig_theta*(pi*r*cot(gama))*t;
+force_balance = P*pi*r^2 - 2*T*cos(gama) - pi*(2*r*t + t^2)*sig_z + Fload;
+torque_balance = 2*(r+t)*T*sin(gama) - pi*(2*r*t + t^2)*(r + t/2)*tau_ztheta + Mload;
 
 %% Geometric Constraints
 gama_inextensible = L/cos(gama) + r*(theta_gama0 + phi)/sin(gama);
@@ -96,7 +94,7 @@ Jsym = jacobian(Fsym, x);
 
 %% Create Matlab Functions to calculate Fsym and Jsym
 
-Feval = matlabFunction(Fsym, 'File', 'Feval', 'Vars', {[P, gama, r, L, phi, T], [P0, gama0, r0, L0, phi0, T0], t0, E, G, [Fload, Mload], u});
-Jeval = matlabFunction(Jsym, 'File', 'Jeval', 'Vars', {[P, gama, r, L, phi, T], [P0, gama0, r0, L0, phi0, T0], t0, E, G, [Fload, Mload], u});
+Feval = matlabFunction(Fsym, 'File', 'Feval', 'Vars', {[P, gama, r, L, phi, T], [P0, gama0, r0, L0, phi0, T0], t0, [Fload, Mload], u});
+Jeval = matlabFunction(Jsym, 'File', 'Jeval', 'Vars', {[P, gama, r, L, phi, T], [P0, gama0, r0, L0, phi0, T0], t0, [Fload, Mload], u});
 
 end

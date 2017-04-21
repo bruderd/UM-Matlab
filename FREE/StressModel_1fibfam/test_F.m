@@ -14,6 +14,6 @@ G = params.modulus(2);    % constant modulus
 
 u = 10; % just some number
 %% Set value of output    
-    F = Feval(x, params.x_rest, params.t_rest, E, G, params.load, u);
+    F = Feval(x, params.x_rest, params.t_rest, params.load, u);
 
 end

@@ -20,17 +20,17 @@ function [F, J] = FBstress(x, u, params)
 dL_norm = (L - L0)/L0;
 dphi_norm = atan(r*phi)/L0;
 
-E = params.modulus(1);    % constant modulus
-G = params.modulus(2);    % constant modulus
-% E = params.modulus(1,1)*dL_norm + params.modulus(1,2);  % varying modulus
-% G = params.modulus(2,1)*dphi_norm + params.modulus(2,2);    % varying modulus
+% E = params.modulus(1);    % constant modulus
+% G = params.modulus(2);    % constant modulus
+E = params.modulus(1,1)*dL_norm + params.modulus(1,2);  % varying modulus
+G = params.modulus(2,1)*dphi_norm + params.modulus(2,2);    % varying modulus
 
 %% Evaluate FB equations and gradient at current point
-F = Feval(x, params.x_rest, params.t_rest, E, G, params.load, u);
+F = Feval(x, params.x_rest, params.t_rest, params.load, u);
 % F = F*1e4;
 
 if nargout > 1  % Two output arguments
-    J = Jeval(x, params.x_rest, params.t_rest, E, G, params.load, u);     % Jacobian of F evaluated at x
+    J = Jeval(x, params.x_rest, params.t_rest, params.load, u);     % Jacobian of F evaluated at x
 %     J = J*1e4;
 end
 

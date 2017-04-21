@@ -8,7 +8,7 @@ params = struct;
 
 %% CHOOSE THE RELAXED FIBER ANGLE
 %   1 = 20deg, 2 = 40deg, 3 = 50deg, 4 = 60deg
-choice = 2;
+choice = 3;
 
 %% Set values of relaxed parameters (except gamma, which you chose above)
 P_rest = 0;
@@ -22,16 +22,16 @@ params.t_rest = t_rest;   % tube wall thickness
 
 %% Set pressure range, loads, elastic modulus and other parameters
 params.Pmin = 0;
-params.Pmax = 3;        % maximum pressure tested
+params.Pmax = 10;        % maximum pressure tested
 
 % Set the values of the external loads
 params.load = [0, 0];        % [F_load, M_load];
 
 % Set constant values of moduli of elastomer (if not being set specifically for different angles below)
-params.modulus = [500, 200]; % Young's and shear modulus of elastomer: [E, G] (constant modulus)
+% params.modulus = [500, 200]; % Young's and shear modulus of elastomer: [E, G] (constant modulus)
 
 % Linear coefficients for moduli: [c1, c2; c3, c4] --> E = c1*dLnorm + c2, G = c3*dphinorm + c4 (varying modulus)
-% params.modulus = [4.3105e3, 0.1029e3; -381.6858, 136.7244];     % 50 deg FREE
+params.modulus = [4.3105e3, 0.1029e3; -381.6858, 136.7244];     % 50 deg FREE
 % params.modulus = [1.4188e4, -0.1134e4; -2.7352e3, 0.8910e3];     % 60 deg FREE
 
 
@@ -140,6 +140,6 @@ params.theta_rest = -L_rest*tan(gama_rest)/(r_rest);
 params.x_rest = [P_rest, gama_rest, r_rest, L_rest, phi_rest, T_rest];
 
 %% Define system of Force Balance Equations and functions (must change FBsymbolic.m to edit these)
-FBsymbolic;
+FBsymbolic(params);
 
 
