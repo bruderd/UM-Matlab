@@ -8,7 +8,7 @@ params = struct;
 
 %% CHOOSE THE RELAXED FIBER ANGLE
 %   1 = 20deg, 2 = 40deg, 3 = 50deg, 4 = 60deg
-choice = 3;
+choice = 2;
 
 %% Set values of relaxed parameters (except gamma, which you chose above)
 P_rest = 0;
@@ -22,7 +22,7 @@ params.t_rest = t_rest;   % tube wall thickness
 
 %% Set pressure range, loads, elastic modulus and other parameters
 params.Pmin = 0;
-params.Pmax = 10;        % maximum pressure tested
+params.Pmax = 15;        % maximum pressure tested
 
 % Set the values of the external loads
 params.load = [0, 0];        % [F_load, M_load];
@@ -31,7 +31,9 @@ params.load = [0, 0];        % [F_load, M_load];
 % params.modulus = [500, 200]; % Young's and shear modulus of elastomer: [E, G] (constant modulus)
 
 % Linear coefficients for moduli: [c1, c2; c3, c4] --> E = c1*dLnorm + c2, G = c3*dphinorm + c4 (varying modulus)
-params.modulus = [4.3105e3, 0.1029e3; -381.6858, 136.7244];     % 50 deg FREE
+params.modulus = [4.1441e3, 0.1929e3; -234.7082, 107.1864];     % 40 deg FREE
+% params.modulus = [4.1441e3, 0.1929e3; -(100/0.1), 200];         % 40 deg FREE alternative solution
+% params.modulus = [4.3105e3, 0.1029e3; -381.6858, 136.7244];     % 50 deg FREE
 % params.modulus = [1.4188e4, -0.1134e4; -2.7352e3, 0.8910e3];     % 60 deg FREE
 
 

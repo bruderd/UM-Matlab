@@ -6,15 +6,15 @@
 % Set desired input values
 Pss = 1;     % steady state pressure (input)
 
-N = 3000;        % number of pressure steps to reach steady state value
+N = 1000;        % number of pressure steps to reach steady state value
 dP = (Pss/N);   % pressure step size
 
 %% Iteratively solve for state at each pressure step
 
 x = zeros(N,length(params.x_rest));
 
-x(1,:) = params.x_rest;
-% x(1,:) = [1.0000    0.7126    0.1934    3.3556    0.2205    0.1122];    % can set different IC if you don't want to use x_rest
+% x(1,:) = params.x_rest;
+x(1,:) = findIC(params.Pmin, params, params.x_rest + [params.Pmin, 0, 1e-6, 0, 0, 0]); % Set initial simulation point at Pmin
 
 for k = 2:N+1
     u = params.Pmin + ((params.Pmax-params.Pmin)/N) * (k-1);

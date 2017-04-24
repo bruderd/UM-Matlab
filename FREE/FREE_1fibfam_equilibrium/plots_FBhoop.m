@@ -155,6 +155,7 @@ params.Pmax = 3.0001;        % maximum pressure tested
 % % Set the values of the external loads
 % params.load = [0, 0];        % [F_load, M_load];
 
+% Set initial simulation point
 x(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
 x1bolt(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
 x2bolt(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)

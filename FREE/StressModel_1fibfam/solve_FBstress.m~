@@ -16,11 +16,13 @@ UB = [u+dx, pi/2, r_rest*4, L_rest*2, Inf, Inf];
 
 % solve FB stress and return solution x
 % options = optimoptions(@lsqnonlin, 'Jacobian', 'on', 'DerivativeCheck', 'on', 'Display', 'iter-detailed', 'TolX', 1e-12, 'TolFun', 1e-12);
-options = optimoptions(@lsqnonlin, 'Jacobian', 'on', 'TolX', 1e-12, 'TolFun', 1e-12);
+% options = optimoptions(@lsqnonlin, 'Jacobian', 'on', 'TolX', 1e-12, 'TolFun', 1e-12);
 if nargin > 2 % if the user supplies an initial condition for solver, use it
-    x = lsqnonlin( @(x) FBstress(x, u, params), x0, LB, UB, options );
+%     x = lsqnonlin( @(x) FBstress(x, u, params), x0, LB, UB, options );
+    [x,fval,exitFlag,output] = simulannealbnd(ObjectiveFunction,X0,LB,UB);
 else
-    x = lsqnonlin( @(x) FBstress(x, u, params), params.x_rest, LB, UB, options );
+%     x = lsqnonlin( @(x) FBstress(x, u, params), params.x_rest, LB, UB, options );
+    [x,fval,exitFlag,output] = simulannealbnd(ObjectiveFunction,X0,LB,UB);
 end
 
 P = x(1);
@@ -32,3 +34,5 @@ T = x(6);
 
 end
 
+
+[x,fval,exitFlag,output] = simulannealbnd(ObjectiveFunction,X0,lb,ub);
