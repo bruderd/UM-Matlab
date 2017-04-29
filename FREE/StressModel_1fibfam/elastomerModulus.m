@@ -15,8 +15,8 @@ sig_theta = E * (r - r0)/r0;        % removed factor of 2*pi
 tau_ztheta = G * atan(r*phi/L);     % added atan since x ~= tan(x) only for small x
 
 %% Tube wall thickness equation
-t = -r + sqrt(r^2 + 2*r0*t0 +t0^2); 
-
+% t = -r + sqrt(r^2 + 2*r0*t0 +t0^2); 
+t = t0;
 %% Force Balance Equations
 hoop_balance = 2*pi*P*r^2*cot(gama) - 2*T*sin(gama) - 2*sig_theta*(pi*r*cot(gama))*t;
 force_balance = P*pi*r^2 - 2*T*cos(gama) - pi*(2*r*t + t^2)*sig_z + Fload;

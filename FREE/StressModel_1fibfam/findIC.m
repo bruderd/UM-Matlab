@@ -1,5 +1,5 @@
 % findIC.m
-%   Finds the globally optimal solution of FBstress near a given pressure.
+%   Finds the "globally" optimal solution of FBstress near a given pressure.
 %   Solution can then be used as initial contition to iterative simulation,
 %   away from zero.
 %

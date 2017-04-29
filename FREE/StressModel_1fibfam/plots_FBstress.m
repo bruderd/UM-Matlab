@@ -10,14 +10,14 @@ res = 5000;
 
 %% Simulates steady state behavior of FREE for pressures from Pmin-Pmax psi
 
-% Set inital simulation point at x_rest (
-% x(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
-% x1bolt(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
-% x2bolt(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain) 
+% Set inital simulation point at x_rest
+x(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
+x1bolt(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain)
+x2bolt(1,:) = params.x_rest + [0, 0, 1e-6, 0, 0, 0];    % initial simulation point (slightly more than zero so solver doesn't complain) 
 
 % Mload = Fload = 0
 params.load = [0, 0];        % [F_load, M_load];
-x(1,:) = findIC(params.Pmin, params, params.x_rest + [params.Pmin, 0, 1e-6, 0, 0, 0]); % Set initial simulation point at Pmin
+% x(1,:) = findIC(params.Pmin, params, params.x_rest + [params.Pmin, 0, 1e-6, 0, 0, 0]); % Set initial simulation point at Pmin
 for i = 1:res
     P_des(i+1) = params.Pmin + ((params.Pmax-params.Pmin)/res) * i;
     x0 = x(i,:);    %set initial guess of solution as state at last P_des
@@ -26,7 +26,7 @@ end
 
 % Mload = 1 bolt, Fload = 0
 params.load = [0, -(0.117933525 + 0.0)];        % [F_load, M_load];
-x1bolt(1,:) = findIC(params.Pmin, params, params.x_rest + [params.Pmin, 0, 1e-6, 0, 0, 0]);    % Set initial simulation point at Pmin
+% x1bolt(1,:) = findIC(params.Pmin, params, params.x_rest + [params.Pmin, 0, 1e-6, 0, 0, 0]);    % Set initial simulation point at Pmin
 for j = 1:res
     P_des(j+1) = params.Pmin + ((params.Pmax-params.Pmin)/res) * j;
     x0 = x1bolt(j,:);    %set initial guess of solution as state at last P_des
@@ -35,7 +35,7 @@ end
 
 % Mload = 2 bolts, Fload = 0
 params.load = [0, -(0.23586705 + 0.0)];        % [F_load, M_load];
-x2bolt(1,:) = findIC(params.Pmin, params, params.x_rest + [params.Pmin, 0, 1e-6, 0, 0, 0]);    % Set initial simulation point at Pmin
+% x2bolt(1,:) = findIC(params.Pmin, params, params.x_rest + [params.Pmin, 0, 1e-6, 0, 0, 0]);    % Set initial simulation point at Pmin
 for k = 1:res
     P_des(k+1) = params.Pmin + ((params.Pmax-params.Pmin)/res) * k;
     x0 = x2bolt(k,:);    %set initial guess of solution as state at last P_des
