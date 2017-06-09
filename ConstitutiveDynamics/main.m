@@ -2,16 +2,12 @@
 %   Runs optimization to find optimal solution
 %   Note: Must run setParams.m before this script
 
-ready = exist('params', 'var';
+ready = exist('params', 'var');
 
 % Check that param struct has been created
 if ready
     
     s0 = state_encode0(params);
-    
-    % Dummy inequality constraints. Defined as A*s <= B
-    A = eye(length(s0));
-    B = ones(length(s0),1)*100;
     
     % % defining options for fmincon
     options = optimoptions('fmincon','Algorithm','sqp',...
@@ -23,13 +19,12 @@ if ready
     ub = 10*ones(length(s0),1);
     
     % NL program to solve optimization problem
-    s_star = fmincon(@(s)obj(s, params), s0, [], [],[],[], lb, ub, @(s)implicit_Dynamics(s,params), options);
-    % s_star = fmincon(@(s)obj(s, params), s0, [], [],[],[], lb, ub, [], options); %no constraints
+    s_star = fmincon(@(s)obj(s, params), s0, [], [],[],[], lb, ub, @(s)constraints(s,params), options);
     
     % convert results of optimization to states and inputs
     [x_star, u_star] = state_decode(s_star, params);
 
 else
-    printf('You must set parameters by running setParams.m first');
+    'You must set initial conditions and solver parameters by running setParams.m first bro'
 end
     

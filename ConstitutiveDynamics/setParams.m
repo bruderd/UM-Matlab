@@ -6,15 +6,24 @@ clc
 
 params = struct;
 
-params.x0 = [1 2 pi]';    %state vector initial condition (any size)
-params.u0 = [1 0]';        %input vector initial condition (any size)
+params.x0 = [0, 3/16, 0.1, 0.012, 0]';    %state vector initial condition (any size)
+params.u0 = [0]';        %input vector initial condition (any size)
 
 params.T = 1;   %final time
-params.N = 50; %number of steps
+params.N = 10; %number of steps
 params.dt = params.T/params.N;    %size of one time step
 params.n = length(params.x0);  %dimension of state vector x
 params.m = length(params.u0);  %dimension of state vector u
 
+%% OTHER USER DEFINED CONSTANTS
+params.C = [1,1];   % material constants for neo-hookean model [C1, C2]
+params.Gama = deg2rad(40);  % relaxed fiber angle (rad)
+params.R = [0.01, 0.012];    % relaxed FREE radius [Ri, Ro] (m)
+params.L = 0.1; % relaxed FREE length (m)
+params.load = [0, 0];   % loads on FREE [Fload, Mload]
+
+
+%% 
 params.vf = @(x, u) vf(x, u);
 
 % creates functions to evaluate the dynamics at any point

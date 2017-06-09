@@ -1,0 +1,44 @@
+% plots_qvP.m
+%   Solves for q = [s, w]' over a range of pressures P = [P_l, P_r]'
+%   Plots results in 3d plot and color plot
+
+dP_l = (params.Prange_l(2) - params.Prange_l(1)) / params.steps_l;
+dP_r = (params.Prange_r(2) - params.Prange_r(1)) / params.steps_r;
+
+Pl = zeros(1,params.steps_l);
+Pr = zeros(1,params.steps_r);
+
+for i = 1:params.steps_l
+    
+    P_l = i * dP_l;
+    
+    for j = 1:params.steps_r
+        
+%         P_r = j * dP_r;
+%         
+%         iteration = params.steps_l * (i-1) + j;
+%         
+%         P(:, iteration) = [P_l; P_r];
+%         
+%         q(:, iteration) = lsqnonlin(@(q) netF(q, P(:,iteration), params), [0;0]);
+        
+        P_r = j * dP_r;
+        
+        iteration = params.steps_l * (i-1) + j;
+        
+        %P(i,j) = [P_l; P_r];
+        Pl(i) = P_l;
+        Pr(j) = P_r;
+        
+        q = lsqnonlin(@(q) netF(q, [P_l; P_r], params), [0;0]);
+        s(i,j) = q(1);
+        w(i,j) = q(2);
+    end
+    
+end
+
+
+
+[X,Y] = meshgrid(Pl,Pr);
+surf(X,Y,w)
+

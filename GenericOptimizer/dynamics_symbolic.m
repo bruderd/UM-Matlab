@@ -6,19 +6,18 @@
 function dynamics_symbolic(params)
 %% USER SPECIFIED SECTION.
 
-% defining symbolic variables
-syms a b c dadt dbdt
+% define symbolic variables
+syms V turn xs ys thetas dxs dys dthetas
 
-% define state vector (x) and its time derivative (xdot)
-x = [a, b];
-xdot = [dadt, dbdt];
-
-% defing input (u)
-u = c;
+% define state vector (x), its time derivative (xdot), and the input (u)
+x = [xs, ys, thetas];
+xdot = [dxs, dys, dthetas];
+u = [V, turn];
 
 % define (implicit) dynamics of the form f = 0 (f should be nx1)
-f_sym = [a + dadt;
-    b + c];
+f_sym = [V*cos(thetas) - dxs;...
+         V*sin(thetas) - dys;...
+         turn - dthetas];
 
 
 %% DO NOT EDIT BELOW THIS LINE---------------------------------------------
