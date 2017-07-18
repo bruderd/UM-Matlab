@@ -1,5 +1,5 @@
 % /OneFREE/setParams.m
-%   Set resting values (when p = 0) for state (xrest), and other FREE parameters.
+%   Set resting values (when P = 0) for state (xrest), and other FREE parameters.
 clear
 clc
 
@@ -13,8 +13,8 @@ params.L = 10e-2; % relaxed FREE length (m)
 
 params.kelast = [-4e3, -4e-2];   % spring constants for the elastomer
 
-params.load = [0, 0];   % loads on FREE [Fload, Mload] (N)
-% params.load = [20, -0.1];   % loads on FREE [Fload, Mload] (N)
+% params.load = [0, 0];   % loads on FREE [Fload, Mload] (N)
+params.load = [20, -0.1];   % loads on FREE [Fload, Mload] (N)
 
 params.Ptest = 69e3; % pressure at which plots generated (Pa)
 
