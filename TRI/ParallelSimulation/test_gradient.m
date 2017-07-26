@@ -39,7 +39,7 @@ else
 end
 
 % dan's hack 11/28
-num_grad = num_grad';
+% num_grad = num_grad';
 
 fprintf( 1, 'Maximum error = %d\n', max( abs( grad(:) - num_grad(:) ) ) );
 % if( max( abs( grad(:) - num_grad(:) ) ) > 1e-5 )

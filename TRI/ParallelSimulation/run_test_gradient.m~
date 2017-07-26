@@ -1,0 +1,13 @@
+% run_test_gradient.m
+%   This just calls test gradient on the dynamics of the system so that I
+%   don't have to call it from the command line. 
+
+function [grad, num_grad] = run_test_gradient(choice, params)
+
+if nargin < 2
+    s0 = state_encode0(params);
+end
+    
+[grad, num_grad] = test_gradient( @(s, params)test_f(arg, params, choice), @(s,params)test_fgrad(x, u, xdot, params), s0, params);
+
+end
