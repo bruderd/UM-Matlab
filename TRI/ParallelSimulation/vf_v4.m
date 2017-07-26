@@ -17,8 +17,8 @@ kelast_w = params.kelast_w;
 [kw1, kw2, kw3, kw4] = deal(kelast_w(1), kelast_w(2), kelast_w(3), kelast_w(4));
 B = params.B;
 [B1, B2, B3, B4] = deal(B(1), B(2), B(3), B(4));
-N = params.N;
-[N1, N2, N3, N4] = deal(N(1), N(2), N(3), N(4));
+Nf = params.Nf;
+[N1, N2, N3, N4] = deal(Nf(1), Nf(2), Nf(3), Nf(4));
 
 % Define local names for states and inputs
 [psi, theta, phi, dpsi, dtheta, dphi] = deal(x(1), x(2), x(3), x(4), x(5), x(6));

@@ -4,7 +4,7 @@ function Jv = calc_Jv( x, params )
 
 n = params.numFREEs;   % the number of FREE actuators in system
 B = params.B;   % FREE fiber length (array)
-N = params.N;   % FREE total fiber windings in revolutions (when relaxed) (array)
+N = params.Nf;   % FREE total fiber windings in revolutions (when relaxed) (array)
 L = params.Lspine;   % lenght of central spine
 
 % Define the extension and twist of each FREE with respect to x

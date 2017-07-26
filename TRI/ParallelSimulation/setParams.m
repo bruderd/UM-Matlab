@@ -25,6 +25,17 @@ params.damp = [5e-1; 5e-1; 5e-1];    % damping in each direction [damppsi, dampt
 
 %% USER DEFINED TEST PARAMETERS
 
+% Initial conditions (could be made more generic in the future)
+params.x0 = [0, 0, 0, 0, 0, 0]';
+params.xdot0 = [params.x0(4), params.x0(5), params.x0(6), 0, 0, 0]';
+params.u0 = [1000, 0, 1000, 0]';
+
+params.T = 1;   %final time
+params.N = 50; %number of steps
+params.dt = params.T/params.N;    %size of one time step
+params.n = length(params.x0);  %dimension of state vector x
+params.m = length(params.u0);  %dimension of state vector u
+
 % range of pressures to iterate over
 params.Prange1 = [0, 200e3];
 params.Prange2 = [0, 200e3];
@@ -45,4 +56,4 @@ params.width = 0.04;        % width of the top and bottom blocks
 %% Dependent parameters (do not edit below this line)
 
 params.B = abs(params.L ./ cos(params.Gama));   % fiber length (must be positive))
-params.N = -params.L ./ (2*pi*params.R) .* tan(params.Gama); % total fiber windings in revolutions (when relaxed)
+params.Nf = -params.L ./ (2*pi*params.R) .* tan(params.Gama); % total fiber windings in revolutions (when relaxed)
