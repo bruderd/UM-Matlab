@@ -18,10 +18,10 @@ params.xattach = [2e-2, -2e-2, -2e-2, 2e-2]';      % x-coordinate of attachment 
 params.yattach = [2e-2, 2e-2, -2e-2, -2e-2]';      % y-coordinate of attachment point of FREE
 
 %% USER DEFINED END EFFECTOR PARAMETERS
-params.m = 0.1;         % end effector mass (kg)
+params.m = 0.01;         % end effector mass (kg)
 params.I = [0.1; 0.1; 0.01]; % end effector rotational moments of inertia [Mx, My, Mz]'
 params.g = 9.81;        % acceleration due to gravity (m/s^2)
-params.damp = [5e-1; 5e-1; 5e-1];    % damping in each direction [damppsi, damptheta, dampphi]'
+params.damp = [10e-1; 10e-1; 10e-1];    % damping in each direction [damppsi, damptheta, dampphi]'
 
 %% USER DEFINED TEST PARAMETERS
 

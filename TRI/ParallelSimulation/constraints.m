@@ -17,8 +17,8 @@ function [con, coneq, grad_con, grad_coneq] = constraints(s, params)
     grad_con = zeros(m, N+1, (2*N+1)*n + (N+1)*m);
     
     for k = 0:N
-        con(1:m, k+1) =  u(:,k+1) - zeros(4,1);     % pressure must be positive
-        grad_con(1:m, k+1, (N+1)*n + m*(k-1) + 1 : (N+1)*n + m*(k-1) + m) = 1;
+        con(1:m, k+1) =  -u(:,k+1) + zeros(4,1);     % pressure must be positive
+        grad_con(1:m, k+1, (N+1)*n + m*(k) + 1 : (N+1)*n + m*(k) + m) = -1;
     end
     
     %% Calculate equality constraints (coneq) and gradient (grad_coneq)
