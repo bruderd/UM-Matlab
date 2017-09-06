@@ -58,9 +58,9 @@ if length(Ptest) > 1;
 end
 
 %% Creat csv from data
-Matrix = [zeros(1,6);...
-          s_vec, w_vec, F, M, P, V_vec];
+Matrix = [zeros(1, 3+length(Ptest));...
+          s_vec, w_vec, F, M, P, V_vec, zeros(length(s_vec), length(Ptest) - 3)];
 
-Matrix(1, 1:3) = [Gama, L, R];     % add headers to top row
+Matrix(1, 1 : 3+length(Ptest)) = [Gama, L, R, Ptest];     % add headers to top row
 
 csvwrite('LinModelData.csv', Matrix);
