@@ -31,10 +31,11 @@ dVdw = 2*pi*((L+s) .* ((L+s).^2 - B^2)) ./ (2*pi*N + w).^3;
 Felast = Kf * s;
 Melast = Km * w;
 
-% Multiply by pressure to get the forces
+% Multiply by pressure to get the forces (I scaled these to generate dummy data)
+scale = 1.5;
 for i = 1:length(Ptest)
-    Force(:,:,i) = Ptest(i)*10^3 * dVds + Felast;
-    Moment(:,:,i) = Ptest(i)*10^3 * dVdw + Melast;
+    Force(:,:,i) = (Ptest(i)*10^3 * dVds + Felast)*scale;
+    Moment(:,:,i) = (Ptest(i)*10^3 * dVdw + Melast)*scale^(-1);
 end
 
 %% Convert matrices to vectors
@@ -67,4 +68,4 @@ Matrix = [zeros(1, 3+length(Ptest));...
 
 Matrix(1, 1 : 3+length(Ptest)) = [Gama, L, R, Ptest];     % add headers to top row
 
-csvwrite('LinModelData.csv', Matrix);
+csvwrite('Fake_LinModelData.csv', Matrix);

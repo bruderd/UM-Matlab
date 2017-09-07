@@ -11,7 +11,7 @@ params.GamaDeg = 70;  % relaxed fiber angle (deg)
 params.R = 0.5e-2;    % relaxed FREE radius (m)
 params.L = 10e-2; % relaxed FREE length (m)
 
-params.kelast = [-4e3, -4e-2];   % spring constants for the elastomer
+params.kelast = [-4e2, -4e-3];   % spring constants for the elastomer
 
 % params.load = [0, 0];   % loads on FREE [Fload, Mload] (N)
 params.load = [20, -0.1];   % loads on FREE [Fload, Mload] (N)
@@ -19,7 +19,7 @@ params.load = [20, -0.1];   % loads on FREE [Fload, Mload] (N)
 params.Ptest = [30, 60, 90, 120, 150]; % pressure(s) at which plots generated (kPa)
 
 % How many points to use for s and w
-params.res = 2;
+params.res = 50;
 
 %% Dependent parameters
 
