@@ -35,6 +35,10 @@ Melast = Km * w;
 for i = 1:length(Ptest)
     Force(:,:,i) = Ptest(i)*10^3 * dVds + Felast;
     Moment(:,:,i) = Ptest(i)*10^3 * dVdw + Melast;
+    
+%     % No elastomer
+%     Force(:,:,i) = Ptest(i)*10^3 * dVds;
+%     Moment(:,:,i) = Ptest(i)*10^3 * dVdw;
 end
 
 %% Convert matrices to vectors

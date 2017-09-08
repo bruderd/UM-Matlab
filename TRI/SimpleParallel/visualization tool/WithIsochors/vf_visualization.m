@@ -50,6 +50,8 @@ s2 = x2 * (1/L);
 w1 = y1 * (1/(2*pi));
 w2 = y2 * (1/(2*pi));
 
+% [S1,W1,Vol1] = meshgrid(s1(:,:,1), w1(:,:,1), vol1(:,:,1));   % JUST TRYING SOMETHING
+
 % Scale F and M for better plotting
 fscale = 3e-3; % changes apparent width of arrows
 mscale = 5e0; % changes apparent height of arrows
@@ -77,9 +79,10 @@ end
 vfplot = figure;
 set(vfplot, 'Units', 'Normalized', 'OuterPosition', [0 0 1 1]);
 title(['$\Gamma =$ ' num2str(Gama) ' (deg), $L =$ ' num2str(L*1e2) ' (cm), $R = $' num2str(R*1e2) ' (cm)'],'Interpreter','Latex', 'FontSize',25)
-xlabel({'$s$ ($\%$ of L)' ; '$F$ ($3 \times 10^{-4}$ N)'},'Interpreter','Latex', 'FontSize',25)
+% xlabel({'$s$ ($\%$ of L)' ; '$F$ ($3 \times 10^{-4}$ N)'},'Interpreter','Latex', 'FontSize',25)
 % ylabel({'$w$ (rev)' ; '$M$ ($5 \times 10^{-1}$ Nm)'},'Interpreter','Latex', 'FontSize',25)
-ylabel({'$w$ (rev)' ; '$M$ ' num2str(mscale)},'Interpreter','Latex', 'FontSize',25)
+xlabel({['$s$ ($\%$ of L)'] ; ['$F$ (' num2str(fscale) ' N)']},'Interpreter','Latex', 'FontSize',25)
+ylabel({['$w$ (rev)'] ; ['$M$ (' num2str(mscale) ' Nm)']},'Interpreter','Latex', 'FontSize',25)
 axis([xrange(1) xrange(2) yrange(1) yrange(2)]);
 line(xrange, [0,0]);    % draw x-axis
 line([0,0], yrange);    % draw y-axis
@@ -130,7 +133,22 @@ for i = 1:length(P)
     str = strjoin(str);
     annotation('textbox',dim,'String',str,'FitBoxToText','off', 'FontSize', 18);
 end
-% annotation('rectangle',[.665 .25 .2 .2])
+
+hold on
+Vol1 = griddata(s1(:,:,1), w1(:,:,1), vol1(:,:,1), S, W);
+Vol2 = griddata(s2(:,:,1), w2(:,:,1), vol2(:,:,1), S, W);
+caxis([0, max(max(vol1(:,:,1)), max(vol2(:,:,1)))]);    % scale colorbar to max volume
+
+% Plot lines of constant volume
+contour(S,W,Vol1, 'LineWidth', 3);  
+contour(S,W,Vol2, 'LineWidth', 3);
+% Show colorbar
+cbar = colorbar('eastoutside', 'FontSize', 14);
+cbar.Label.String = 'Volume (m^3)';
+cbar.Label.FontSize = 16;
+hold off
+
+caxis
 
 end
 

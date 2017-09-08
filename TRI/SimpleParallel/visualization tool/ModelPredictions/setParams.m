@@ -7,7 +7,7 @@ params = struct;
 
 %% USER DEFINED FREE PARAMETERS
 
-params.GamaDeg = 70;  % relaxed fiber angle (deg)
+params.GamaDeg = 40;  % relaxed fiber angle (deg)
 params.R = 0.5e-2;    % relaxed FREE radius (m)
 params.L = 10e-2; % relaxed FREE length (m)
 
@@ -19,7 +19,7 @@ params.load = [20, -0.1];   % loads on FREE [Fload, Mload] (N)
 params.Ptest = [30, 60, 90, 120, 150]; % pressure(s) at which plots generated (kPa)
 
 % How many points to use for s and w
-params.res = 50;
+params.res = 10;
 
 %% Dependent parameters
 
