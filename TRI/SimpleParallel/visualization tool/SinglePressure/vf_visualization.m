@@ -73,7 +73,7 @@ hold on
 quiv1 = quiver(S,W, F1, M1, 'Color', 'red', 'Linewidth', 1, 'MaxHeadSize', 5e-2, 'AutoScale', 'off', 'ShowArrowHead', 'off', 'Marker', '.');
 quiv2 = quiver(S,W, F2, M2, 'Color', 'blue', 'Linewidth', 1, 'MaxHeadSize', 5e-2, 'AutoScale', 'off', 'ShowArrowHead', 'off', 'Marker', '.');
 hold off
-legend([quiv1, quiv2], {'Linear Model', 'Constitutive Model'}, 'Fontsize', 24, 'Location', 'eastoutside');
+% legend([quiv1, quiv2], {'Linear Model', 'Constitutive Model'}, 'Fontsize', 24, 'Location', 'eastoutside');
 
 
 %% Add arrowheads that look good (need the arrow3 function to work)
@@ -89,5 +89,8 @@ Y = reshape(quiv1.YData, [numel(quiv1.YData),1]);
 arrow3( [X,Y], [X+U1,Y+V1] , 'r', 0.5, 0.5, [], 1, []);
 arrow3( [X,Y], [X+U2,Y+V2] , 'b', 0.5, 0.5, [], 1, []);
 hold off
+
+%% Draw legend for plot
+legend([quiv1, quiv2], {'Linear Model', 'Constitutive Model'}, 'Fontsize', 24, 'Location', 'eastoutside');
 
 end
