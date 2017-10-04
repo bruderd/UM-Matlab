@@ -46,6 +46,7 @@ patch(vertTop(1,:), vertTop(2,:), vertTop(3,:), color)
 plot3(spine(1,:), spine(2,:), spine(3,:), 'LineWidth',5)
 hold off
 view(3)
+set(gca,'zdir','reverse')
 xlabel('x (m)')
 ylabel('y (m)')
 zlabel('z (m)')
