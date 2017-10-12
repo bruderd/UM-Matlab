@@ -21,7 +21,7 @@ params.yattach = [2e-2, 2e-2, -2e-2, -2e-2]';      % y-coordinate of attachment 
 params.m = 0.01;         % end effector mass (kg)
 params.I = [0.1; 0.1; 0.01]; % end effector rotational moments of inertia [Mx, My, Mz]'
 params.g = 9.81;        % acceleration due to gravity (m/s^2)
-params.damp = [10e-1; 10e-1; 10e-1];    % damping in each direction [damppsi, damptheta, dampphi]'
+params.damp = [1.3e0; 1.3e0; 8e-1];    % damping in each direction [damppsi, damptheta, dampphi]'
 
 %% USER DEFINED TEST PARAMETERS
 

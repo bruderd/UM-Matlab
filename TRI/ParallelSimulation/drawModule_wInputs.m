@@ -38,7 +38,7 @@ Pkpa = [u(1); u(2); u(3); u(4)] * 10^(-3);
 %% Create the plot
 
 % Draw the module geometry in 3D-space
-subplot(1,2,1)
+subplot(2,1,1)
 color = [189 215 231]./256;
 % title(['$t = $' num2str(t,'%.2f') ':  $P_1 = $' num2str(Pkpa(1),'%.0f') ', $P_2 = $' num2str(Pkpa(2),'%.0f') ', $P_3 = $' num2str(Pkpa(3),'%.0f') ', $P_4 = $' num2str(Pkpa(4),'%.0f') ' (kPa)'], 'Interpreter', 'LaTex')
 title(['$t = $' num2str(t,'%.2f') ' (s)'], 'Interpreter', 'LaTex')
@@ -64,10 +64,10 @@ zlim([-L, 5e-2])
 box on
 
 % Plot the input pressure to each FREE
-subplot(1,2,2)
+subplot(2,1,2)
 bar(Pkpa)
 title(['$P_1 = $' num2str(Pkpa(1),'%.0f') ', $P_2 = $' num2str(Pkpa(2),'%.0f') ', $P_3 = $' num2str(Pkpa(3),'%.0f') ', $P_4 = $' num2str(Pkpa(4),'%.0f') ' (kPa)'], 'Interpreter', 'LaTex')
-ylim([0, 1e8*1e-3])
+ylim([0, 3.1e6*1e-3])
 ylabel('Input Pressure (kPa)')
 
 

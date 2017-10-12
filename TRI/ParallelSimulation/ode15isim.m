@@ -3,7 +3,7 @@
 %% ODE15i Simulation
 %   Use this to check of the dynamics are broken, or if it's something else
 
-tspan = [0, 3];
+tspan = [0, 12];
 x0 = 1e-6*[0 0 0 0 0 0]';       % initial point
 xdot0 = 0*1e-6*[1 1 1 1 1 1]';
 % u = [1000, 0, 0, 1000]';

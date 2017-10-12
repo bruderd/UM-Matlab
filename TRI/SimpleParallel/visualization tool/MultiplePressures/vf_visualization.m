@@ -1,4 +1,4 @@
-function vf_visualization( csv_linear, csv_constitutive, res, xrange, yrange )
+function vf_visualization( csv_linear, csv_constitutive, res, scale, xrange, yrange )
 %vf_visualization
 %   Reads in csv files (vf1, vf2, ...) that describe vector fields then
 %   plots them both in the same figure
@@ -7,9 +7,14 @@ if nargin == 2
     res = 11;   % number of vector points in the final plot
     xrange = [-0.25,0.25];    % [xmin, xmax]
     yrange = [-1,1]; % [ymin, ymax]
+    scale = [1e-3, 1e0];    % [fscale, mscale]
 elseif nargin == 3
     xrange = [-0.25,0.25];    % [xmin, xmax]
-    yrange = [-1,1]; % [ymin, ymax]    
+    yrange = [-1,1]; % [ymin, ymax] 
+    scale = [1e-3, 1e0];    % [fscale, mscale]
+elseif nargin == 4
+    xrange = [-0.25,0.25];    % [xmin, xmax]
+    yrange = [-1,1]; % [ymin, ymax] 
 end
 
 % Read in the csvfiles
@@ -51,8 +56,8 @@ w1 = y1 * (1/(2*pi));
 w2 = y2 * (1/(2*pi));
 
 % Scale F and M for better plotting
-fscale = 3e-3; % changes apparent width of arrows
-mscale = 5e0; % changes apparent height of arrows
+fscale = scale(1); % changes apparent width of arrows
+mscale = scale(2); % changes apparent height of arrows
 f1 = u1 * fscale;
 f2 = u2 * fscale;
 m1 = v1 * mscale;
