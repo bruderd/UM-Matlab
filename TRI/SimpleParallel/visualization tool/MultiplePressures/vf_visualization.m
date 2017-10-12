@@ -91,7 +91,6 @@ for i = 1:length(P)
     quiv2(i) = quiver(S,W, F2(:,:,i), M2(:,:,i), 'Color', 'blue', 'Linewidth', 1, 'MaxHeadSize', 5e-2, 'AutoScale', 'off', 'ShowArrowHead', 'off', 'Marker', '.');
 end
 hold off
-legend([quiv1(1), quiv2(1)], {'Linear Model', 'Constitutive Model'}, 'Fontsize', 24, 'Location', 'eastoutside');
 
 
 %% Add arrowheads that look good (need the arrow3 function to work)
@@ -132,6 +131,8 @@ for i = 1:length(P)
     annotation('textbox',dim,'String',str,'FitBoxToText','off', 'FontSize', 18);
 end
 % annotation('rectangle',[.665 .25 .2 .2])
+
+legend([quiv1(1), quiv2(1)], {'Linear Model', 'Constitutive Model'}, 'Fontsize', 24, 'Location', 'eastoutside');
 
 end
 
