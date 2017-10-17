@@ -11,7 +11,7 @@ ceq = [a0 - params.R;...
        phi]; % phi=0 added as constraint to emulate McKibbon muscle
 
 z = linspace(0,l,100)';  % want this constraint to hold at all points
-% c = [-(a0*ones(size(z)) + a1*z + a2*z.^2 + a3*z.^3 + a4*z.^4 + a5*z.^5 + a6*z.^6)];
+% c = [-(a0*ones(size(z)) + a1*z + a2*z.^2 + a3*z.^3 + a4*z.^4 + a5*z.^5 + a6*z.^6)];   % radius cannot be less than zero
 c = [];
 
 

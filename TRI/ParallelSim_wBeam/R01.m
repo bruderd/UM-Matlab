@@ -1,0 +1,26 @@
+function R01 = R01( xeul )
+%Calculates the rotation matrix to transform form coordinates in frame-0 to
+%frame-1, given the Euler angles describing their relative orientation.
+%   Detailed explanation goes here
+
+[psi, theta, phi] = deal(xeul(1), xeul(2), xeul(3));
+
+% Old version with phi and psi flipped
+R = [cos(phi)*cos(theta), cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi), cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi);...
+     sin(phi)*cos(theta), sin(phi)*sin(theta)*sin(psi) + cos(phi)*cos(psi), sin(phi)*sin(theta)*cos(psi) - cos(phi)*sin(psi);...
+     -sin(theta), cos(theta)*sin(psi), cos(theta)*cos(psi)];
+ 
+R01 = pinv(R);
+ 
+% R(:,1) = [cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi);...
+%     sin(phi)*sin(theta)*cos(psi) - cos(phi)*sin(psi);...
+%     cos(theta)*cos(psi)];
+% R(:,2) = [cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi);...
+%     sin(phi)*sin(theta)*sin(psi) + cos(phi)*cos(psi);...
+%     cos(theta)*sin(psi)];
+% R(:,3) = [cos(phi)*cos(theta);...
+%     sin(phi)*cos(theta);...
+%     -sin(theta)];
+     
+end
+

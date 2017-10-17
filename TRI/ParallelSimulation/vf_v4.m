@@ -38,7 +38,7 @@ Jv = calc_Jv(x, params);
 % FREE elastomer forces
 Felast = [kelast_s; kelast_w] .* q;   % linear elastomer forces/torques 
 
-% Matrix to convert from FREE forces to torques
+% Matrix to convert from FREE forces to torques (unused)
 f2tau = calc_f2tau(x, params);
 
 % Torques on end effector due to FREE forces, tau.
