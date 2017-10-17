@@ -10,6 +10,10 @@ end
 
 L = params.Lspine;
 
+% attached points for each FREE
+[a1, a2, a3, a4] = deal(params.xattach(1), params.xattach(2), params.xattach(3), params.xattach(4));
+[b1, b2, b3, b4] = deal(params.yattach(1), params.yattach(2), params.yattach(3), params.yattach(4));
+
 xcart = euler2cart(xeul, params);
 R = R10(xeul);
 
@@ -26,16 +30,16 @@ dl = L/res;
 m = (R(:,3) - [0, 0, 1]') * (1/L);
 b = [0; 0; 1];
 spine(:,1) = [0; 0; -L];
+free1(:,1) = spine(:,1);
 for i = 2:res
     l = i*dl;
     spine(:,i) = spine(:,i-1) + (m*l + b) * dl;
-end
-
-% attempt to draw FREE around the outside of central spine
-free1(:,1) = [-width; -width; -L];
-for i = 2:res
-    l = i*dl;
-    free1(:,i) = free1(:,i-1) + (m*l + b) * dl;
+    
+    % attempt to draw FREE around the outside of central spine
+    helix = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L + pi/4);...
+            sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L + pi/4);...
+            0];
+    free1(:,i) = spine(:,i) + helix;
 end
 
 
@@ -56,7 +60,7 @@ patch([vertEff(1,3:4), vertEff(1,8), vertEff(1,7)], [vertEff(2,3:4), vertEff(2,8
 patch([vertEff(1,1), vertEff(1,4), vertEff(1,8), vertEff(1,5)], [vertEff(2,1), vertEff(2,4), vertEff(2,8), vertEff(2,5)], [vertEff(3,1), vertEff(3,4), vertEff(3,8), vertEff(3,5)], 'm')
 patch(vertTop(1,:), vertTop(2,:), vertTop(3,:), color)
 plot3(spine(1,:), spine(2,:), spine(3,:), 'LineWidth',5)
-% plot3(free1(1,:), free1(2,:), free1(3,:), 'LineWidth',2)
+plot3(free1(1,:), free1(2,:), free1(3,:), 'LineWidth',2)
 hold off
 set(gca,'zdir','reverse')
 view(3)
