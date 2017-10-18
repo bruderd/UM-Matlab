@@ -7,7 +7,7 @@ params = struct;
 %% USER DEFINED FREE PARAMETERS
 
 params.numFREEs = 4;    % total number of FREEs
-params.Lspine = 20e-2;  % length of central spine
+params.Lspine = 30e-2;  % length of central spine
 
 params.Gama = [0.75, -0.75, 0.75, -0.75]';        % relaxed fiber angle (rad)
 params.R = [0.5e-2, 0.5e-2, 0.5e-2, 0.5e-2]';    % relaxed FREE radius (m)

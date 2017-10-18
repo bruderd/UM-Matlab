@@ -30,26 +30,33 @@ dl = L/res;
 m = (R(:,3) - [0, 0, 1]') * (1/L);
 b = [0; 0; 1];
 spine(:,1) = [0; 0; -L];
-free1(:,1) = [a3; b4; -L];
+free1(:,1) = spine(:,1) + [a1; b1];
+free2(:,1) = spine(:,1) + [a2; b2];
+free3(:,1) = spine(:,1) + [a3; b3];
+free4(:,1) = spine(:,1) + [a4; b4];
 for i = 2:res
     l = i*dl;
     spine(:,i) = spine(:,i-1) + (m*l + b) * dl;
     
-    helix = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L);...
-            sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L);...
-            l];
-    free1(:,i) = spine(:,i) + helix;
+    % attempt to draw FREE around the outside of central spine
+    helix1 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L + pi/4);...
+            sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L + pi/4);...
+            0];
+    helix2 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L - pi/4);...
+            sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L + pi/4);...
+            0];
+    helix3 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L - pi/4);...
+            sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L - pi/4);...
+            0];
+    helix4 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L + pi/4);...
+            sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L - pi/4);...
+            0];
+        
+    free1(:,i) = spine(:,i) + helix1;
+    free2(:,i) = spine(:,i) + helix2;
+    free3(:,i) = spine(:,i) + helix3;
+    free4(:,i) = spine(:,i) + helix4;
 end
-
-% % attempt to draw FREE around the outside of central spine
-% free1(:,1) = [a4; b4; -L];
-% for i = 2:res
-%     l = i*dl;
-%     helix = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L);...
-%             sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L);...
-%             l];
-%     free1(:,i) = free1(:,i-1) + (m*l + b) * dl + helix;
-% end
 
 
 % Convert pressures to KPa for display purposes

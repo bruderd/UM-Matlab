@@ -30,16 +30,32 @@ dl = L/res;
 m = (R(:,3) - [0, 0, 1]') * (1/L);
 b = [0; 0; 1];
 spine(:,1) = [0; 0; -L];
-free1(:,1) = spine(:,1);
+free1(:,1) = spine(:,1) + [a1; b1; 0];
+free2(:,1) = spine(:,1) + [a2; b2; 0];
+free3(:,1) = spine(:,1) + [a3; b3; 0];
+free4(:,1) = spine(:,1) + [a4; b4; 0];
 for i = 2:res
     l = i*dl;
     spine(:,i) = spine(:,i-1) + (m*l + b) * dl;
     
     % attempt to draw FREE around the outside of central spine
-    helix = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L + pi/4);...
+    helix1 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L + pi/4);...
             sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L + pi/4);...
             0];
-    free1(:,i) = spine(:,i) + helix;
+    helix2 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L + 3*pi/4);...
+            sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L + 3*pi/4);...
+            0];
+    helix3 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L - 3*pi/4);...
+            sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L - 3*pi/4);...
+            0];
+    helix4 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L - pi/4);...
+            sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L - pi/4);...
+            0];
+        
+    free1(:,i) = spine(:,i) + helix1;
+    free2(:,i) = spine(:,i) + helix2;
+    free3(:,i) = spine(:,i) + helix3;
+    free4(:,i) = spine(:,i) + helix4;
 end
 
 
@@ -61,6 +77,9 @@ patch([vertEff(1,1), vertEff(1,4), vertEff(1,8), vertEff(1,5)], [vertEff(2,1), v
 patch(vertTop(1,:), vertTop(2,:), vertTop(3,:), color)
 plot3(spine(1,:), spine(2,:), spine(3,:), 'LineWidth',5)
 plot3(free1(1,:), free1(2,:), free1(3,:), 'LineWidth',2)
+plot3(free2(1,:), free2(2,:), free2(3,:), 'LineWidth',2)
+plot3(free3(1,:), free3(2,:), free3(3,:), 'LineWidth',2)
+plot3(free4(1,:), free4(2,:), free4(3,:), 'LineWidth',2)
 hold off
 set(gca,'zdir','reverse')
 view(3)
