@@ -6,7 +6,7 @@ R = R10(xeul);
 
 % defining the vertices of the end effector prism
 thickness = params.thickness;   % unused for now, not actually necessary for visualization
-width = params.width/2;
+width = params.width/1.25;
 
 vert = zeros(3,8);
 vert(:,1) = R*[1; 1; 0] * width + xcart(1:3,1);

@@ -21,7 +21,7 @@ R = R10(xeul);
 vertEff = verticesEff(xeul, xcart, params);
 
 % Define the coordinates of the vertices of the top block
-width = params.width/2;
+width = params.width/1.25;
 vertTop = [[width; width; -L], [width; -width; -L], [-width; -width; -L], [-width; width; -L]];
     
 % Define the central spine
@@ -36,26 +36,35 @@ free3(:,1) = spine(:,1) + [a3; b3; 0];
 free4(:,1) = spine(:,1) + [a4; b4; 0];
 for i = 2:res
     l = i*dl;
-    spine(:,i) = spine(:,i-1) + (m*l + b) * dl;
+    nspine = m*l + b;   % directinal vector of the spine
+    spine(:,i) = spine(:,i-1) + nspine * dl;
     
-    % attempt to draw FREE around the outside of central spine
-    helix1 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L + pi/4);...
-            sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L + pi/4);...
-            0];
-    helix2 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L + 3*pi/4);...
-            sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L + 3*pi/4);...
-            0];
-    helix3 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L - 3*pi/4);...
-            sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L - 3*pi/4);...
-            0];
-    helix4 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L - pi/4);...
-            sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L - pi/4);...
-            0];
-        
-    free1(:,i) = spine(:,i) + helix1;
-    free2(:,i) = spine(:,i) + helix2;
-    free3(:,i) = spine(:,i) + helix3;
-    free4(:,i) = spine(:,i) + helix4;
+    deul = (l/L) * xeul;
+    dR = R10(deul);
+    
+    free1(:,i) = dR*[a1; b1; 0] + spine(:,i);
+    free2(:,i) = dR*[a2; b2; 0] + spine(:,i);
+    free3(:,i) = dR*[a3; b3; 0] + spine(:,i);
+    free4(:,i) = dR*[a4; b4; 0] + spine(:,i);
+    
+%     % attempt to draw FREE around the outside of central spine (works okay but the way done above is much better
+%     helix1 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L + pi/4);...
+%             sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L + pi/4);...
+%             0];
+%     helix2 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L + 3*pi/4);...
+%             sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L + 3*pi/4);...
+%             0];
+%     helix3 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L - 3*pi/4);...
+%             sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L - 3*pi/4);...
+%             0];
+%     helix4 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L - pi/4);...
+%             sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L - pi/4);...
+%             0];
+%         
+%     free1(:,i) = spine(:,i) + helix1;
+%     free2(:,i) = spine(:,i) + helix2;
+%     free3(:,i) = spine(:,i) + helix3;
+%     free4(:,i) = spine(:,i) + helix4;
 end
 
 

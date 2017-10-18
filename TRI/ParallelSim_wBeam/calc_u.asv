@@ -30,40 +30,44 @@ function u = calc_u( t )
 % end
 
 %% Drive each free with a sinusoid
-% Pmax = 3e6;
-% 
-% cmd1 = (cos(t)*Pmax + Pmax)*0.5;
-% cmd2 = (cos(t + pi/2)*Pmax + Pmax)*0.5;
-% cmd3 = (cos(t + 2*pi/2)*Pmax + Pmax)*0.5;
-% cmd4 = (cos(t + 3*pi/2)*Pmax + Pmax)*0.5;
-% 
-% u = [cmd1, cmd2, cmd3, cmd4]';
+Pmax = 3e6;
+
+cmd1 = (cos(t)*Pmax + Pmax)*0.5;
+cmd2 = (cos(t + pi/2)*Pmax + Pmax)*0.5;
+cmd3 = (cos(t + 2*pi/2)*Pmax + Pmax)*0.5;
+cmd4 = (cos(t + 3*pi/2)*Pmax + Pmax)*0.5;
+
+u = [cmd1, cmd2, cmd3, cmd4]';
 
 
-%% Control inputs to match labview (for TRI demo)
+%% Control inputs to match labview
+
+cmd1 = Pmax - Pmax*exp(-t1*flow);
+cmd2 = Pmax - Pmax*exp(-t2*flow);
+cmd3 = Pmax - Pmax*exp(-t3*flow);
+cmd4 = Pmax - Pmax*exp(-t4*flow);
 
 Pmax = 3e6;
-flow = 10;
-ti = mod(t,2);
-
+tau = 
 if t < 2
-    vi = sin(ti*pi/2);
-    u = [1 1 0 0]' * (Pmax - Pmax*exp(-vi*flow));
+    ti = t;
+    pi = sin(t*pi/2);
+    u = [1 1 0 0]' * (Pmax - Pmax*exp(-ti*flow));
 elseif t < 4
-    vi = sin(ti*pi/2);
-    u = [1 0 1 0]' * (Pmax - Pmax*exp(-vi*flow));
+    ti = t - 2;
+    u = [1 0 1 0]' * (Pmax - Pmax*exp(-ti*flow));
 elseif t < 6
-    vi = sin(ti*pi/2);
-    u = [1 0 0 1]' * (Pmax - Pmax*exp(-vi*flow));
+    ti = t - 4;
+    u = [1 0 0 1]' * (Pmax - Pmax*exp(-ti*flow));
 elseif t < 8
-    vi = sin(ti*pi/2);
-    u = [0 1 1 0]' * (Pmax - Pmax*exp(-vi*flow));
+    ti = t - 6;
+    u = [0 1 1 0]' * (Pmax - Pmax*exp(-ti*flow));
 elseif t < 10
-    vi = sin(ti*pi/2);
-    u = [0 1 0 1]' * (Pmax - Pmax*exp(-vi*flow));
+    ti = t - 8;
+    u = [0 1 0 1]' * (Pmax - Pmax*exp(-ti*flow));
 elseif t <= 12
-    vi = sin(ti*pi/2);
-    u = [0 0 1 1]' * (Pmax - Pmax*exp(-vi*flow));
+    ti = t - 10;
+    u = [0 0 1 1]' * (Pmax - Pmax*exp(-ti*flow));
 end
 
 end

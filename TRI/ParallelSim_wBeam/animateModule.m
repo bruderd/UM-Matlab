@@ -8,7 +8,7 @@ function animateModule( t, y, u, params )
 % t = 0:dt:T; % time vector
 % timetodelay = dt;
 
-filename = 'ModuleSimulation.gif';
+filename = 'ModuleSimulation2.gif';
 
 fig = figure;
 
