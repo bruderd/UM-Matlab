@@ -34,5 +34,11 @@ plot(t,y(:,4:6))
 legend('psidot','thetadot','phidot')
 
 figure
-plot(t, u)
-legend('P1', 'P2', 'P3', 'P4')
+plot(t, u*10^(-3))
+title('Control Inputs')
+legend('FREE-1', 'FREE-2', 'FREE-3', 'FREE-4', 'location', 'southeast')
+xlabel('time (s)')
+ylabel('Pressure (kPa)')
+
+
+

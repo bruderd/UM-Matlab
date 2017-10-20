@@ -47,7 +47,7 @@ for i = 2:res
     free3(:,i) = dR*[a3; b3; 0] + spine(:,i);
     free4(:,i) = dR*[a4; b4; 0] + spine(:,i);
     
-%     % attempt to draw FREE around the outside of central spine (works okay but the way done above is much better
+%     % attempt to draw FREE around the outside of central spine (works okay but the way done above is much better)
 %     helix1 = [sqrt(a4^2 + b4^2) * cos(xeul(3) * l/L + pi/4);...
 %             sqrt(a4^2 + b4^2) * sin(xeul(3) * l/L + pi/4);...
 %             0];
@@ -96,8 +96,8 @@ xlabel('x (m)')
 ylabel('y (m)')
 zlabel('z (m)')
 axis equal
-xlim([-L, L])
-ylim([-L, L])
+xlim([-L, L]*0.6)
+ylim([-L, L]*0.6)
 zlim([-L, 5e-2])
 box on
 
