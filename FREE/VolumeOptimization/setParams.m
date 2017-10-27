@@ -5,8 +5,9 @@ function params = setParams( Gama, L, R)
 params.Gama = Gama;
 params.L = L;
 params.R = R;
-
 params.Theta = L*tan(Gama)/R;
+params.S = L/cos(params.Gama);
+params.slices = 1e6;    % number of slices in fiber constraint
 
 syms l phi x a0 a1 a2 a3 a4 a5 a6
 
@@ -17,8 +18,9 @@ gradcost = jacobian(cost,[l phi a0 a1 a2 a3 a4 a5 a6]);
 
 drdx = diff(r,x);
 
+% fiber inextensibility constraint
 fibconst = int(sqrt(drdx^2 + (((params.Theta + phi)/l)^2 - drdx^2) * r^2 + 1),x,0,l) - L/cos(Gama);
-% fibconst = int(sqrt(drdx^2 + 1),x,0,l) - L; % test with straight fiber (90 deg)
+% fibconst = int(sqrt(drdx^2 + 1),x,0,l) - L; % test with straight fiber (0 deg)
 
 
 % create matlab functions for the cost and fiber constraints

@@ -11,12 +11,26 @@
 res = params.res;
 Ptest = params.Ptest;
 
-smin = -0.5*L;
-smax = 0.5*L;
-wmin = -2*pi;
-wmax = 2*pi;
-srange = linspace(smin,smax,res);
-wrange = linspace(wmin,wmax,res);
+%% Use this chunk of code if optional parameters not set
+
+% smin = -0.5*L;
+% smax = 0.5*L;
+% wmin = -2*pi;
+% wmax = 2*pi;
+% srange = linspace(smin,smax,res);
+% wrange = linspace(wmin,wmax,res);
+
+%% Use this chunk if optional parameters set
+
+smin = params.srange(1);
+smax = params.srange(2);
+wmin = params.wrange(1);
+wmax = params.wrange(2);
+srange = smin:params.sinc:smax;
+wrange = wmin:params.winc:wmax;
+
+
+%% Create model predictions 
 
 [s,w] = meshgrid(srange, wrange);
 
@@ -47,8 +61,8 @@ w_vec = matrix2vector(w);
 V_vec = matrix2vector(V);
 F = matrix2vector(Force(:,:,1));
 M = matrix2vector(Moment(:,:,1));
-P = ones(length(s)^2,1) * Ptest(1);
-if length(Ptest) > 1;
+P = ones(length(s(1,:))*length(s(:,1)),1) * Ptest(1);
+if length(Ptest) > 1
     for j = 2:length(Ptest)
         %     s_vec( (j-1)*length(s)+ 1 : j*length(s), 1) = matrix2vector(s);
         %
@@ -61,7 +75,7 @@ if length(Ptest) > 1;
         V_vec = [V_vec; matrix2vector(V)];
         F = [F; matrix2vector(Force(:,:,j))];
         M = [M; matrix2vector(Moment(:,:,j))];
-        P = [P; ones(length(s)^2,1) * Ptest(j)];
+        P = [P; ones(length(s(1,:))*length(s(:,1)),1) * Ptest(j)];
     end
 end
 
@@ -71,4 +85,4 @@ Matrix = [zeros(1, 3+length(Ptest));...
 
 Matrix(1, 1 : 3+length(Ptest)) = [Gama, L, R, Ptest];     % add headers to top row
 
-csvwrite('LinModelData_TRI4.csv', Matrix);
+csvwrite('LinModelData_TRireview.csv', Matrix);

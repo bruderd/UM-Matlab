@@ -1,4 +1,4 @@
-function u = calc_u( t )
+function u = calc_u( t, params )
 %Calculate the input to the system, which is a vector of pressures
 %   Detailed explanation goes here
 
@@ -42,28 +42,73 @@ function u = calc_u( t )
 
 %% Control inputs to match labview (for TRI demo)
 
-Pmax = 3e6;
+% Pmax = 2e6;
+Pmax = params.Pmax;
 flow = 10;
 ti = mod(t,2);
 
+% if t < 2
+%     vi = sin(ti*pi/2);
+%     u = [1 1 0 0]' * (Pmax - Pmax*exp(-vi*flow));
+% elseif t < 4
+%     vi = sin(ti*pi/2);
+%     u = [1 0 1 0]' * (Pmax - Pmax*exp(-vi*flow));
+% elseif t < 6
+%     vi = sin(ti*pi/2);
+%     u = [1 0 0 1]' * (Pmax - Pmax*exp(-vi*flow));
+% elseif t < 8
+%     vi = sin(ti*pi/2);
+%     u = [0 1 1 0]' * (Pmax - Pmax*exp(-vi*flow));
+% elseif t < 10
+%     vi = sin(ti*pi/2);
+%     u = [0 1 0 1]' * (Pmax - Pmax*exp(-vi*flow));
+% elseif t <= 12
+%     vi = sin(ti*pi/2);
+%     u = [0 0 1 1]' * (Pmax - Pmax*exp(-vi*flow));
+% end
+
+
+% % Reordered to sync up with video of real system
+% if t < 2
+%     vi = sin(ti*pi/2);
+%     u = [0 1 0 1]' * (Pmax - Pmax*exp(-vi*flow));
+% elseif t < 4
+%     vi = sin(ti*pi/2);
+%     u = [1 0 0 1]' * (Pmax - Pmax*exp(-vi*flow));
+% elseif t < 6
+%     vi = sin(ti*pi/2);
+%     u = [0 1 1 0]' * (Pmax - Pmax*exp(-vi*flow));
+% elseif t < 8
+%     vi = sin(ti*pi/2);
+%     u = [1 0 1 0]' * (Pmax - Pmax*exp(-vi*flow));
+% elseif t < 10
+%     vi = sin(ti*pi/2);
+%     u = [1 1 0 0]' * (Pmax - Pmax*exp(-vi*flow));
+% elseif t <= 12
+%     vi = sin(ti*pi/2);
+%     u = [0 0 1 1]' * (Pmax - Pmax*exp(-vi*flow));
+% end
+
+
+% Reordered to sync up with video of real system (I mixed up tubes 2 and 3)
 if t < 2
     vi = sin(ti*pi/2);
-    u = [1 1 0 0]' * (Pmax - Pmax*exp(-vi*flow));
+    u = [0 0 1 1]' * (Pmax - Pmax*exp(-vi*flow));
 elseif t < 4
     vi = sin(ti*pi/2);
     u = [1 0 1 0]' * (Pmax - Pmax*exp(-vi*flow));
 elseif t < 6
     vi = sin(ti*pi/2);
-    u = [1 0 0 1]' * (Pmax - Pmax*exp(-vi*flow));
+    u = [0 1 1 0]' * (Pmax - Pmax*exp(-vi*flow));
 elseif t < 8
     vi = sin(ti*pi/2);
-    u = [0 1 1 0]' * (Pmax - Pmax*exp(-vi*flow));
+    u = [1 0 0 1]' * (Pmax - Pmax*exp(-vi*flow));
 elseif t < 10
     vi = sin(ti*pi/2);
     u = [0 1 0 1]' * (Pmax - Pmax*exp(-vi*flow));
 elseif t <= 12
     vi = sin(ti*pi/2);
-    u = [0 0 1 1]' * (Pmax - Pmax*exp(-vi*flow));
+    u = [1 1 0 0]' * (Pmax - Pmax*exp(-vi*flow));
 end
 
 end

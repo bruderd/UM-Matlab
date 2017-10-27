@@ -13,15 +13,15 @@ xdot0 = 0*1e-6*[1 1 1 1 1 1]';
 % Check that initial conditions make sense
 fixed_x0 = [1 1 1 0 0 0];
 fixed_xdot0 = [0 0 0 0 0 0];
-[x0_new,xdot0_new] = decic(@(t, x, xdot)vf(x,calc_u(t),xdot,params),0,x0,fixed_x0,xdot0,fixed_xdot0);
+[x0_new,xdot0_new] = decic(@(t, x, xdot)vf(x,calc_u(t, params),xdot,params),0,x0,fixed_x0,xdot0,fixed_xdot0);
 
 % Simulate system response
-[t, y] = ode15i(@(t, x, xdot)vf(x, calc_u(t), xdot, params), tspan, x0_new, xdot0_new);
+[t, y] = ode15i(@(t, x, xdot)vf(x, calc_u(t, params), xdot, params), tspan, x0_new, xdot0_new);
 
 %% Create vector of inputs u(t)
 u = zeros(length(t), params.m);
 for i = 1:length(t)
-    u(i,:) = calc_u(t(i));
+    u(i,:) = calc_u(t(i), params);
 end
 
 %% Plot the results

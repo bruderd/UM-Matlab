@@ -69,12 +69,15 @@ end
 
 
 % Convert pressures to KPa for display purposes
-Pkpa = [u(1); u(2); u(3); u(4)] * 10^(-3);
+% Pkpa = [u(1); u(2); u(3); u(4)] / (2e6) * 120;  % conversion for poster
+Pkpa = [u(1); u(2); u(3); u(4)] * 10^(-3);  % correct conversion
 
 % Create the plot
 color = [189 215 231]./256;
 
-title(['$t = $' num2str(t,'%.2f') ':  $P_1 = $' num2str(Pkpa(1),'%.0f') ', $P_2 = $' num2str(Pkpa(2),'%.0f') ', $P_3 = $' num2str(Pkpa(3),'%.0f') ', $P_4 = $' num2str(Pkpa(4),'%.0f') ' (kPa)'], 'Interpreter', 'LaTex')
+% The title is two lines to increase space between subplots
+title(['';'$t = $' num2str(t,'%.2f') ':  $P_1 = $' num2str(Pkpa(1),'%.0f') ', $P_2 = $' num2str(Pkpa(2),'%.0f') ', $P_3 = $' num2str(Pkpa(3),'%.0f') ', $P_4 = $' num2str(Pkpa(4),'%.0f') ' (kPa)'], 'Interpreter', 'LaTex')
+% title(['$t = $' num2str(t,'%.2f') ':  $P_1 = $' num2str(Pkpa(1),'%.0f') ', $P_2 = $' num2str(Pkpa(2),'%.0f') ', $P_3 = $' num2str(Pkpa(3),'%.0f') ', $P_4 = $' num2str(Pkpa(4),'%.0f') ' (kPa)'], 'Interpreter', 'LaTex')
 % title(['$t = $' num2str(t,'%.2f')], 'Interpreter', 'LaTex')
 hold on
 patch(vertEff(1,1:4), vertEff(2,1:4), vertEff(3,1:4), color)
@@ -91,7 +94,8 @@ plot3(free3(1,:), free3(2,:), free3(3,:), 'LineWidth',2)
 plot3(free4(1,:), free4(2,:), free4(3,:), 'LineWidth',2)
 hold off
 set(gca,'zdir','reverse')
-view(3)
+% view(3)
+view(-35,-10)
 xlabel('x (m)')
 ylabel('y (m)')
 zlabel('z (m)')
