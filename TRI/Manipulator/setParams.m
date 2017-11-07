@@ -1,7 +1,12 @@
 function params = setParams(p, n , module, free, sim)
 %setParams: Creates parameter struct which holds all parameters related to
 %soft manipulator.
-%   Detailed explanation goes here
+%   Inputs:
+%       p: number of modules in manipulator
+%       n: number of actuators in each module, must be vector of length p
+%       module: all parameters related to each module
+%       free: all paramters that are related to each actuator
+%       sim: simulation parameters
 
 params = struct;
 
@@ -28,8 +33,17 @@ params.spine = module(:,3);
 
 params.Gama = free(:,1);
 params.R = free(:,2);
+params.attach = free(:,3:4);
 params.xattach = free(:,3);
 params.yattach = free(:,4);
+
+% the length of each FREE (determined by length of module it's in)
+for i = 1:p
+    params.Lfree(sum(n(1:i-1)):sum(n(1:i))) = params.L(i);
+end
+
+params.B = abs(params.Lfree ./ cos(params.Gama));   % fiber length (must be positive))
+params.Nf = -params.Lfree ./ (2*pi*params.R) .* tan(params.Gama); % total fiber windings in revolutions (when relaxed)
 
 
 %% SIMULATION PARAMETERS
