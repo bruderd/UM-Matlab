@@ -1,0 +1,46 @@
+function params = setParams(p, n , mod, free, sim)
+%setParams: Creates parameter struct which holds all parameters related to
+%soft manipulator.
+%   Detailed explanation goes here
+
+params = struct;
+
+%% Make sure the sizes of inputs are consistent
+if size(n,1) ~= p
+    error('n must have p rows');
+elseif size(mod,1) ~= p
+    error('Not enough/too many module parameters');
+elseif size(free,1) ~= sum(n)
+    error('Not enough/too many free parameters');
+end
+
+%% MODULE PARAMETERS
+
+params.L = mod()
+
+
+
+%% FREE PARAMETERS
+
+params.Gama = free(:,1);
+params.R = free(:,2);
+params.xattach = free(:,3);
+params.yattach = free(:,4);
+
+
+
+%% SIMULATION PARAMETERS
+
+
+
+%% VISUALISATION PARAMETERS
+
+
+
+
+
+        
+
+
+end
+

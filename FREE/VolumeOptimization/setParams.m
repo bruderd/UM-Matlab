@@ -18,7 +18,7 @@ gradcost = jacobian(cost,[l phi a0 a1 a2 a3 a4 a5 a6]);
 
 drdx = diff(r,x);
 
-% fiber inextensibility constraint
+% fiber inextensibility constraint (unused)
 fibconst = int(sqrt(drdx^2 + (((params.Theta + phi)/l)^2 - drdx^2) * r^2 + 1),x,0,l) - L/cos(Gama);
 % fibconst = int(sqrt(drdx^2 + 1),x,0,l) - L; % test with straight fiber (0 deg)
 

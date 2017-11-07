@@ -7,7 +7,7 @@ params = setParams(Gama, L, R);
 
 % x0 = [L, 0, R, 0, 0, 0, 0, 0, 0];
 x0 = [L, 0, R, rand(1,6)];
-lb = [L/2, -inf, R-(1e-6), -inf, -inf, -inf, -inf, -inf, -inf];
+lb = [L/4, -inf, R-(1e-6), -inf, -inf, -inf, -inf, -inf, -inf];
 ub = [params.S, inf, inf, inf, inf, inf, inf, inf, inf];
 options = optimoptions('fmincon', 'algorithm', 'interior-point', 'Display','iter');
 options.MaxFunctionEvaluations = 6000;
