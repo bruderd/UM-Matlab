@@ -35,8 +35,8 @@ Spos = [eye(3), zeros(3,3); zeros(3,3), zeros(3,3)];
 Seul = [zeros(3,3), zeros(3,3); zeros(3,3), eye(3)];
 
 % state vectors (in local and global coordinates)
-x = sym('x', [6*p,1]);      % local coordinates
-x0 = sym('x0', [6*p,1]);    % global coordinates
+x = sym('x', [6*p,1], 'real');      % local coordinates
+x0 = sym('x0', [6*p,1], 'real');    % global coordinates
 T = zeros(6,6,p);       % Rotation transformation matrix from local to global
 T = sym(T);
 
