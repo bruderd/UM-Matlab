@@ -1,12 +1,12 @@
-function [zeta0, xdot] = manipulatorBlock( zeta, xdot0, x , params)
+function [zeta0, xdot] = manipulatorBlock( zeta, xdot0, x0 , params)
 %manipulatorBlock: Relates module torques to manipulator torques in global
 %frame
 %   Detailed explanation goes here
 
-invJx = Jxinv(x);   % invert coordinate transformation Jacobian to go from global to local coordinates
+J_x = Jx(x0);   % invert coordinate transformation Jacobian to go from global to local coordinates
 
 %% set output values
-xdot = invJx * xdot0;
-zeta0 = invJx' * zeta;
+xdot = J_x * xdot0;
+zeta0 = J_x' * zeta;
 
 end

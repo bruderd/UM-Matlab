@@ -25,7 +25,7 @@ matlabFunction(J_ki, 'File', 'J_ki', 'Vars', {X_k, [a_ki, b_ki], L_k});
 
 
 
-%% Manipulator Block Jacobian (gets hung up when tries to take inverse)
+%% Manipulator Block Jacobian
 % 
 % % p = params.p;   % total number of modules in the manipulator
 % p = 2;
@@ -98,7 +98,7 @@ x = x02x_sym(x0, params);   % define x in terms of x0
 Jx = jacobian(x, x0);
 
 % Create Matlab function for evaluating Jx
-matlabFunction(Jx, 'File', 'Jx', 'Vars', {x0}, 'Optimize', false);
+matlabFunction(Jx, 'File', 'Jx', 'Vars', {x0}, 'optim');
 
 end
 

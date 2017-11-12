@@ -1,8 +1,9 @@
 function setEOM(params)
 %setDynamics: Symbolically derives Euler-Lagrange EOM, then creates
 %function to evaluate them.
-%   Assumptions: all mass is concentrated at the module connecting
-%   blocks (i.e. FREEs and spine are massless).
+%   Assumptions: 
+%       -all mass is concentrated at the module connecting blocks (i.e. FREEs and spine are massless).
+%       -spine does not contribute forces.
 
 %% Define symbolic parameters
 

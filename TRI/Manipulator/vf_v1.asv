@@ -6,7 +6,6 @@ function [f, dfdX, dfdu, dfdXdot] = vf_v1(X0, u, X0dot, params)
 
 p = params.p;       % total number of modules in manipulator
 m = params.m;       % masses of the blocks
-I = %???????? need to calculate I from the parameters given
 
 %% Caclulate the manipulator forces (zeta0)
 x0 = X0(1:6*p);
@@ -19,6 +18,7 @@ P = u;      % input is vector of pressures
 [Z, Vdot] = actuatorBlock(P, qdot, x, params);
 [zeta, qdot] = moduleBlock(Z, xdot, x, params);
 [zeta0, xdot] = manipulatorBlock(zeta, x0dot, x0, params);
+
 
 
 %% Equations of Motion, f(xddot, xdot, x, u) = 0
