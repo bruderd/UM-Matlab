@@ -27,11 +27,19 @@ params.n = n;
 %% MODULE PARAMETERS
 % module = [L, block density, EI of spine], size(module) = p x 3
 
-params.L = module(:,1);
-params.block = module(:,2);
-params.spine = module(:,3);   
+params.L = module(:, 1);
+params.denBlock = module(:, 2);
+params.dimBlock = module(:, 3:5);
+params.EIspine = module(:, 6);   
 
-params.m = params.block * (5e-2
+% assuming each module connection block is a rectangular prism
+params.m = params.denBlock .* params.dimBlock(:,1) .* params.dimBlock(:,2) .* params.dimBlock(:,3);     % mass of the module end blocks (kg)
+params.I = zeros(3*p, 3);   % moment of inertia matrix blocks in local coordinate frame
+for i = 1:p
+    params.I(3*(i-1)+1 : 3*i, :) = [params.m(i)/12 * (params.dimBlock(i,2)^2 + params.dimBlock(i,3)^2), 0, 0;...
+                                    0, params.m(i)/12 * (params.dimBlock(i,1)^2 + params.dimBlock(i,3)^2), 0;...
+                                    0, 0, params.m(i)/12 * (params.dimBlock(i,1)^2 + params.dimBlock(i,2)^2)];
+end
 
 
 %% FREE PARAMETERS
@@ -55,6 +63,13 @@ params.Nf = -params.Lfree ./ (2*pi*params.R) .* tan(params.Gama); % total fiber 
 
 %% SIMULATION PARAMETERS
 % EDIT THIS LATER WHEN YOU ARE ACTUALLY GOING TO RUN SIMULATION
+
+% initial conditions of simulation
+params.X0_0 = zeros(2*6*p, 1);
+for i = 1:p
+    params.X0(6*(i-1))
+end
+params.X0dot_0 = zeros(2*6*p, 1);
 
 % % Initial conditions (could be made more generic in the future)
 % params.x0 = [0, 0, 0, 0, 0, 0]';

@@ -6,7 +6,7 @@ function [f, dfdX, dfdu, dfdXdot] = vf_v1(X0, u, X0dot, params)
 
 p = params.p;       % total number of modules in manipulator
 m = params.m;       % masses of the blocks
-I = eye(3); %???????? need to calculate I from the parameters given
+I = params.I;       % moment of inertia matrices of blocks
 
 %% Caclulate the manipulator forces (zeta0)
 x0 = X0(1:6*p);

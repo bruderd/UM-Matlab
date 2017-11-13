@@ -12,7 +12,8 @@ Seul = [zeros(3,3), eye(3)];
 x = zeros(size(x0));
 x = sym(x);
 
-x(1:6,1) = x0(1:6,1);
+x(4:6, 1) = x0(4:6,1);
+x(1:3, 1) = euler2cart(x0(4:6,1), params.L(1));
 for i = 2:p
    x0i = x0(1+6*(i-1) : 6*i, 1);     % state of ith module in global coordinates
    x0im1 = x0(1+6*(i-2) : 6*(i-1), 1);     % state of (i-1)th module in global coordinates
@@ -22,9 +23,11 @@ for i = 2:p
    Rim1_0 = pinv(R0_im1);           % rotation matrix from 0 to (i-1)th frame
    T = [Rim1_0, zeros(3,3)];        % matrix to isolate top of vector and multiply it by Rim1_0
    
-   xi(1:3, 1) = T * (x0i - x0im1);      % set position component of xi
-   xi(4:6, 1) = rot2euler_sym(Rim1_0 * R0_i);   % set orientation component of xi
-   
+%   xi(1:3, 1) = T * (x0i - x0im1);      % set position component of xi
+   xi_orient = rot2euler_sym(Rim1_0 * R0_i);
+   xi(1:3, 1) = euler2cart(xi_orient, params.L(i));      % set position component of xi
+   xi(4:6, 1) = xi_orient;   % set orientation component of xi
+
    x(1+6*(i-1) : 6*i, 1) = xi;
 end
 

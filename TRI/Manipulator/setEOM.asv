@@ -46,16 +46,13 @@ Sz = kron(eye(p), sz);
 KE = (1/2) * x0dot' * M * x0dot;
 
 % potential energy
-x = x02x_sym(x0, params);
 Lpe = zeros(p,1);
 for i = 1:p
-    xi = x(1+6*(i-1) : 6*i, 1);      % state of the ith module
     Lpe(i,1) = sum(L(1:i));
     
-    z0(i,1) = L(i)/2 * (cos(xi(5)) * cos(xi(4)) - 1);
+    PEi(i) = 
 end
-PE = -g * m' * z0;
-% PE = g * m' * (Lpe - Sz*x0);
+PE = g * m' * (Lpe - Sz*x0);
 % PE = -g * m' * Sz*x0;
 % PE = 0;
 
