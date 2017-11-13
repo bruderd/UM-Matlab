@@ -31,7 +31,7 @@ params.L = module(:,1);
 params.block = module(:,2);
 params.spine = module(:,3);   
 
-params.m = ones(p,1) * params.block * (5e-2)^3;     % mass of the module end blocks (assuming each has volume (5cm)^3)
+params.m = params.block * (5e-2
 
 
 %% FREE PARAMETERS

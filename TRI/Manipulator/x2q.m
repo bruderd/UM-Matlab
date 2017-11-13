@@ -13,7 +13,7 @@ for i = 1:p
     
     for j = 1:n(i)
         free_index = sum(n(1:i-1)) + j;     % index of the jth actuator of the ith module
-        [a, b] = params.attach(free_index,:);   % coordinates of the attachment point
+        [a, b] = deal(params.attach(free_index,1), params.attach(free_index,2));   % coordinates of the attachment point
         
         s = -L + sqrt( (L - sin(theta)*a + cos(theta)*sin(psi)*b)^2 + (a^2 + b^2)*phi^2 );
         w = phi;

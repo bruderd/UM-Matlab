@@ -6,12 +6,12 @@ function [f, dfdX, dfdu, dfdXdot] = vf_v1(X0, u, X0dot, params)
 
 p = params.p;       % total number of modules in manipulator
 m = params.m;       % masses of the blocks
-I = %???????? need to calculate I from the parameters given
+I = eye(3); %???????? need to calculate I from the parameters given
 
 %% Caclulate the manipulator forces (zeta0)
 x0 = X0(1:6*p);
 x0dot = X0(6*p+1 : 2*(6*p));
-x = x02x(x0);   % convert x0 to local coordinates x
+x = x02x(x0, params);   % convert x0 to local coordinates x
 P = u;      % input is vector of pressures
 
 [~, xdot] = manipulatorBlock(0, x0dot, x0, params);

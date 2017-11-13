@@ -14,7 +14,7 @@ s_ki = -L_k + sqrt( (L_k - sin(theta_k)*a_ki + cos(theta_k)*sin(psi_k)*b_ki)^2 +
 w_ki = phi_k;
 
 q_ki = [s_ki, w_ki]';
-X_k = [x_k, y_k, z_k, psi_k, theta_k, phi_k];
+X_k = [x_k, y_k, z_k, psi_k, theta_k, phi_k]';
 
 % define the module Jacobian
 J_ki = jacobian(q_ki, X_k);

@@ -21,7 +21,7 @@ for i = 1:sum(n)
     Jv_ki = [(pi*(B(i)^2 - 3*(L+s(i))^2) / (2*pi*N(i)+w(i))^2),...
              2*pi*(L+s(i))*((L+s(i))^2 - B(i)^2) / (2*pi*N(i)+w(i))^3];
          
-    Jv( i, 2*(i-1:i) ) = Jv_ki;     % stack volume jacobian for each actuator diagonally to form Jv.   
+    Jv( i, 2*(i-1)+1 : 2*i ) = Jv_ki;     % stack volume jacobian for each actuator diagonally to form Jv.   
 end
 
 %% Define elastomer stiffness and damping matrices
