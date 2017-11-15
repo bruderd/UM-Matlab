@@ -7,7 +7,8 @@ n = params.n;
 
 u = zeros(sum(n),1);
 
-u(1) = 100;
+u(1) = 1;
+u(2) = 1;
 
 end
 

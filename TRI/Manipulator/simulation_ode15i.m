@@ -30,12 +30,18 @@ sim = 0;
 
 % create params struct to be passed to many functions
 params = setParams(p, n , module, free, sim);
-setJacobians(params);   % derive the appropriate Jacobian matrices
-setEOM(params);     % derive the equations of motion
+disp('Initialized parameters.')
 
+setJacobians(params);   % derive the appropriate Jacobian matrices
+disp('Symbolically derived Jacobian matrices.')
+
+setEOM_v2(params);     % derive the equations of motion
+disp('Symbolically derived Euler-Lagrange equations of motion.')
+
+disp('Simulating dynamics...')
 %% ODE15i Simulation
 
-tspan = [0, 10];    % initial and final time to simulate
+tspan = [0, 1];    % initial and final time to simulate
 % x0 = 1e-6*[0 0 0 0 0 0 0 0 0 0 0 0]';       % initial point
 % xdot0 = 0*1e-6*[1 1 1 1 1 1 1 1 1 1 1 1]';
 x0 = params.X0_0;
@@ -44,8 +50,6 @@ xdot0 = params.X0dot_0;
 % options = odeset('abstol', 1e-6, 'reltol', 1e-6, 'NonNegative', 1);
 
 % Check that initial conditions make sense
-% fixed_x0 = [1 1 1 0 0 0];
-% fixed_xdot0 = [0 0 0 0 0 0];
 fixed_x0 = ones(size(x0'));
 fixed_xdot0 = zeros(size(xdot0'));
 [x0_new,xdot0_new] = decic(@(t, x, xdot)vf(x,setInput(t, params),xdot,params),0,x0,fixed_x0,xdot0,fixed_xdot0);
@@ -59,13 +63,19 @@ for i = 1:length(t)
     u(i,:) = setInput(t(i), params);
 end
 
+%% Convert x0_orient to x0
+Y = zeros(length(y), 6*p);
+for i = 1 : length(t)
+    Y(i, 1:6*p) = x0_orient2x0(y(i, 1:3*p)', params)';
+end
+
 %% Plot the results
 figure
-plot(t,y(:,1:6))
+plot(t,y(:,1:3))
 % legend('psi','theta','phi')
 
 figure
-plot(t,y(:,7:12))
+plot(t,y(:,4:6))
 % legend('psidot','thetadot','phidot')
 
 % figure

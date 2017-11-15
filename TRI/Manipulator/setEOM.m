@@ -17,6 +17,11 @@ m = sym('m', [p,1], 'real');    % masses of the module blocks
 I = sym('I', [3*p,3], 'real');      % rotational moment of inertia matrices of the module blocks expressed in the local coordinate frame, vertically concatenated
 
 x0 = sym('x0', [6*p,1], 'real');
+for i = 1:p
+    x0i = x0(1+6*(i-1) : 6*i, 1);
+    x0i(1:3, 1) = euler2cart(x0i(4:6, 1), L(i));
+    x00(1+6*(i-1) : 6*i, 1) = x0i;
+end
 x0dot = sym('x0dot', [6*p,1], 'real');
 x0ddot = sym('x0ddot', [6*p,1], 'real');
 zeta0 = sym('zeta0', [6*p,1], 'real');
@@ -46,16 +51,16 @@ Sz = kron(eye(p), sz);
 KE = (1/2) * x0dot' * M * x0dot;
 
 % potential energy
-x = x02x_sym(x0, params);
+% x = x02x_sym(x0, params);
 Lpe = zeros(p,1);
 for i = 1:p
-    xi = x(1+6*(i-1) : 6*i, 1);      % state of the ith module
-    Lpe(i,1) = sum(L(1:i));
-    
-    z0(i,1) = L(i)/2 * (cos(xi(5)) * cos(xi(4)) - 1);
+%     xi = x(1+6*(i-1) : 6*i, 1);      % state of the ith module
+    Lpe(i,1) = sum(L(1:i)); 
+%     h(i,1) = xi(3) - L(i);
+%     z0(i,1) = L(i)/2 * (cos(xi(5)) * cos(xi(4)) - 1);
 end
-PE = -g * m' * z0;
-% PE = g * m' * (Lpe - Sz*x0);
+% PE = -g * m' * h;
+PE = g * m' * (Lpe - Sz*x0);
 % PE = -g * m' * Sz*x0;
 % PE = 0;
 
@@ -84,7 +89,10 @@ Lagrangian = KE - PE;
 %% Euler Lagrange Equations of Motion (using my own code)
 
 dLdx0dot = jacobian(Lagrangian, x0dot)';
+
 dLdx0 = jacobian(Lagrangian, x0)';
+dLdx0 = dLdx0' * jacobian(x00, x0);
+dLdx0 = dLdx0';
 
 % define x0 and x0dot as functions of time
 syms t

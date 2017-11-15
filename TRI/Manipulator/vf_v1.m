@@ -12,6 +12,7 @@ I = params.I;       % moment of inertia matrices of blocks
 x0 = X0(1:6*p);
 x0dot = X0(6*p+1 : 2*(6*p));
 x = x02x(x0, params);   % convert x0 to local coordinates x
+% xdot = x02x(x0dot, params);
 P = u;      % input is vector of pressures
 
 [~, xdot] = manipulatorBlock(0, x0dot, x0, params);

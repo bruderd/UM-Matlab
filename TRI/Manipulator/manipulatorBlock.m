@@ -3,7 +3,7 @@ function [zeta0, xdot] = manipulatorBlock( zeta, xdot0, x0 , params)
 %frame
 %   Detailed explanation goes here
 
-J_x = Jx(x0);   % invert coordinate transformation Jacobian to go from global to local coordinates
+J_x = Jx(x0);   % define coordinate transformation Jacobian to go from global to local coordinates
 
 %% set output values
 xdot = J_x * xdot0;

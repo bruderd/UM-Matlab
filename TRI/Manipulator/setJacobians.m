@@ -100,5 +100,19 @@ Jx = jacobian(x, x0);
 % Create Matlab function for evaluating Jx
 matlabFunction(Jx, 'File', 'Jx', 'Vars', {x0}, 'Optimize', false);
 
+
+%% Jacobian to transfer between orientation and position velocities
+
+syms psi_ theta_ phi_ x y z L_ real
+
+x_orient = [psi_, theta_, phi_]';
+x_pos = euler2cart(x_orient, L_);
+
+% define the Jacobian
+Jorient2pos =  jacobian(x_pos, x_orient);
+
+% Create Matlab function for evaluating Jx
+matlabFunction(Jorient2pos, 'File', 'Jorient2pos', 'Vars', {x_orient, L_}, 'Optimize', false);
+
 end
 

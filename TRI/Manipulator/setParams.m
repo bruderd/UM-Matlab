@@ -65,11 +65,12 @@ params.Nf = -params.Lfree ./ (2*pi*params.R) .* tan(params.Gama); % total fiber 
 % EDIT THIS LATER WHEN YOU ARE ACTUALLY GOING TO RUN SIMULATION
 
 % initial conditions of simulation
-params.X0_0 = zeros(2*6*p, 1);
-for i = 1:p
-    params.X0_0(2*6*(i-1)+3, 1) = sum(params.L(1:i));
-end
-params.X0dot_0 = zeros(2*6*p, 1);
+% params.X0_0 = zeros(2*6*p, 1);
+% for i = 1:p
+%     params.X0_0(2*6*(i-1)+3, 1) = sum(params.L(1:i));
+% end
+params.X0dot_0 = zeros(2*3*p, 1);
+params.X0_0 = zeros(2*3*p, 1);
 
 % % Initial conditions (could be made more generic in the future)
 % params.x0 = [0, 0, 0, 0, 0, 0]';

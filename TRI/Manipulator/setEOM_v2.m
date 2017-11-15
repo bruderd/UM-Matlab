@@ -1,4 +1,4 @@
-function setEOM(params)
+function setEOM_v2(params)
 %setDynamics: Symbolically derives Euler-Lagrange EOM, then creates
 %function to evaluate them.
 %   Assumptions: 
@@ -16,15 +16,26 @@ g = 9.81;   % acceleration due to gravity, 9.81 m/s^s
 m = sym('m', [p,1], 'real');    % masses of the module blocks
 I = sym('I', [3*p,3], 'real');      % rotational moment of inertia matrices of the module blocks expressed in the local coordinate frame, vertically concatenated
 
-x0 = sym('x0', [6*p,1], 'real');
+
+x0_orient = sym('x0_orient', [3*p,1], 'real');
+% x0 = sym('x0', [6*p,1], 'real');
 for i = 1:p
-    x0i = x0(1+6*(i-1) : 6*i, 1);
-    x0i(1:3, 1) = euler2cart(x0i(4:6, 1), L(i));
-    x00(1+6*(i-1) : 6*i, 1) = x0i;
+    x0i_orient = x0_orient(1+3*(i-1) : 3*i, 1);
+    x0i(1:3, 1) = euler2cart(x0i_orient, L(i));
+    x0i(4:6, 1) = x0i_orient;
+    x0(1+6*(i-1) : 6*i, 1) = x0i;
 end
-x0dot = sym('x0dot', [6*p,1], 'real');
-x0ddot = sym('x0ddot', [6*p,1], 'real');
-zeta0 = sym('zeta0', [6*p,1], 'real');
+
+dx0dx0_orient = jacobian(x0, x0_orient);   % deriviative of the x0 vector with respect to the last 3 components of each module, which describe orientation.
+% dx0_orientdx0 = kron(eye(p), [zeros(3,3), eye(3)]);     % deriviative of the x0_orientation vector with respect to x0. Basically eliminates everything except
+% dx0_orientdx0 = pinv(dx0dx0_orient);
+
+x0dot_orient = sym('x0dot_orient', [3*p, 1], 'real');
+% x0dot = sym('x0dot', [6*p,1], 'real');
+x0dot = dx0dx0_orient * x0dot_orient;   % chain rule
+
+x0ddot = sym('x0ddot', [3*p,1], 'real');
+zeta0_orient = sym('zeta0', [3*p,1], 'real');
 
 %% Definition of matrices to simplify later expressions
 
@@ -88,46 +99,57 @@ Lagrangian = KE - PE;
 
 %% Euler Lagrange Equations of Motion (using my own code)
 
-dLdx0dot = jacobian(Lagrangian, x0dot)';
+% % rename stuff to make it work
+% x0_ = sym('x0_', [3*p,1], 'real');          
+% x0dot_ = sym('x0dot_', [3*p,1], 'real');
+% 
+% % dLdx0dot = (jacobian(Lagrangian, x0dot_orient) * dx0_orientdx0)';
+% % dLdx0 = (jacobian(Lagrangian, x0_orient) * dx0_orientdx0)';
+dLdx0dot = jacobian(Lagrangian, x0dot_orient)';
+dLdx0 = jacobian(Lagrangian, x0_orient)';
+% for i = 1 : p
+%     dLdx0dot = subs(dLdx0dot, x0dot_orient(3*(i-1)+1 : 3*i) , x0dot_(6*(i-1)+4 : 6*i));
+%     dLdx0 = subs(dLdx0, x0dot_orient(3*(i-1)+1 : 3*i) , x0dot_(6*(i-1)+4 : 6*i));
+%     
+%     dLdx0dot = subs(dLdx0dot, x0_orient(3*(i-1)+1 : 3*i) , x0_(6*(i-1)+4 : 6*i));
+%     dLdx0 = subs(dLdx0, x0_orient(3*(i-1)+1 : 3*i) , x0_(6*(i-1)+4 : 6*i));
+% end
 
-dLdx0 = jacobian(Lagrangian, x0)';
-dLdx0 = dLdx0' * jacobian(x00, x0);
-dLdx0 = dLdx0';
 
 % define x0 and x0dot as functions of time
 syms t
-x0t = zeros(6*p,1);
+x0t = zeros(3*p,1);
 x0t = sym(x0t);
-x0tdot = zeros(6*p,1);
+x0tdot = zeros(3*p,1);
 x0tdot = sym(x0tdot);
-for j = 1 : 6*p
+for j = 1 : 3*p
    jstr = num2str(j);
    
    x0t(j) = sym(strcat('x0t', jstr, '(t)'));
    x0tdot(j) = sym(strcat('x0tdot', jstr, '(t)'));
 end
 
-dLdx0dot_t = subs(dLdx0dot, [x0, x0dot], [x0t, x0tdot]);
-dLdx0_t = subs(dLdx0, [x0, x0dot], [x0t, x0tdot]);
+dLdx0dot_t = subs(dLdx0dot, [x0_orient, x0dot_orient], [x0t, x0tdot]);
+dLdx0_t = subs(dLdx0, [x0_orient, x0dot_orient], [x0t, x0tdot]);
 
 % Euler Lagrange Equations of motion
-EOM_raw = diff(dLdx0dot_t, t) - dLdx0 - zeta0;    % assuming no load on the system 
+EOM_raw = diff(dLdx0dot_t, t) - dLdx0 - zeta0_orient;    % assuming no load on the system 
 
 % Character substitutions to get rid of all the 'diff(x(t), t)' stuff in EOM_raw
-Dx0t = sym( zeros(6*p,1) );        % x0dot written in gross way, e.g. x0dot = diff(x0(t), t)
-Dx0tdot = sym( zeros(6*p,1) );     % x0ddot written in gross way, e.g. x0ddot = diff(x0dot(t), t)
-for i = 1:6*p
+Dx0t = sym( zeros(3*p,1) );        % x0dot written in gross way, e.g. x0dot = diff(x0(t), t)
+Dx0tdot = sym( zeros(3*p,1) );     % x0ddot written in gross way, e.g. x0ddot = diff(x0dot(t), t)
+for i = 1:3*p
    istr = num2str(i);
    Dx0t(i,1) = sym(strcat( 'diff(x0t', istr, '(t), t)' )); 
    Dx0tdot(i,1) = sym(strcat( 'diff(x0tdot', istr, '(t), t)' )); 
 end
 
-EOM = subs(EOM_raw, [x0t; x0tdot; Dx0t; Dx0tdot], [x0; x0dot; x0dot; x0ddot]);      % replace all instances of 't'
+EOM = subs(EOM_raw, [x0t; x0tdot; Dx0t; Dx0tdot], [x0_orient; x0dot_orient; x0dot_orient; x0ddot]);      % replace all instances of 't'
 
 %% Creates Matlab function for evaluating the Equations of Motion
-X0 = [x0; x0dot];       % dynamics state vector, x0 and x0dot vertically concatenated
-X0dot = [x0dot; x0ddot];
-matlabFunction(EOM, 'File', 'EOM', 'Vars', {X0, X0dot, zeta0, m, I});
+X0 = [x0_orient; x0dot_orient];       % dynamics state vector, x0 and x0dot vertically concatenated
+X0dot = [x0dot_orient; x0ddot];
+matlabFunction(EOM, 'File', 'EOM', 'Vars', {X0, X0dot, zeta0_orient, m, I});
 
 end
 
