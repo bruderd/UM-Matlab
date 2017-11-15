@@ -7,7 +7,7 @@ function setJacobians_v2(params)
 
 %% Module Block Jacobian
 
-syms a_ki b_ki L_k x_k y_k z_k psi_k theta_k phi_k real
+syms a_ki b_ki L_k psi_k theta_k phi_k real
 
 % The state of the ith actuator of the kth module (q_ki) in terms of the state of
 % the kth module in local coordinate frame (X_k).
@@ -15,7 +15,7 @@ s_ki = -L_k + sqrt( (L_k - sin(theta_k)*a_ki + cos(theta_k)*sin(psi_k)*b_ki)^2 +
 w_ki = phi_k;
 
 q_ki = [s_ki, w_ki]';
-X_k = [x_k, y_k, z_k, psi_k, theta_k, phi_k]';
+X_k = [psi_k, theta_k, phi_k]';
 
 % define the module Jacobian
 J_ki = jacobian(q_ki, X_k);
@@ -90,10 +90,10 @@ matlabFunction(J_ki, 'File', 'J_ki', 'Vars', {X_k, [a_ki, b_ki], L_k});
 p = params.p;   % total number of modules in manipulator
 
 % state vectors (in local and global coordinates)
-x = sym('x', [6*p,1], 'real');      % local coordinates
-x0 = sym('x0', [6*p,1], 'real');    % global coordinates
+x = sym('x', [3*p,1], 'real');      % local coordinates
+x0 = sym('x0', [3*p,1], 'real');    % global coordinates
 
-x = x02x_sym(x0, params);   % define x in terms of x0
+x = x0_orient2x_orient_sym(x0, params);   % define x in terms of x0
 
 % define the manipulator Jacobian
 Jx = jacobian(x, x0);

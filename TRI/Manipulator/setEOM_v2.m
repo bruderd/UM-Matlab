@@ -5,6 +5,10 @@ function setEOM_v2(params)
 %       -all mass is concentrated at the module connecting blocks (i.e. FREEs and spine are massless).
 %       -spine does not contribute forces.
 
+% suppress inconsequential warning
+warn_id = 'symbolic:sym:sym:DeprecateExpressions';
+warning('off', warn_id);
+
 %% Define symbolic parameters
 
 p = params.p;   % total number of modules
@@ -19,12 +23,14 @@ I = sym('I', [3*p,3], 'real');      % rotational moment of inertia matrices of t
 
 x0_orient = sym('x0_orient', [3*p,1], 'real');
 % x0 = sym('x0', [6*p,1], 'real');
-for i = 1:p
-    x0i_orient = x0_orient(1+3*(i-1) : 3*i, 1);
-    x0i(1:3, 1) = euler2cart(x0i_orient, L(i));
-    x0i(4:6, 1) = x0i_orient;
-    x0(1+6*(i-1) : 6*i, 1) = x0i;
-end
+
+% for i = 1:p
+%     x0i_orient = x0_orient(1+3*(i-1) : 3*i, 1);
+%     x0i(1:3, 1) = euler2cart(x0i_orient, L(i));
+%     x0i(4:6, 1) = x0i_orient;
+%     x0(1+6*(i-1) : 6*i, 1) = x0i;
+% end
+x0 = x0_orient2x0_sym(x0_orient, params);
 
 dx0dx0_orient = jacobian(x0, x0_orient);   % deriviative of the x0 vector with respect to the last 3 components of each module, which describe orientation.
 % dx0_orientdx0 = kron(eye(p), [zeros(3,3), eye(3)]);     % deriviative of the x0_orientation vector with respect to x0. Basically eliminates everything except
@@ -35,7 +41,7 @@ x0dot_orient = sym('x0dot_orient', [3*p, 1], 'real');
 x0dot = dx0dx0_orient * x0dot_orient;   % chain rule
 
 x0ddot = sym('x0ddot', [3*p,1], 'real');
-zeta0_orient = sym('zeta0', [3*p,1], 'real');
+zeta0_orient = sym('zeta0_orient', [3*p,1], 'real');
 
 %% Definition of matrices to simplify later expressions
 
@@ -151,6 +157,9 @@ X0 = [x0_orient; x0dot_orient];       % dynamics state vector, x0 and x0dot vert
 X0dot = [x0dot_orient; x0ddot];
 matlabFunction(EOM, 'File', 'EOM', 'Vars', {X0, X0dot, zeta0_orient, m, I});
 
+
+%% Reactivate previously suppressed warning
+warning('on', warn_id);
 end
 
 

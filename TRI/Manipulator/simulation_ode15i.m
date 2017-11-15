@@ -18,8 +18,8 @@ module = [L, density, dim, EIspine];
 % actuator paramters: free = [Gama, R, xattach, yattach], size(free) = sum(n) x 4
 Gama = deg2rad([20, -20, 20, -20]');  % fiber angle (rad)
 R = 1 * ones(sum(n), 1) * 1e-2;     % internal radius (m)
-xattach = [2, -2, -2, 2]' * 1e-2;
-yattach = [2, 2, -2, -2]' * 1e-2;
+xattach = [2, -2, -2, 2]' * 1e-2;   % x-coordinates of attachment points
+yattach = [2, 2, -2, -2]' * 1e-2;   % y-coordinates of attachment points
 free = [Gama, R, xattach, yattach];
 
 % simulation parameters (might want to put some simulation parameters here at some point...)
@@ -32,14 +32,16 @@ sim = 0;
 params = setParams(p, n , module, free, sim);
 disp('Initialized parameters.')
 
-setJacobians(params);   % derive the appropriate Jacobian matrices
+%% Create various functions
+
+setJacobians_v2(params);   % derive the appropriate Jacobian matrices
 disp('Symbolically derived Jacobian matrices.')
 
 setEOM_v2(params);     % derive the equations of motion
 disp('Symbolically derived Euler-Lagrange equations of motion.')
 
-disp('Simulating dynamics...')
 %% ODE15i Simulation
+disp('Simulating dynamics...')
 
 tspan = [0, 1];    % initial and final time to simulate
 % x0 = 1e-6*[0 0 0 0 0 0 0 0 0 0 0 0]';       % initial point
@@ -72,11 +74,11 @@ end
 %% Plot the results
 figure
 plot(t,y(:,1:3))
-% legend('psi','theta','phi')
+legend('psi','theta','phi')
 
 figure
 plot(t,y(:,4:6))
-% legend('psidot','thetadot','phidot')
+legend('psidot','thetadot','phidot')
 
 % figure
 % plot(t, u*10^(-3))
