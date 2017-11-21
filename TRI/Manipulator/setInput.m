@@ -5,10 +5,10 @@ function u = setInput( t, params )
 p = params.p;
 n = params.n;
 
-u = ones(sum(n),1);
+u = zeros(sum(n),1);
 
-% u(2) = 1;
-% u(3) = 0;
+u(1) = 1;
+u(4) = 1;
 
 end
 

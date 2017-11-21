@@ -15,7 +15,7 @@ for i = 1:p
       
     Jk = zeros(2*n(i), 3);  % ensure the module Jacobian is the right size.
     for j = 1:n(i)
-       Jki(:,:,j) = J_ki(xi, params.attach(i,:), params.L(i));      % Jacobian for each actuator in ith module
+       Jki(:,:,j) = J_ki(xi, params.attach(j,:), params.L(i));      % Jacobian for each actuator in ith module
        Jk(2*(j-1)+1 : 2*j, :) = Jki(:,:,j);   % Jacobian for the ith module. Stacks actuator Jacobians vertically.
     end
     

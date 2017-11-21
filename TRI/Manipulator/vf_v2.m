@@ -46,14 +46,14 @@ x = x0_orient2x_orient(x0, params);
 [~, xdot] = manipulatorBlock(0, x0dot, x0, params);
 [~, qdot] = moduleBlock(0, xdot, x, params);
 [Z, Vdot] = actuatorBlock(P, qdot, x, params);
-[zeta, qdot] = moduleBlock(Z, xdot, x, params);
-[zeta0, xdot] = manipulatorBlock(zeta, x0dot, x0, params);
+[zeta, ~] = moduleBlock(Z, xdot, x, params);
+[zeta0, ~] = manipulatorBlock(zeta, x0dot, x0, params);
 
 % zeta0_orient = kron(eye(p), [zeros(3,3), eye(3)]) * zeta0;  % isolate just the torques
 
 
 %% Equations of Motion, f(xddot, xdot, x, u) = 0
-f(1:3*p, 1) = X0dot_orient(1:3*p) - X0_orient(3*p+1 : 2*(3*p));
+f(1:3*p, 1) = X0dot_orient(1:3*p, 1) - X0_orient(3*p+1 : 2*(3*p), 1);
 f(3*p+1 : 2*(3*p), 1) = EOM(X0_orient, X0dot_orient, zeta0, m, I) + X0dot_orient(1:3*p, 1)*(0.01);     % damping term haphazardly added
 
 %% Gradients (not needed for now)

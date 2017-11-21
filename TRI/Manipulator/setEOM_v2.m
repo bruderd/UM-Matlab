@@ -155,7 +155,7 @@ EOM = subs(EOM_raw, [x0t; x0tdot; Dx0t; Dx0tdot], [x0_orient; x0dot_orient; x0do
 %% Creates Matlab function for evaluating the Equations of Motion
 X0 = [x0_orient; x0dot_orient];       % dynamics state vector, x0 and x0dot vertically concatenated
 X0dot = [x0dot_orient; x0ddot];
-matlabFunction(EOM, 'File', 'EOM', 'Vars', {X0, X0dot, zeta0_orient, m, I});
+matlabFunction(EOM, 'File', 'EOM', 'Vars', {X0, X0dot, zeta0_orient, m, I}, 'Optimize', false);
 
 
 %% Reactivate previously suppressed warning

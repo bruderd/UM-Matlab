@@ -3,6 +3,7 @@ function x0 = x2x0_sym( x, params )
 %   Detailed explanation goes here
 
 p = params.p;
+L = params.L;
 
 % selection matrix to isolate position component of module state
 Spos = [eye(3), zeros(3,3)];

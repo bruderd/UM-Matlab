@@ -52,9 +52,9 @@ params.xattach = free(:,3);
 params.yattach = free(:,4);
 
 % the length of each FREE (determined by length of module it's in)
-params.Lfree(1:n(1)) = params.L(1);
+params.Lfree(1:n(1),1) = params.L(1);
 for i = 2:p
-    params.Lfree(sum(n(1:i-1))+1 : sum(n(1:i))) = params.L(i);
+    params.Lfree(sum(n(1:i-1))+1 : sum(n(1:i)), 1) = params.L(i);
 end
 
 params.B = abs(params.Lfree ./ cos(params.Gama));   % fiber length (must be positive))

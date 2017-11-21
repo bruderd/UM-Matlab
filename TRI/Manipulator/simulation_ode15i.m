@@ -5,21 +5,21 @@ clc
 
 %% Set system parameter values
 
-p = 1;      % total number of modules
-n = [4];     % numer of actuators in each module (a vector)
+p = 2;      % total number of modules
+n = [4, 4]';     % numer of actuators in each module (a vector)
 
 % module parameters: module = [L, block density, EI of spine], size(module) = p x 3
-L = [0.1]';    % length of each module (m)
-density = [1e3]';      % density of each module block (kg/m^3)
-dim = [5, 5, 5] * 1e-2;     % length (along x-axis), width (along y-axis), height (along z-axis) of end blocks, assuming they are rectangular prisms (m)
-EIspine = [0]';       % effective stiffness/inertia of spine material (currently is not factored in since spine is considered forceless)
+L = [0.1, 0.1]';    % length of each module (m)
+density = [1e3, 1e3]';      % density of each module block (kg/m^3)
+dim = [5, 5, 5; 5, 5, 5] * 1e-2;     % length (along x-axis), width (along y-axis), height (along z-axis) of end blocks, assuming they are rectangular prisms (m)
+EIspine = [0 0]';       % effective stiffness/inertia of spine material (currently is not factored in since spine is considered forceless)
 module = [L, density, dim, EIspine];
 
 % actuator paramters: free = [Gama, R, xattach, yattach], size(free) = sum(n) x 4
-Gama = deg2rad([20, -20, 20, -20]');  % fiber angle (rad)
+Gama = deg2rad([40, -40, 40, -40, 40, -40, 40, -40]');  % fiber angle (rad)
 R = 1 * ones(sum(n), 1) * 1e-2;     % internal radius (m)
-xattach = [2, -2, -2, 2]' * 1e-2;   % x-coordinates of attachment points
-yattach = [2, 2, -2, -2]' * 1e-2;   % y-coordinates of attachment points
+xattach = [2, -2, -2, 2, 2, -2, -2, 2]' * 1e-2;   % x-coordinates of attachment points
+yattach = [2, 2, -2, -2, 2, -2, -2, 2]' * 1e-2;   % y-coordinates of attachment points
 free = [Gama, R, xattach, yattach];
 
 % simulation parameters (might want to put some simulation parameters here at some point...)
