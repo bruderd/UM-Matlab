@@ -3,12 +3,13 @@ function x0 = x2x0( x, params )
 %   Detailed explanation goes here
 
 p = params.p;
+L = params.L;
 
 % selection matrix to isolate position component of module state
 Spos = [eye(3), zeros(3,3)];
 Seul = [zeros(3,3), eye(3)];
 
-%% calculate x0 in terms of x
+%% calculate x0 in terms of x (for 6D case)
 x0 = zeros(size(x));
 x0 = sym(x0);
 

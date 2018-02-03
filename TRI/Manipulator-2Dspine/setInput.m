@@ -3,7 +3,7 @@ function u = setInput(t, params)
 %   Detailed explanation goes here
 
 u = zeros(params.n,1);
-u(1) = exp(t-10)*100;
+u(1) = (1-exp(-t))*1e6;
 
 end
 

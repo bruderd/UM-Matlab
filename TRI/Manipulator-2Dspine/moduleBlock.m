@@ -11,7 +11,7 @@ Jaq = J_aq(alpha);
 
 %% set output values
 qdot = Jaq * alphadot;
-zeta = Jaq' * Z;% + K * alpha + D * alphadot;
+zeta = Jaq' * Z + K * alpha + D * alphadot;
 
 end
 

@@ -1,0 +1,31 @@
+function f = staticBalance(x, u, params)
+%staticBalance: force balance function of manipulator
+%   Detailed explanation goes here
+
+%% Define local names of global parameters
+
+p = params.p;       % total number of modules in manipulator\
+m = params.m;       % masses of the blocks
+I = params.I;       % moment of inertia matrices of blocks
+L = params.L;       % lengths of the modules
+
+%% Caclulate the manipulator forces (zeta0)
+
+P = u;      % input is vector of pressures
+
+qdot = zeros;
+xdot = 0;
+
+[Z, Vdot] = actuatorBlock(P, qdot, x, params);
+[zeta, ~] = moduleBlock(Z, xdot, x, params);
+[zeta0, ~] = manipulatorBlock(zeta, x0dot, x0, params);
+
+% zeta0_orient = kron(eye(p), [zeros(3,3), eye(3)]) * zeta0;  % isolate just the torques
+
+
+%% Force balance equation
+f = zeta0;
+
+
+end
+

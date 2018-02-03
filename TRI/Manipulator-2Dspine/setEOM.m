@@ -19,7 +19,7 @@ g = 9.81;   % acceleration due to gravity, 9.81 m/s^s
 %I = sym('I', [p,p], 'real');      % rotational moment of inertia matrices of the module blocks expressed in the local coordinate frame, vertically concatenated
 
 zeta = sym('zeta', [p,1], 'real');
-gama = sym('gama', [p,1], 'real');
+tau = sym('tau', [p,1], 'real');
 
 alpha = sym('alpha', [p,1], 'real');
 alphadot = sym('alphadot', [p,1], 'real');
@@ -69,7 +69,7 @@ dLdx0dot_t = subs(dLdalphadot, [alpha, alphadot], [x0t, x0tdot]);
 dLdx0_t = subs(dLdalpha, [alpha, alphadot], [x0t, x0tdot]);
 
 % Euler Lagrange Equations of motion
-EOM_raw = diff(dLdx0dot_t, t) - dLdalpha - zeta - gama;    % assuming no load on the system 
+EOM_raw = diff(dLdx0dot_t, t) - dLdalpha - zeta - tau;    % assuming no load on the system 
 
 % Character substitutions to get rid of all the 'diff(x(t), t)' stuff in EOM_raw
 Dx0t = sym( zeros(p,1) );        % x0dot written in gross way, e.g. x0dot = diff(x0(t), t)
@@ -85,7 +85,7 @@ EOM = subs(EOM_raw, [x0t; x0tdot; Dx0t; Dx0tdot], [alpha; alphadot; alphadot; al
 %% Creates Matlab function for evaluating the Equations of Motion
 X0 = [alpha; alphadot];       % dynamics state vector, x0 and x0dot vertically concatenated
 X0dot = [alphadot; alphaddot];
-matlabFunction(EOM, 'File', 'EOM', 'Vars', {X0, X0dot, zeta, gama}, 'Optimize', false);
+matlabFunction(EOM, 'File', 'EOM', 'Vars', {X0, X0dot, zeta, tau}, 'Optimize', false);
 
 end
 

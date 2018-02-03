@@ -7,18 +7,18 @@ clc
 
 params = struct;
 
-p = 6;
+p = 32;
 n = [2]';
 params.p = p;      % total number of spine segments
 params.n = n;     % numer of actuators in each module (a vector)
 
 % spine parameters
-params.L = [0.01]';%[0.3048]';    % length of each module (m)
+params.L = [0.3]';%[0.3048]';    % length of each module (m)
 params.dl = params.L / params.p;
-params.K = -0.001 * eye(p);
+params.K = -0.00001 * eye(p);
 params.D = -0.1 * eye(p);
-params.M = 0.005 * eye(3*p);   % mass of each vertebrae (kg)
-params.M(3*p-2 : 3*p, 3*p-2 : 3*p) = eye(3) * 0.030;  % mass of end block (kg)
+params.M = 0.0001 * eye(3*p);   % mass of each vertebrae (kg)
+params.M(3*p-2 : 3*p, 3*p-2 : 3*p) = eye(3) * 0.010;  % mass of end block (kg)
 params.I = 0.0001 * eye(p);   % inertia of each vertebrae
 params.I(p,p) = 0.0030;  % inertia of end block
 
@@ -52,7 +52,7 @@ xdot0 = zeros(2*p,1);
 % options = odeset('abstol', 1e-6, 'reltol', 1e-6, 'NonNegative', 1);
 
 % Check that initial conditions make sense
-fixed_x0 = ones(size(x0'));
+fixed_x0 = zeros(size(x0'));
 fixed_xdot0 = zeros(size(xdot0'));
 [x0_new,xdot0_new] = decic(@(t, x, xdot)vf(x,setInput(t, params),xdot,params),0,x0,fixed_x0,xdot0,fixed_xdot0);
 
@@ -66,12 +66,19 @@ for i = 1:length(t)
 end
 
 %% Plot final position in xy-coordinates
-X_final = alpha2x(y(end, :), params);
+X_final = alpha2x(y(5, :), params);
 x_final = X_final(1:3:end);
 y_final = X_final(2:3:end);
+theta_final = X_final(3:3:end);
 
 figure
 plot(x_final, y_final)
+axis([-params.L, params.L, 0, params.L])
+
+figure
+title('Theta at final t')
+plot(theta_final)
+
 
 %% Convert x0_orient to x0
 % Y = zeros(length(y), 6*p);

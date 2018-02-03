@@ -1,6 +1,6 @@
 function x0 = x0_orient2x0( x0_orient, params )
 %x0_orient2x: Converts the orientation in global coordinates to position
-%and orientation in local coordinates
+%and orientation in global coordinates
 %   Detailed explanation goes here
 
 p = params.p;       % total number of modules

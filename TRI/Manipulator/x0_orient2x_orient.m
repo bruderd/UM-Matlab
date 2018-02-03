@@ -19,9 +19,9 @@ for i = 2:p
    R0_i = Reuler(x0i(1:3,1));       % rotation matrix from ith to 0 frame
    R0_im1 = Reuler(x0im1(1:3,1));   % rotation matrix from (i-1)th to 0 frame
 %    Rim1_0 = pinv(R0_im1);           % rotation matrix from to (i-1)th frame
-   Rim1_0 = R0_im1';           % rotation matrix from to (i-1)th frame
+   Rim1_0 = R0_im1';           % rotation matrix from 0 to (i-1)th frame
    
-   xi_orient = rot2euler_sym(Rim1_0 * R0_i);
+   xi_orient = rot2euler(Rim1_0 * R0_i);
    xi(1:3, 1) = xi_orient;   % set orientation component of xi
    
    x(1+3*(i-1) : 3*i, 1) = xi;

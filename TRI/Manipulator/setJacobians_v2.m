@@ -101,6 +101,22 @@ Jx = jacobian(x, x0);
 % Create Matlab function for evaluating Jx
 matlabFunction(Jx, 'File', 'Jx', 'Vars', {x0}, 'Optimize', false);
 
+%% Another version of Manipulator Jacobian that is a function of x not x0
+
+% p = params.p;   % total number of modules in manipulator
+% 
+% % state vectors (in local and global coordinates)
+% x = sym('x', [3*p,1], 'real');      % local coordinates
+% x0 = sym('x0', [3*p,1], 'real');    % global coordinates
+% 
+% x0 = x_orient2x0_orient_sym(x, params);   % define x in terms of x0
+% 
+% % define the manipulator Jacobian
+% Jx0 = jacobian(x0, x);
+% 
+% % Create Matlab function for evaluating Jx
+% matlabFunction(Jx0, 'File', 'Jx0', 'Vars', {x}, 'Optimize', false);
+
 
 %% Jacobian to transfer between orientation and position velocities
 

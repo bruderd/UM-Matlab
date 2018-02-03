@@ -18,8 +18,8 @@ w = q(2:2:end);
 %% Define volume Jacobain
 Jv = zeros(sum(n), 2*sum(n));      % initialize Jv
 for i = 1:sum(n)
-    Jv_ki = [(pi*(B(i)^2 - 3*(L+s(i))^2) / (2*pi*N(i)+w(i))^2),...
-             2*pi*(L+s(i))*((L+s(i))^2 - B(i)^2) / (2*pi*N(i)+w(i))^3];
+    Jv_ki = [(pi*(B(i)^2 - 3*(L(1)+s(i))^2) / (2*pi*N(i)+w(i))^2),...
+             2*pi*(L(1)+s(i))*((L(1)+s(i))^2 - B(i)^2) / (2*pi*N(i)+w(i))^3];
          
     Jv( i, 2*(i-1)+1 : 2*i ) = Jv_ki;     % stack volume jacobian for each actuator diagonally to form Jv.   
 end
@@ -31,6 +31,7 @@ Kd = zeros(length(q), length(q));   % elastomer damping matrix
 
 % elastomer spring constants (could set these values in setParams, but I wanted to keep that script agnostic about the FREE model for now).
 kelast = [-4e1, -4e-2]';     % [axial stiffness, rotational stiffness]'
+% kelast = [-1e1, -1e-6]';
 
 % insert stiffnesses as diagonal elements of Kc (really janky way to do this...)
 for j = 1:length(q)/2

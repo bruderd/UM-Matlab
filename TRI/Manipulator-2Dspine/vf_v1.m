@@ -12,16 +12,18 @@ alphadot = X0(p+1 : 2*p);
 P = u;      % input is vector of pressures
 gama = zeros(3*p,1);  % no external loads
 
-[~, xdot] = manipulatorBlock(gama, alphadot, alpha, params);
+% [~, xdot] = manipulatorBlock(gama, alphadot, alpha, params);
 [~, qdot] = moduleBlock(0, alphadot, alpha, params);
 [Z, Vdot] = actuatorBlock(P, qdot, alpha, params);
 [zeta, qdot] = moduleBlock(Z, alphadot, alpha, params);
 [tau, xdot] = manipulatorBlock(gama, alphadot, alpha, params);
 
+% zeta = -1 * ones(p,1);
+
 
 %% Equations of Motion, f(xddot, xdot, x, u) = 0
 f(1:p, 1) = X0dot(1:p) - X0(p+1 : 2*p);
-f(p+1 : 2*p, 1) = EOM(X0, X0dot, zeta, gama) + 1e-4 * ones(p,1);
+f(p+1 : 2*p, 1) = EOM(X0, X0dot, zeta, tau) + 1e-4 * ones(p,1);
 
 %% Gradients (not needed for now)
 dfdX = [0];
