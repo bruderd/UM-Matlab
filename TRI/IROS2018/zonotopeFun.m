@@ -24,5 +24,6 @@ hold on
 quiver(zeros(1,params.num), zeros(1,params.num), ztmax(3,:),ztmax(6,:), 'ShowArrowHead', 'off', 'AutoScaleFactor', 1, 'Marker', 'o', 'Color', 'r')
 plot(ztmax(3,:),ztmax(6,:),'r*');
 plot(vx(zntp), vy(zntp), 'b-');
+grid on
 hold off
 

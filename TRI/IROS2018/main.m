@@ -1,12 +1,12 @@
 % main.m
 
 % Set the values of all of the system parameters
-Gama = deg2rad([20, -20, 85]);
-R = 0.01 * ones(1,3);
+Gama = deg2rad([40, -40, 89]);
+R = 0.009525 * ones(1,3);
 L = 0.1 * ones(1,3);
 d = zeros(3,3);
 p = [0,0,0 ; 0,0,0 ; 1,1,1];
-Pmax = [100, 100, 1000];
+Pmax = [103.421e3, 103.421e3, 103.421e3];
 params = setParams(Gama, R, L, d, p, Pmax);
 
 % Set the value of test parameters
