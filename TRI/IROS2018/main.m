@@ -20,4 +20,7 @@ testParams.wtest = [0, 20,-20, 20, -20];    % deg
 
 % Create csv of the test data points
 testPoints = setTestPoints(testParams, params);
+% Need to convert these to voltages before writing to csv or tsv
+% ADD CONVERSION HERE
 csvwrite('testPoints.csv',testPoints);      % exports testPoint to csv file
+dlmwrite('testPoints.txt',testPoints, 'delimiter', '\t', 'newline', 'pc');
