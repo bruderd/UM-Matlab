@@ -1,7 +1,7 @@
 function Z = calcZ( q, P, params )
-%maxZ: Calculates the maximum Z = [F,M]' for each free
-%   Zmax is a vertical concatenation or Zmax_i for each FREE.
-%   Pmax should be a vector of dim n.
+%calcZ: Calculates Z = [F,M]' for each free
+%   Z is a vertical concatenation or Z_i for each FREE.
+%   P should be a vector of dim n.
 
 num = params.num;   % number of FREEs in parallel
 B = params.B;   % FREE fiber length (array)
@@ -20,6 +20,6 @@ for i = 1:num
     Jv( i, 2*(i-1)+1 : 2*i ) = Jv_ki;     % stack volume jacobian for each actuator diagonally to form Jv.   
 end
 
-Zmax = Jv' * P;
+Z = Jv' * P;
 
 end

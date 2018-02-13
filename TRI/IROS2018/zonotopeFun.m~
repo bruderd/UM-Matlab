@@ -7,8 +7,8 @@ q = x2q(x, params);
 % Calculate the maximum Z = [F,M]' for each FREE
 Zmax = maxZ(q, params);
 
-% Convert Zmax to end effector coordinates for each FREE
-zetamax = Z2zeta_i(Zmax, params);
+% Convert Zmax to end effector coordinates
+zetamax = Z2zetamax(Zmax, params);
 
 % Generate the zonotope
 ztmax = zeros(6,params.num);

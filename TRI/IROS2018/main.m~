@@ -47,7 +47,7 @@ for i = 1:size(testPoints,1)
 end
 
 % Append force predictions to testPoints matrix
-testPred = [testPoints, predForces];
+
 
 
 
