@@ -4,7 +4,7 @@ clear
 %% Set parameter values
 % Set the values of system parameters
 Gama = deg2rad([40, -40, 89]);
-R = 10e-3/2 * ones(1,3); % R = 0.009525/2 * ones(1,3);
+R = (10e-3)/2 * ones(1,3); % R = 0.009525/2 * ones(1,3);
 L = 0.1 * ones(1,3);
 d = zeros(3,3);
 p = [0,0,0 ; 0,0,0 ; 1,1,1];
