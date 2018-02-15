@@ -3,7 +3,7 @@ clear
 
 %% Set parameter values
 % Set the values of system parameters
-Gama = deg2rad([40, -40, 89]);
+Gama = deg2rad([40, -40, -89]);
 R = (10e-3)/2 * ones(1,3); % R = 0.009525/2 * ones(1,3);
 L = 0.1 * ones(1,3);
 d = zeros(3,3);
@@ -14,8 +14,8 @@ params = setParams(Gama, R, L, d, p, Pmax);
 % Set the value of test parameters
 testParams = struct;
 testParams.Psteps = 4;     % how finely to break up Pmax
-testParams.stest = [0, 5, 5, -5, -5];   % mm
-testParams.wtest = [0, 20,-20, 20, -20];    % deg
+testParams.stest = [0, 5, 0, 5];   % mm
+testParams.wtest = [0, 0, 20, 20];    % deg
 testParams.TRmax = 103.421e3;   % Pa = 15psi
 
 % % Much smaller set of points for debugging
