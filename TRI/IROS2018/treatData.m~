@@ -1,0 +1,5 @@
+% Load in test data and do stuff with it
+clear
+load('testData_1.mat')
+
+FMraw = SyncedForceTor
