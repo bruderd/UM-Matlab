@@ -12,6 +12,9 @@ alpha = (0:Psteps)/Psteps;  % fractions of Pmax to take measurements at
 
 Ptest = permn(alpha,3) * diag(Pmax);    % Calulate all test pressure inputs
 
+% enforce minimum pressure, slightly more than 0 psi
+Ptest = max(Ptest, ones(size(Ptest))*0.5);
+
 for i = 1:length(stest)
     dim = size(Ptest,1);
     qtest(1:dim , :) = ones(dim,1) * [stest(i), wtest(i)];

@@ -13,9 +13,14 @@ params = setParams(Gama, R, L, d, p, Pmax);
 
 % Set the value of test parameters
 testParams = struct;
-testParams.Psteps = 4;     % how finely to break up Pmax
-testParams.stest = [0, 5, 5, -5, -5];   % mm
-testParams.wtest = [0, 20,-20, 20, -20];    % deg
+% testParams.Psteps = 4;     % how finely to break up Pmax
+% testParams.stest = [0, 5, 5, -5, -5];   % mm
+% testParams.wtest = [0, 20,-20, 20, -20];    % deg
+% testParams.TRmax = 103.421e3;   % Pa = 15psi
+
+testParams.Psteps = 1;     % how finely to break up Pmax
+testParams.stest = [0, 5];   % mm
+testParams.wtest = [0, 20];    % deg
 testParams.TRmax = 103.421e3;   % Pa = 15psi
 
 %% Calculate the force zonotope for each test configuration
@@ -33,8 +38,8 @@ end
 testPoints = setTestPoints(testParams, params);
 % Need to convert these to voltages before writing to csv or tsv
 testPoints_out = testPoints * diag([0.033418, 1, 10/testParams.TRmax, 10/testParams.TRmax, 10/testParams.TRmax]);
-csvwrite('testPoints.csv',testPoints_out);      % exports testPoint to csv file
-dlmwrite('testPoints.txt',testPoints_out, 'delimiter', '\t', 'newline', 'pc');
+csvwrite('testPoints_simple.csv',testPoints_out);      % exports testPoint to csv file
+dlmwrite('testPoints_simple.txt',testPoints_out, 'delimiter', '\t', 'newline', 'pc');
 
 %% Calculate the forces at each test data point
 
@@ -47,7 +52,7 @@ for i = 1:size(testPoints,1)
 end
 
 % Append force predictions to testPoints matrix
-
+testPred = [testPoints, predForces];
 
 
 
