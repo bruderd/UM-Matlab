@@ -3,7 +3,7 @@ clear
 
 %% Set parameter values
 % Set the values of system parameters
-Gama = deg2rad([40, -40, -89]);
+Gama = deg2rad([40, -40, -85]);
 R = (9e-3)/2 * ones(1,3); % R = 0.009525/2 * ones(1,3);
 L = 0.10 * ones(1,3);
 d = zeros(3,3);
