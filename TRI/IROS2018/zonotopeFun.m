@@ -25,11 +25,14 @@ quiver(zeros(1,params.num), zeros(1,params.num), ztmax(3,:),ztmax(6,:), 'ShowArr
 patch(vx(zntp), vy(zntp), 'r', 'FaceAlpha', 0.25, 'EdgeColor', 'none')
 plot(ztmax(3,:),ztmax(6,:),'r*');
 % plot(vx(zntp), vy(zntp), 'b-');
+xlim([-15 15]);
+ylim([-0.1 0.1]);
 xL = xlim;
 yL = ylim;
 line([0 0], yL, 'color', 'k');  %x-axis
 line(xL, [0 0], 'color', 'k');  %y-axis
 grid on
+box on
 xlabel('Force (N)')
 ylabel('Moment (N-m)')
 hold off

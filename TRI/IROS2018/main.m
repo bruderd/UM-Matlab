@@ -37,28 +37,28 @@ for i = 1:length(testParams.stest)
     w = testParams.wtest(i);
     x = [0, 0, s*10^(-3), 0, 0, deg2rad(w)]';  % end effector state
     [zntp(:,i), vx(:,i), vy(:,i)] = zonotopeFun(x, params);
-    
-%     % Plot measured points on top of zonotope
-%     [FM, predFM, RMSE] = treatData('testData/testData_3.mat', testPoints, params);
-%     hold on
-%     plot(FM(125*(i-1)+1 : 125*i, 1), FM(125*(i-1)+1 : 125*i, 2), 'b*')
-%     plot(predFM(125*(i-1)+1 : 125*i, 1), predFM(125*(i-1)+1 : 125*i, 2), 'r*')
-%     hold off
 
     % Plot measured points on top of zonotope
-    [FM1, FM2, FM3, FM4, predFM, RMSE] = treatData('testData/testData_3.mat', testPoints, params);
+    [FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE] = treatData('testData/testData_3.mat', testPoints, testPoints_out, params, testParams);
     if i == 1
         FM = FM1;
+        FMpred = FM1pred;
     elseif i == 2
         FM = FM2;
+        FMpred = FM2pred;
     elseif i == 3
         FM = FM3;
+        FMpred = FM3pred;
     elseif i == 4
         FM = FM4;
+        FMpred = FM4pred;
     end
+    % generate cvx hull of measured points
+    cvxh = convhull(FM(:,1),FM(:,2));
     hold on
+    plot(FMpred(:, 1), FMpred(:, 2), 'r*')
     plot(FM(:,1), FM(:,2), 'b*')
-    plot(predFM(125*(i-1)+1 : 125*i, 1), predFM(125*(i-1)+1 : 125*i, 2), 'r*')
+    plot(FM(cvxh,1), FM(cvxh,2), 'b-');
     hold off
 end
 

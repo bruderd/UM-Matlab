@@ -1,0 +1,119 @@
+function [FM1, FM2, FM3, FM4, predFM, RMSE] = treatData(MatDataFile, testPoints, testPoints_out, params)
+% treatData: Reads in measured data, removes elastomer offsets, splits into
+% separate arrays for each configuration. Also measures error
+% MatDataFile is a string which is the name of the .mat file containing the
+% test data
+
+% Load in test data and input points
+load(MatDataFile);
+FMraw = SyncFT.data;
+RESraw = SycRes.data;
+
+% find duplicate points and delete them
+i = 1;
+while i <= 500 %length(testPoints_out)
+    if abs(RESraw(i,1) - testPoints_out(i,5)) < 5.5 && abs(RESraw(i,2) - testPoints_out(i,4)) < 5 && abs(RESraw(i,3) - testPoints_out(i,3)) < 5
+        i = i+1;
+    else
+        RESraw(i,:) = [];
+        FMraw(i,:) = [];
+    end
+end
+
+% Calculate the predicted forces at each point in testPoints
+predFM = calcModelFM(testPoints, params);
+
+% Remove the sensor offset at (0,0) and remedy sign discrepency
+FM = zeros(size(FMraw));
+% for i = 1:4
+% %     % subtract forces at (0,0)
+% %     FM(125*(i-1)+1 : 125*i, 1) = -1 * (FMraw(125*(i-1)+1 : 125*i, 1) - FMraw(125*(i-1)+1, 1) );
+% %     FM(125*(i-1)+1 : 125*i, 2) = -1 * (FMraw(125*(i-1)+1 : 125*i, 2) - FMraw(125*(i-1)+1, 2) );
+%     
+% %     % subtract average forces
+% %     FM(125*(i-1)+1 : 125*i, 1) = -1 * (FMraw(125*(i-1)+1 : 125*i, 1) - mean(FMraw(125*(i-1)+1 : 125*i, 1)) );
+% %     FM(125*(i-1)+1 : 125*i, 2) = -1 * (FMraw(125*(i-1)+1 : 125*i, 2) - mean(FMraw(125*(i-1)+1 : 125*i, 2)) );
+%     
+%     % only invert sign
+%     FM(125*(i-1)+1 : 125*i, 1) = -1 * (FMraw(125*(i-1)+1 : 125*i, 1) );
+%     FM(125*(i-1)+1 : 125*i, 2) = -1 * (FMraw(125*(i-1)+1 : 125*i, 2) );
+%     
+% end
+% % Cut off any extra zeros at end of vector
+% FM = FM(1:500, :);
+
+% % Remove offset manually
+% FMraw = FMraw(1:501, :);
+% FM1 = [-1 * (FMraw(1:125, 1) - FMraw(1, 1) ) , -1 * (FMraw(1:125, 2) - FMraw(1, 2) )];
+% FM2 = [-1 * (FMraw(126:250, 1) - 16.4 ) , -1 * (FMraw(126:250, 2) - -0.025 )];
+% FM3 = [-1 * (FMraw(251:374, 1) - -0.04349 ) , -1 * (FMraw(251:374, 2) - -0.02678 )];    % removed one point that was out of place
+% FM4 = [-1 * (FMraw(376:500, 1) - 14.78 ) , -1 * (FMraw(376:500, 2) - -0.04746 )];
+% FM = [FM1; FM2; FM3; FM4];
+
+% Separate RAW data by configuration
+FMraw1 = FMraw(1:125,:);
+FMraw2 = FMraw(126:250,:);
+FMraw3 = FMraw(251:375,:);
+FMraw4 = FMraw(376:500,:);
+predFM1 = predFM(1:125,:);
+predFM2 = predFM(126:250,:);
+predFM3 = predFM(251:375,:);
+predFM4 = predFM(376:500,:);
+
+% % Remove offset manually, v2
+% j = 60;
+% FMraw = FMraw(1:500, :);
+% FM1 = [-1 * (FMraw(1:125, 1) - FMraw(1, 1) ) , -1 * (FMraw(1:125, 2) - FMraw(1, 2) )];
+% FM2 = [-1 * (FMraw(126:250, 1) - (FMraw2(j,1) - predFM2(j,1)) ) , -1 * (FMraw(126:250, 2) - (FMraw2(j,2) - predFM2(j,2)) )];
+% FM3 = [-1 * (FMraw(251:375, 1) - (FMraw3(j,1) - predFM3(j,1)) ) , -1 * (FMraw(251:375, 2) - (FMraw3(j,2) - predFM3(j,2)) )];
+% FM4 = [-1 * (FMraw(376:500, 1) - (FMraw4(j,1) - predFM4(j,1)) ) , -1 * (FMraw(376:500, 2) - (FMraw4(j,2) - predFM4(j,2)) )];
+% FM = [FM1; FM2; FM3; FM4];
+%FM = -FMraw; % just plot the raw data with sign flipped
+
+% % Remove offset manually, v3
+% % FMraw = FMraw(1:500, :);
+% FM1 = [-1 * (FMraw(1:128, 1) - FMraw(1, 1) ) , -1 * (FMraw(1:128, 2) - FMraw(1, 2) )];
+% FM2 = [-1 * (FMraw(129:256, 1) - 16.4 - FMraw(1, 1)) , -1 * (FMraw(129:256, 2) - -0.012 - FMraw(1, 2))];
+% FM3 = [-1 * (FMraw(257:384, 1) - -1.1 - FMraw(1, 1)) , -1 * (FMraw(257:384, 2) - -0.021 - FMraw(1, 2))];
+% FM4 = [-1 * (FMraw(385:502, 1) - 16.2 - FMraw(1, 1)) , -1 * (FMraw(385:502, 2) - -0.041 - FMraw(1, 2))];
+% FM = [FM1; FM2; FM3; FM4];
+
+% Remove offset manually, v4
+FMraw = FMraw(1:500, :);
+FM1 = [-1 * (FMraw(1:125, 1) - FMraw(1, 1) ) , -1 * (FMraw(1:125, 2) - FMraw(1, 2) )];
+FM2 = [-1 * (FMraw(126:250, 1) - 16.4 - FMraw(1, 1)) , -1 * (FMraw(126:250, 2) - -0.012 - FMraw(1, 2))];
+FM3 = [-1 * (FMraw(251:374, 1) - -1.1 - FMraw(1, 1)) , -1 * (FMraw(251:374, 2) - -0.021 - FMraw(1, 2))];
+FM4 = [-1 * (FMraw(376:500, 1) - 16.2 - FMraw(1, 1)) , -1 * (FMraw(376:500, 2) - -0.041 - FMraw(1, 2))];
+FM = [FM1; FM2; FM3; FM4];
+
+% % Separate data by configuration
+% FM1 = FM(1:125,:);
+% FM2 = FM(126:250,:);
+% FM3 = FM(251:375,:);
+% FM4 = FM(376:500,:);
+
+
+% Calulate total error at each point
+error = ( FM - predFM(1:length(FM),:) );
+sqerror = diag(error * error');
+squerror1 = error(:,1).^2;
+squerror2 = error(:,2).^2;
+
+% Calculate RMSE for each configuration
+% for i = 1:4
+%    
+%    RMSE(i,1) = sqrt(sum(squerror1(125*(i-1)+1 : 125*i)) / (125));
+%    RMSE(i,2) = sqrt(sum(squerror2(125*(i-1)+1 : 125*i)) / (125));
+%     
+% end
+
+RMSE(1,1) = sqrt(sum(squerror1(1 : length(FM1(:,1)))) / (length(FM1(:,1))));
+RMSE(1,2) = sqrt(sum(squerror2(1 : length(FM1(:,1)))) / (length(FM1(:,1))));
+RMSE(2,1) = sqrt(sum(squerror1(length(FM1(:,1))+1 : length(FM1(:,1))+length(FM2(:,1)))) / (length(FM2(:,1))));
+RMSE(2,2) = sqrt(sum(squerror2(length(FM1(:,1))+1 : length(FM1(:,1))+length(FM2(:,1)))) / (length(FM2(:,1))));
+RMSE(3,1) = sqrt(sum(squerror1(length([FM1;FM2])+1 : length([FM1;FM2;FM3]))) / (length(FM3(:,1))));
+RMSE(3,2) = sqrt(sum(squerror2(length([FM1;FM2])+1 : length([FM1;FM2;FM3]))) / (length(FM3(:,1))));
+RMSE(4,1) = sqrt(sum(squerror1(length([FM1;FM2;FM3])+1 : end)) / (length(FM4(:,1))));
+RMSE(4,2) = sqrt(sum(squerror2(length([FM1;FM2;FM3])+1 : end)) / (length(FM4(:,1))));
+end
+

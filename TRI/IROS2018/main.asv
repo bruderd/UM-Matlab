@@ -3,7 +3,7 @@ clear
 
 %% Set parameter values
 % Set the values of system parameters
-Gama = deg2rad([49, -48, -89]);
+Gama = deg2rad([48, -48, -85]);
 R = (10e-3)/2 * ones(1,3); % R = 0.009525/2 * ones(1,3);
 L = 0.10 * ones(1,3);
 d = zeros(3,3);
@@ -24,28 +24,46 @@ testParams.TRmax = (1/0.14503) * 1e3 * 15;   % Pa = 15psi
 % testParams.wtest = [0, 20];    % deg
 % testParams.TRmax = 103.421e3;   % Pa = 15psi
 
-%% Calculate the force zonotope for each test configuration
-for i = 1:length(testParams.stest)
-    s = testParams.stest(i);
-    w = testParams.wtest(i);
-    x = [0, 0, s*10^(-3), 0, 0, deg2rad(w)]';  % end effector state
-    [zntp(:,i), vx(:,i), vy(:,i)] = zonotopeFun(x, params);
-    
-    % Plot measured points on top of zonotope
-    [FM, RMSE] = treatData('testData/testData_3.mat', testPoints, params);
-    hold on
-    plot(FM(125*(i-1)+1 : 125*i, 1))
-end
-
-% Plot all of the force zonotopes using subplots
-% ...
-
 %% Create csv of the test data points
 testPoints = setTestPoints(testParams, params);
 % Need to convert these to voltages before writing to csv or tsv
 testPoints_out = testPoints * diag([0.033418, 1, 10/testParams.TRmax, 10/testParams.TRmax, 10/testParams.TRmax]);
 csvwrite('testPoints.csv',testPoints_out);      % exports testPoint to csv file
 dlmwrite('testPoints.txt',testPoints_out, 'delimiter', '\t', 'newline', 'pc');
+
+%% Calculate the force zonotope for each test configuration
+for i = 1:length(testParams.stest)
+    s = testParams.stest(i);
+    w = testParams.wtest(i);
+    x = [0, 0, s*10^(-3), 0, 0, deg2rad(w)]';  % end effector state
+    [zntp(:,i), vx(:,i), vy(:,i)] = zonotopeFun(x, params);
+
+    % Plot measured points on top of zonotope
+    [FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE] = treatData('testData/testData_3.mat', testPoints, testPoints_out, params, testParams);
+    if i == 1
+        FM = FM1;
+        FMpred = FM1pred;
+    elseif i == 2
+        FM = FM2;
+        FMpred = FM2pred;
+    elseif i == 3
+        FM = FM3;
+   
+    elseif i == 4
+        FM = FM4;
+    end
+    % generate cvx hull of measured points
+    cvxh = convhull(FM(:,1),FM(:,2));
+    hold on
+    plot(FMpred(:, 1), FMpred(:, 2), 'r*')
+    plot(FM(:,1), FM(:,2), 'b*')
+    plot(FM(cvxh,1), FM(cvxh,2), 'b-');
+    hold off
+end
+
+
+% Plot all of the force zonotopes using subplots
+% ...
 
 %% Calculate the forces at each test data point
 
