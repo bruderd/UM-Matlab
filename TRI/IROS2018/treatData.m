@@ -1,4 +1,4 @@
-function [FM, RMSE] = treatData(MatDataFile, testPoints, params)
+function [FM, predFM, RMSE] = treatData(MatDataFile, testPoints, params)
 % treatData: Reads in measured data, removes elastomer offsets, splits into
 % separate arrays for each configuration. Also measures error
 % MatDataFile is a string which is the name of the .mat file containing the
@@ -82,8 +82,10 @@ squerror2 = error(:,2).^2;
 % Calculate RMSE for each configuration
 for i = 1:4
    
-   RMSE(i,1) = sqrt(sum(squerror1(125*(i-1)+8 : 125*i)) / 125);
-   RMSE(i,2) = sqrt(sum(squerror2(125*(i-1)+8 : 125*i)) / 125);
+   RMSE(i,1) = sqrt(sum(squerror1(125*(i-1)+8 : 125*i)) / (125-7));
+   RMSE(i,2) = sqrt(sum(squerror2(125*(i-1)+8 : 125*i)) / (125-7));
     
+end
+
 end
 

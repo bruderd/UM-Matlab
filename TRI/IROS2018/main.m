@@ -39,9 +39,10 @@ for i = 1:length(testParams.stest)
     [zntp(:,i), vx(:,i), vy(:,i)] = zonotopeFun(x, params);
     
     % Plot measured points on top of zonotope
-    [FM, RMSE] = treatData('testData/testData_3.mat', testPoints, params);
+    [FM, predFM, RMSE] = treatData('testData/testData_3.mat', testPoints, params);
     hold on
     plot(FM(125*(i-1)+1 : 125*i, 1), FM(125*(i-1)+1 : 125*i, 2), 'b*')
+    plot(predFM(125*(i-1)+1 : 125*i, 1), predFM(125*(i-1)+1 : 125*i, 2), 'r*')
     hold off
 end
 
