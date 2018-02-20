@@ -38,13 +38,30 @@ for i = 1:length(testParams.stest)
     x = [0, 0, s*10^(-3), 0, 0, deg2rad(w)]';  % end effector state
     [zntp(:,i), vx(:,i), vy(:,i)] = zonotopeFun(x, params);
     
+%     % Plot measured points on top of zonotope
+%     [FM, predFM, RMSE] = treatData('testData/testData_3.mat', testPoints, params);
+%     hold on
+%     plot(FM(125*(i-1)+1 : 125*i, 1), FM(125*(i-1)+1 : 125*i, 2), 'b*')
+%     plot(predFM(125*(i-1)+1 : 125*i, 1), predFM(125*(i-1)+1 : 125*i, 2), 'r*')
+%     hold off
+
     % Plot measured points on top of zonotope
-    [FM, predFM, RMSE] = treatData('testData/testData_3.mat', testPoints, params);
+    [FM1, FM2, FM3, FM4, predFM, RMSE] = treatData('testData/testData_3.mat', testPoints, params);
+    if i == 1
+        FM = FM1;
+    elseif i == 2
+        FM = FM2;
+    elseif i == 3
+        FM = FM3;
+    elseif i == 4
+        FM = FM4;
+    end
     hold on
-    plot(FM(125*(i-1)+1 : 125*i, 1), FM(125*(i-1)+1 : 125*i, 2), 'b*')
+    plot(FM(:,1), FM(:,2), 'b*')
     plot(predFM(125*(i-1)+1 : 125*i, 1), predFM(125*(i-1)+1 : 125*i, 2), 'r*')
     hold off
 end
+
 
 % Plot all of the force zonotopes using subplots
 % ...

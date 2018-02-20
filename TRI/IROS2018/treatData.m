@@ -1,4 +1,4 @@
-function [FM, predFM, RMSE] = treatData(MatDataFile, testPoints, params)
+function [FM1, FM2, FM3, FM4, predFM, RMSE] = treatData(MatDataFile, testPoints, params)
 % treatData: Reads in measured data, removes elastomer offsets, splits into
 % separate arrays for each configuration. Also measures error
 % MatDataFile is a string which is the name of the .mat file containing the
@@ -59,11 +59,11 @@ predFM4 = predFM(376:500,:);
 %FM = -FMraw; % just plot the raw data with sign flipped
 
 % Remove offset manually, v3
-FMraw = FMraw(1:500, :);
-FM1 = [-1 * (FMraw(1:125, 1) - FMraw(1, 1) ) , -1 * (FMraw(1:125, 2) - FMraw(1, 2) )];
-FM2 = [-1 * (FMraw(126:250, 1) - 16.4 - FMraw(1, 1)) , -1 * (FMraw(126:250, 2) - -0.012 - FMraw(1, 2))];
-FM3 = [-1 * (FMraw(251:375, 1) - -1.1 - FMraw(1, 1)) , -1 * (FMraw(251:375, 2) - -0.021 - FMraw(1, 2))];
-FM4 = [-1 * (FMraw(376:500, 1) - 16.2 - FMraw(1, 1)) , -1 * (FMraw(376:500, 2) - -0.041 - FMraw(1, 2))];
+% FMraw = FMraw(1:500, :);
+FM1 = [-1 * (FMraw(1:128, 1) - FMraw(1, 1) ) , -1 * (FMraw(1:128, 2) - FMraw(1, 2) )];
+FM2 = [-1 * (FMraw(129:256, 1) - 16.4 - FMraw(1, 1)) , -1 * (FMraw(129:256, 2) - -0.012 - FMraw(1, 2))];
+FM3 = [-1 * (FMraw(257:384, 1) - -1.1 - FMraw(1, 1)) , -1 * (FMraw(257:384, 2) - -0.021 - FMraw(1, 2))];
+FM4 = [-1 * (FMraw(385:502, 1) - 16.2 - FMraw(1, 1)) , -1 * (FMraw(385:502, 2) - -0.041 - FMraw(1, 2))];
 FM = [FM1; FM2; FM3; FM4];
 
 % Separate data by configuration
@@ -74,18 +74,26 @@ FM = [FM1; FM2; FM3; FM4];
 
 
 % Calulate total error at each point
-error = (FM - predFM);
+error = (FM(1:500,:) - predFM);
 sqerror = diag(error * error');
 squerror1 = error(:,1).^2;
 squerror2 = error(:,2).^2;
 
 % Calculate RMSE for each configuration
-for i = 1:4
-   
-   RMSE(i,1) = sqrt(sum(squerror1(125*(i-1)+8 : 125*i)) / (125-7));
-   RMSE(i,2) = sqrt(sum(squerror2(125*(i-1)+8 : 125*i)) / (125-7));
-    
-end
+% for i = 1:4
+%    
+%    RMSE(i,1) = sqrt(sum(squerror1(125*(i-1)+1 : 125*i)) / (125));
+%    RMSE(i,2) = sqrt(sum(squerror2(125*(i-1)+1 : 125*i)) / (125));
+%     
+% end
 
+RMSE(1,1) = sqrt(sum(squerror1(1 : length(FM1(:,1)))) / (length(FM1(:,1))));
+RMSE(1,2) = sqrt(sum(squerror2(1 : length(FM1(:,1)))) / (length(FM1(:,1))));
+RMSE(2,1) = sqrt(sum(squerror1(length(FM1(:,1))+1 : length(FM1(:,1))+length(FM2(:,1)))) / (length(FM2(:,1))));
+RMSE(2,2) = sqrt(sum(squerror2(length(FM1(:,1))+1 : length(FM1(:,1))+length(FM2(:,1)))) / (length(FM2(:,1))));
+RMSE(3,1) = sqrt(sum(squerror1(length(FM1(:,1))+length(FM2(:,1))+1 : length(FM1(:,1))+length(FM2(:,1)))+length(FM3(:,1))) / (length(FM3(:,1))));
+RMSE(3,2) = sqrt(sum(squerror2(length(FM1(:,1))+length(FM2(:,1))+1 : length(FM1(:,1))+length(FM2(:,1)))+length(FM3(:,1))) / (length(FM3(:,1))));
+RMSE(4,1) = sqrt(sum(squerror1(length([FM1;FM2;FM3])+1 : 500)) / (length(FM4(:,1))));
+RMSE(4,2) = sqrt(sum(squerror2(length([FM1;FM2;FM3])+1 : 500)) / (length(FM4(:,1))));
 end
 
