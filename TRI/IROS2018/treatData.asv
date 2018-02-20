@@ -38,32 +38,12 @@ FM = zeros(size(FMraw));
 % FM4 = [-1 * (FMraw(376:500, 1) - 14.78 ) , -1 * (FMraw(376:500, 2) - -0.04746 )];
 % FM = [FM1; FM2; FM3; FM4];
 
-% Separate RAW data by configuration
-FMraw1 = FMraw(1:125,:);
-FMraw2 = FMraw(126:250,:);
-FMraw3 = FMraw(251:375,:);
-FMraw4 = FMraw(376:500,:);
-predFM1 = predFM(1:125,:);
-predFM2 = predFM(126:250,:);
-predFM3 = predFM(251:375,:);
-predFM4 = predFM(376:500,:);
-
-% % Remove offset manually, v2
-% j = 60;
-% FMraw = FMraw(1:500, :);
-% FM1 = [-1 * (FMraw(1:125, 1) - FMraw(1, 1) ) , -1 * (FMraw(1:125, 2) - FMraw(1, 2) )];
-% FM2 = [-1 * (FMraw(126:250, 1) - (FMraw2(j,1) - predFM2(j,1)) ) , -1 * (FMraw(126:250, 2) - (FMraw2(j,2) - predFM2(j,2)) )];
-% FM3 = [-1 * (FMraw(251:375, 1) - (FMraw3(j,1) - predFM3(j,1)) ) , -1 * (FMraw(251:375, 2) - (FMraw3(j,2) - predFM3(j,2)) )];
-% FM4 = [-1 * (FMraw(376:500, 1) - (FMraw4(j,1) - predFM4(j,1)) ) , -1 * (FMraw(376:500, 2) - (FMraw4(j,2) - predFM4(j,2)) )];
-% FM = [FM1; FM2; FM3; FM4];
-%FM = -FMraw; % just plot the raw data with sign flipped
-
-% Remove offset manually, v3
+% Remove offset manually, v2
 FMraw = FMraw(1:500, :);
 FM1 = [-1 * (FMraw(1:125, 1) - FMraw(1, 1) ) , -1 * (FMraw(1:125, 2) - FMraw(1, 2) )];
-FM2 = [-1 * (FMraw(126:250, 1) - 16.4 - FMraw(1, 1)) , -1 * (FMraw(126:250, 2) - -0.012 - FMraw(1, 2))];
-FM3 = [-1 * (FMraw(251:375, 1) - -1.1 - FMraw(1, 1)) , -1 * (FMraw(251:375, 2) - -0.021 - FMraw(1, 2))];
-FM4 = [-1 * (FMraw(376:500, 1) - 16.2 - FMraw(1, 1)) , -1 * (FMraw(376:500, 2) - -0.041 - FMraw(1, 2))];
+FM2 = [-1 * (FMraw(126:250, 1) - (FMraw(8,1)) ) , -1 * (FMraw(126:250, 2) - -0.025 )];
+FM3 = [-1 * (FMraw(251:375, 1) - -0.04349 ) , -1 * (FMraw(251:375, 2) - -0.02678 )];
+FM4 = [-1 * (FMraw(376:500, 1) - 14.78 ) , -1 * (FMraw(376:500, 2) - -0.04746 )];
 FM = [FM1; FM2; FM3; FM4];
 
 % Separate data by configuration
@@ -71,7 +51,10 @@ FM = [FM1; FM2; FM3; FM4];
 % FM2 = FM(126:250,:);
 % FM3 = FM(251:375,:);
 % FM4 = FM(376:500,:);
-
+predFM1 = predFM(1:125,:);
+predFM2 = predFM(126:250,:);
+predFM3 = predFM(251:375,:);
+predFM4 = predFM(376:500,:);
 
 % Calulate total error at each point
 error = (FM - predFM);

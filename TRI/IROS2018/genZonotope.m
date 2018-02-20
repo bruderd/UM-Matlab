@@ -19,6 +19,7 @@ vy = V(:,6);
 
 zntp = convhull(vx,vy);
 
+% % Plot the zonotope
 % figure
 % hold on
 % plot(X(1,:),X(2,:),'r*');
