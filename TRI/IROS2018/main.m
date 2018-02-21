@@ -90,8 +90,8 @@ mzntp4 = convhull(FM4(:,1),FM4(:,2));
 hold on
 plot((FM1(mzntp1,1)*scale(1) + 0)*1e3, rad2deg(FM1(mzntp1,2)*scale(2) + 0), 'b-');
 plot((FM2(mzntp2,1)*scale(1) + 0.005)*1e3, rad2deg(FM2(mzntp2,2)*scale(2) + 0), 'b-');
-plot((FM3(mzntp3,1)*scale(1) + 0)*1e3, rad2deg(FM3(mzntp3,2)*scale(2) + deg2rad(20)), 'b-');
-plot((FM4(mzntp4,1)*scale(1) + 0.005)*1e3, rad2deg(FM4(mzntp4,2)*scale(2) + deg2rad(20)), 'b-');
+plot((FM3(mzntp3,1)*scale(1) + 0)*1e3, rad2deg(FM3(mzntp3,2)*scale(2)) + 20, 'b-');
+plot((FM4(mzntp4,1)*scale(1) + 0.005)*1e3, rad2deg(FM4(mzntp4,2)*scale(2)) + 20, 'b-');
 hold off
 
 
