@@ -31,6 +31,9 @@ testPoints_out = testPoints * diag([0.033418, 1, 10/testParams.TRmax, 10/testPar
 csvwrite('testPoints.csv',testPoints_out);      % exports testPoint to csv file
 dlmwrite('testPoints.txt',testPoints_out, 'delimiter', '\t', 'newline', 'pc');
 
+%% Calculate Error between test data and measured data
+[FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE] = treatData('testData/testData_3.mat', testPoints, testPoints_out, params, testParams);
+
 %% Calculate the force zonotope for each test configuration
 for i = 1:length(testParams.stest)
     s = testParams.stest(i);
@@ -39,7 +42,6 @@ for i = 1:length(testParams.stest)
     [zntp(:,i), vx(:,i), vy(:,i)] = zonotopeFun(x, params);
 
     % Plot measured points on top of zonotope
-    [FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE] = treatData('testData/testData_3.mat', testPoints, testPoints_out, params, testParams);
     if i == 1
         FM = FM1;
         FMpred = FM1pred;
@@ -48,12 +50,13 @@ for i = 1:length(testParams.stest)
         FMpred = FM2pred;
     elseif i == 3
         FM = FM3;
-   
+        FMpred = FM3pred;
     elseif i == 4
         FM = FM4;
+        FMpred = FM4pred;
     end
     % generate cvx hull of measured points
-    cvxh = convhull(FM(:,1),FM(:,2));
+    cvxh(:,:,i) = convhull(FM(:,1),FM(:,2));
     hold on
     plot(FMpred(:, 1), FMpred(:, 2), 'r*')
     plot(FM(:,1), FM(:,2), 'b*')
@@ -65,12 +68,23 @@ end
 % Plot all of the force zonotopes using subplots
 % ...
 
-%% Calculate the forces at each test data point
+%% Create awesome plot of all the zonotopes based on configuration
 
-predForces = calcModelFM(testPoints, params);
+xp = (-10:5:10) * 1e-3;
+yp = -deg2rad(40):deg2rad(20):deg2rad(40);
+[Xp, Yp] = meshgrid(xp,yp);
+sp = Xp(:)';
+wp = Yp(:)';
+qp = [sp;wp];
 
-% Append force predictions to testPoints matrix
-testPred = [testPoints, predForces];
+% Creat plot
+scale = [0.00018, 2];
+zntp_qplot(qp, scale, params);
+
+% plot zonotopes of measured points on top
+hold on
+plot(FM1(cvxh,1), FM(cvxh,2), 'b-');
+hold off
 
 
 

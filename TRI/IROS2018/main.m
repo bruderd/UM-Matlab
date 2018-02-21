@@ -31,6 +31,9 @@ testPoints_out = testPoints * diag([0.033418, 1, 10/testParams.TRmax, 10/testPar
 csvwrite('testPoints.csv',testPoints_out);      % exports testPoint to csv file
 dlmwrite('testPoints.txt',testPoints_out, 'delimiter', '\t', 'newline', 'pc');
 
+%% Calculate Error between test data and measured data
+[FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE] = treatData('testData/testData_3.mat', testPoints, testPoints_out, params, testParams);
+
 %% Calculate the force zonotope for each test configuration
 for i = 1:length(testParams.stest)
     s = testParams.stest(i);
@@ -39,7 +42,6 @@ for i = 1:length(testParams.stest)
     [zntp(:,i), vx(:,i), vy(:,i)] = zonotopeFun(x, params);
 
     % Plot measured points on top of zonotope
-    [FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE] = treatData('testData/testData_3.mat', testPoints, testPoints_out, params, testParams);
     if i == 1
         FM = FM1;
         FMpred = FM1pred;
@@ -66,12 +68,31 @@ end
 % Plot all of the force zonotopes using subplots
 % ...
 
-%% Calculate the forces at each test data point
+%% Create awesome plot of all the zonotopes based on configuration
 
-predForces = calcModelFM(testPoints, params);
+xp = (-10:5:10) * 1e-3;
+yp = -deg2rad(40):deg2rad(20):deg2rad(40);
+[Xp, Yp] = meshgrid(xp,yp);
+sp = Xp(:)';
+wp = Yp(:)';
+qp = [sp;wp];
 
-% Append force predictions to testPoints matrix
-testPred = [testPoints, predForces];
+% Creat plot
+scale = [0.00018, 2];
+zntp_qplot(qp, scale, params);
+
+% plot zonotopes of measured points on top
+mzntp1 = convhull(FM1(:,1),FM1(:,2));
+mzntp2 = convhull(FM2(:,1),FM2(:,2));
+mzntp3 = convhull(FM3(:,1),FM3(:,2));
+mzntp4 = convhull(FM4(:,1),FM4(:,2));
+
+hold on
+plot(FM1(mzntp1,1)*scale(1) + 0, FM1(mzntp1,2)*scale(2) + 0, 'b-');
+plot(FM2(mzntp2,1)*scale(1) + 0.005, FM2(mzntp2,2)*scale(2) + 0, 'b-');
+plot(FM3(mzntp3,1)*scale(1) + 0, FM3(mzntp3,2)*scale(2) + deg2rad(20), 'b-');
+plot(FM4(mzntp4,1)*scale(1) + 0.005, FM4(mzntp4,2)*scale(2) + deg2rad(20), 'b-');
+hold off
 
 
 
