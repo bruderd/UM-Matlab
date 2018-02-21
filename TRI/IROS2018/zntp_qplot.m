@@ -20,8 +20,8 @@ for i = 1: length(qpoints(1,:))
     % Plot the force zonotope
     hold on
 %     plot(q(1), q(2), 'r*')
-    quiver(zeros(1,params.num) + q(1), zeros(1,params.num) + q(2), ztmax(3,:),ztmax(6,:), 'ShowArrowHead', 'off', 'AutoScaleFactor', 1, 'Color', 'r', 'LineWidth', 1)
-    patch(vx(zntp), vy(zntp), 'r', 'FaceAlpha', 0.25, 'EdgeColor', 'none')
+    quiver((zeros(1,params.num) + q(1))*1e3, rad2deg(zeros(1,params.num) + q(2)), ztmax(3,:)*1e3, rad2deg(ztmax(6,:)), 'ShowArrowHead', 'off', 'AutoScaleFactor', 1, 'Color', 'r', 'LineWidth', 1)
+    patch(vx(zntp)*1e3, rad2deg(vy(zntp)), 'r', 'FaceAlpha', 0.25, 'EdgeColor', 'none')
 %     plot(ztmax(3,:),ztmax(6,:),'r*');
 end
 
@@ -35,8 +35,8 @@ line([0 0], yL, 'color', 'k');  %x-axis
 line(xL, [0 0], 'color', 'k');  %y-axis
 grid on
 box on
-xlabel('Extension, $s$ (m)', 'Interpreter', 'LaTex')
-ylabel('Rotation, $w$ (rad)', 'Interpreter', 'LaTex')
+xlabel('Extension, $s$ (mm)', 'Interpreter', 'LaTex')
+ylabel('Rotation, $w$ (deg)', 'Interpreter', 'LaTex')
 hold off
 
 end
