@@ -32,7 +32,7 @@ csvwrite('testPoints.csv',testPoints_out);      % exports testPoint to csv file
 dlmwrite('testPoints.txt',testPoints_out, 'delimiter', '\t', 'newline', 'pc');
 
 %% Calculate Error between test data and measured data
-[FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE] = treatData('testData/testData_3.mat', testPoints, testPoints_out, params, testParams);
+[FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE, maxERR] = treatData('testData/testData_3.mat', testPoints, testPoints_out, params, testParams);
 
 %% Calculate the force zonotope for each test configuration
 for i = 1:length(testParams.stest)
@@ -57,10 +57,14 @@ for i = 1:length(testParams.stest)
     end
     % generate cvx hull of measured points
     cvxh = convhull(FM(:,1),FM(:,2));
+    % plot
     hold on
     plot(FMpred(:, 1), FMpred(:, 2), 'r*')
     plot(FM(:,1), FM(:,2), 'b*')
     plot(FM(cvxh,1), FM(cvxh,2), 'b-');
+    for j = 1:length(FM)
+        plot([FM(j,1), FMpred(j,1)], [FM(j,2), FMpred(j,2)], 'm')
+    end
     hold off
 end
 
