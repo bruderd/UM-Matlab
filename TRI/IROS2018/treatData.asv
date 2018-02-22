@@ -8,7 +8,7 @@ function [FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE, maxERR] 
 load(MatDataFile);
 FMraw = SyncFT.data;
 RESraw = SycRes.data;
-RESraw = [RESraw(2:end, :); zeros(size(RESraw(1,)))]; % offset by one row EXPERIMENTAL
+RESraw = [RESraw(2:end, :); zeros(size(RESraw(1,:)))]; % offset by one row EXPERIMENTAL
 
 %% Remove problematic points
 % remove bad transition points (where linear actuator or servo weren't set)
@@ -122,28 +122,28 @@ FM = [FM1; FM2; FM3; FM4];
 
 %% plot to check if a weird offset is arrising after separation (REMOVE AFTER DEBUGGING)
 
-% plot
-figure
-hold on
-plot(FMpred(:, 1), FMpred(:, 2), 'r*')
-plot(FM(:,1), FM(:,2), 'b*')
-for j = 1:length(FM)
-    plot([FM(j,1), FMpred(j,1)], [FM(j,2), FMpred(j,2)], 'm')
-end
-hold off
-
-
-figure
-hold on
-for k = 1:length(FM1)
-    testPoint_V = [RESraw(k,8), RESraw(k,7), RESraw(k,4), RESraw(k,6), RESraw(k,5)];   % actual tested points in units: [s(V), w(deg), P1(V), P2(V), P3(V)]
-    testPoint = [(testPoint_V(1,1)-4.077)*(1/0.033418), testPoint_V(1,2)-125, testPoint_V(1,3:5) * (999740/10)];   % convert it to units: [mm, deg, Pa, Pa, Pa]
-    FMpred = calcModelFM(testPoint, params);
-    plot(FM1(k,1), FM1(k,2), 'b*')
-    plot(FMpred(1,1), FMpred(1,2), 'r*')
-    plot([FM1(k,1), FMpred(1,1)], [FM1(k,2), FMpred(1,2)], 'm')
-end
-hold off
+% % plot
+% figure
+% hold on
+% plot(FMpred(:, 1), FMpred(:, 2), 'r*')
+% plot(FM(:,1), FM(:,2), 'b*')
+% for j = 1:length(FM)
+%     plot([FM(j,1), FMpred(j,1)], [FM(j,2), FMpred(j,2)], 'm')
+% end
+% hold off
+% 
+% 
+% figure
+% hold on
+% for k = 1:length(FM1)
+%     testPoint_V = [RESraw(k,8), RESraw(k,7), RESraw(k,4), RESraw(k,6), RESraw(k,5)];   % actual tested points in units: [s(V), w(deg), P1(V), P2(V), P3(V)]
+%     testPoint = [(testPoint_V(1,1)-4.077)*(1/0.033418), testPoint_V(1,2)-125, testPoint_V(1,3:5) * (999740/10)];   % convert it to units: [mm, deg, Pa, Pa, Pa]
+%     FMpred = calcModelFM(testPoint, params);
+%     plot(FM1(k,1), FM1(k,2), 'b*')
+%     plot(FMpred(1,1), FMpred(1,2), 'r*')
+%     plot([FM1(k,1), FMpred(1,1)], [FM1(k,2), FMpred(1,2)], 'm')
+% end
+% hold off
 
 %%
 
@@ -175,4 +175,29 @@ RMSE(3,1) = sqrt(sum(squerror1(length([FM1;FM2])+1 : length([FM1;FM2;FM3]))) / (
 RMSE(3,2) = sqrt(sum(squerror2(length([FM1;FM2])+1 : length([FM1;FM2;FM3]))) / (length(FM3(:,1))));
 RMSE(4,1) = sqrt(sum(squerror1(length([FM1;FM2;FM3])+1 : end)) / (length(FM4(:,1))));
 RMSE(4,2) = sqrt(sum(squerror2(length([FM1;FM2;FM3])+1 : end)) / (length(FM4(:,1))));
+
+% Average Percent Error
+for m=1:length(FM1)
+    perror(m) = norm(error(m,:)) / norm(FM1(:,:))
+    
+percERR(1,1) = sum( norm(error(1:length(FM1),:)) / norm(FM1(:,:)) ) / length(FM1); 
+
+
+
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

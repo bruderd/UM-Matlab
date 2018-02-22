@@ -1,4 +1,4 @@
-function [FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE, maxERR] = treatData(MatDataFile, testPoints2, testPoints_out, params, testParams)
+function [FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE, maxERR, percERR] = treatData(MatDataFile, testPoints2, testPoints_out, params, testParams)
 % treatData: Reads in measured data, removes elastomer offsets, splits into
 % separate arrays for each configuration. Also measures error
 % MatDataFile is a string which is the name of the .mat file containing the
@@ -175,4 +175,30 @@ RMSE(3,1) = sqrt(sum(squerror1(length([FM1;FM2])+1 : length([FM1;FM2;FM3]))) / (
 RMSE(3,2) = sqrt(sum(squerror2(length([FM1;FM2])+1 : length([FM1;FM2;FM3]))) / (length(FM3(:,1))));
 RMSE(4,1) = sqrt(sum(squerror1(length([FM1;FM2;FM3])+1 : end)) / (length(FM4(:,1))));
 RMSE(4,2) = sqrt(sum(squerror2(length([FM1;FM2;FM3])+1 : end)) / (length(FM4(:,1))));
+
+% Average Percent Error
+for m=1:length(FM)
+    perror(m) = norm(error(m,:)) / norm(FMpred(m,:));
+end    
+percERR(1,1) = sum(perror(1:length(FM1))) / length(FM1); 
+percERR(2,1) = sum(perror(length(FM1)+1 : length([FM1;FM2]))) / length(FM2); 
+percERR(3,1) = sum(perror(length([FM1;FM2])+1 : length([FM1;FM2;FM3]))) / length(FM3); 
+percERR(4,1) = sum(perror(length([FM1;FM2;FM3])+1 : end)) / length(FM4); 
+
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
