@@ -33,7 +33,8 @@ line([0 0], yL, 'color', 'k');  %x-axis
 line(xL, [0 0], 'color', 'k');  %y-axis
 grid on
 box on
-xlabel('Force (N)')
-ylabel('Moment (N-m)')
+% Commented out, will just label in latex...
+% xlabel('Force (N)')
+% ylabel('Moment (N-m)')
 hold off
 

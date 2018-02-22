@@ -59,12 +59,14 @@ for i = 1:length(testParams.stest)
     cvxh = convhull(FM(:,1),FM(:,2));
     % plot
     hold on
-    plot(FMpred(:, 1), FMpred(:, 2), 'r*')
-    plot(FM(:,1), FM(:,2), 'b*')
+    mod = plot(FMpred(:, 1), FMpred(:, 2), 'r*');
+    meas = plot(FM(:,1), FM(:,2), 'b*');
     plot(FM(cvxh,1), FM(cvxh,2), 'b-');
     for j = 1:length(FM)
         plot([FM(j,1), FMpred(j,1)], [FM(j,2), FMpred(j,2)], 'm')
     end
+%     legend([mod, meas], {'Predicted', 'Measured'})
+%     set(gca,'YTickLabel',[])
     hold off
 end
 
