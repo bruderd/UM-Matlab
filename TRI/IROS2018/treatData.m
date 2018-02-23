@@ -177,9 +177,10 @@ RMSE(4,1) = sqrt(sum(squerror1(length([FM1;FM2;FM3])+1 : end)) / (length(FM4(:,1
 RMSE(4,2) = sqrt(sum(squerror2(length([FM1;FM2;FM3])+1 : end)) / (length(FM4(:,1))));
 
 % Average Percent Error
+perror = zeros(length(FM), 1);
 for m=1:length(FM)
     perror(m) = norm(error(m,:)) / norm(FMpred(m,:));
-end    
+end 
 percERR(1,1) = sum(perror(1:length(FM1))) / length(FM1); 
 percERR(2,1) = sum(perror(length(FM1)+1 : length([FM1;FM2]))) / length(FM2); 
 percERR(3,1) = sum(perror(length([FM1;FM2])+1 : length([FM1;FM2;FM3]))) / length(FM3); 

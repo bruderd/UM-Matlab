@@ -59,17 +59,14 @@ for i = 1:length(testParams.stest)
     cvxh = convhull(FM(:,1),FM(:,2));
     % plot
     hold on
-    mod = plot(FMpred(:, 1), FMpred(:, 2), 'k^', 'markers', 6);
+    mod = plot(FMpred(:, 1), FMpred(:, 2), 'k^', 'markers', 7);
     meas = plot(FM(:,1), FM(:,2), 'k.', 'markers', 13);
     plot(FM(cvxh,1), FM(cvxh,2), 'k-', 'LineWidth', 2);
     for j = 1:length(FM)
         plot([FM(j,1), FMpred(j,1)], [FM(j,2), FMpred(j,2)], 'k')
     end
-    legend([mod, meas], {'Predicted', 'Measured'})
-    ax = gca;
-    ax.XTick = [-12, -6, 0, 6, 12];
-    ax.YTick = [-0.08, -0.04, 0, 0.04, 0.08];
-    ax.YTickLabel = []; %     set(gca,'YTickLabel',[])
+%     legend([mod, meas], {'Predicted', 'Measured'})
+%     set(gca,'YTickLabel',[])
     hold off
 end
 
