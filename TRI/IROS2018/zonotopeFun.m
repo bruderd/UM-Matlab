@@ -42,7 +42,7 @@ line(xL, [0 0], 'color', 'k');  %y-axis
 grid on
 box on
 % Commented out, will just label in latex...
-% xlabel('Force (N)')
-% ylabel('Moment (N-m)')
+xlabel('Force, $F^{\hat{z}_e}$ (N)', 'Interpreter', 'LaTex')
+ylabel('Moment, $M^{\hat{z}_e}$ (N-m)', 'Interpreter', 'LaTex')
 hold off
 

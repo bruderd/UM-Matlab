@@ -59,17 +59,17 @@ for i = 1:length(testParams.stest)
     cvxh = convhull(FM(:,1),FM(:,2));
     % plot
     hold on
-    mod = plot(FMpred(:, 1), FMpred(:, 2), 'k^', 'markers', 6);
-    meas = plot(FM(:,1), FM(:,2), 'k.', 'markers', 13);
-    plot(FM(cvxh,1), FM(cvxh,2), 'k-', 'LineWidth', 2);
-    for j = 1:length(FM)
-        plot([FM(j,1), FMpred(j,1)], [FM(j,2), FMpred(j,2)], 'k')
-    end
-    legend([mod, meas], {'Predicted', 'Measured'})
+%    mod = plot(FMpred(:, 1), FMpred(:, 2), 'k^', 'markers', 6);
+%    meas = plot(FM(:,1), FM(:,2), 'k.', 'markers', 13);
+%    plot(FM(cvxh,1), FM(cvxh,2), 'k-', 'LineWidth', 2);
+%    for j = 1:length(FM)
+%        plot([FM(j,1), FMpred(j,1)], [FM(j,2), FMpred(j,2)], 'k')
+%    end
+%    legend([mod, meas], {'Predicted', 'Measured'})
     ax = gca;
     ax.XTick = [-12, -6, 0, 6, 12];
     ax.YTick = [-0.08, -0.04, 0, 0.04, 0.08];
-    ax.YTickLabel = []; %     set(gca,'YTickLabel',[])
+%    ax.YTickLabel = []; %     set(gca,'YTickLabel',[])
     hold off
 end
 
@@ -97,10 +97,10 @@ mzntp3 = convhull(FM3(:,1),FM3(:,2));
 mzntp4 = convhull(FM4(:,1),FM4(:,2));
 
 hold on
-plot((FM1(mzntp1,1)*scale(1) + 0)*1e3, rad2deg(FM1(mzntp1,2)*scale(2) + 0), 'b-');
-plot((FM2(mzntp2,1)*scale(1) + 0.005)*1e3, rad2deg(FM2(mzntp2,2)*scale(2) + 0), 'b-');
-plot((FM3(mzntp3,1)*scale(1) + 0)*1e3, rad2deg(FM3(mzntp3,2)*scale(2)) + 20, 'b-');
-plot((FM4(mzntp4,1)*scale(1) + 0.005)*1e3, rad2deg(FM4(mzntp4,2)*scale(2)) + 20, 'b-');
+plot((FM1(mzntp1,1)*scale(1) + 0)*1e3, rad2deg(FM1(mzntp1,2)*scale(2) + 0), 'k-', 'LineWidth', 1.5);
+plot((FM2(mzntp2,1)*scale(1) + 0.005)*1e3, rad2deg(FM2(mzntp2,2)*scale(2) + 0), 'k-', 'LineWidth', 1.5);
+plot((FM3(mzntp3,1)*scale(1) + 0)*1e3, rad2deg(FM3(mzntp3,2)*scale(2)) + 20, 'k-', 'LineWidth', 1.5);
+plot((FM4(mzntp4,1)*scale(1) + 0.005)*1e3, rad2deg(FM4(mzntp4,2)*scale(2)) + 20, 'k-', 'LineWidth', 1.5);
 hold off
 
 

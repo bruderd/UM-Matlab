@@ -19,10 +19,16 @@ for i = 1: length(qpoints(1,:))
    
     % Plot the force zonotope
     hold on
-%     plot(q(1), q(2), 'r*')
-    quiver((zeros(1,params.num) + q(1))*1e3, rad2deg(zeros(1,params.num) + q(2)), ztmax(3,:)*1e3, rad2deg(ztmax(6,:)), 'ShowArrowHead', 'off', 'AutoScaleFactor', 1, 'Color', 'r', 'LineWidth', 1)
-    patch(vx(zntp)*1e3, rad2deg(vy(zntp)), 'r', 'FaceAlpha', 0.25, 'EdgeColor', 'none')
+    patch(vx(zntp)*1e3, rad2deg(vy(zntp)), 'k', 'FaceAlpha', 0.2, 'EdgeColor', 'none')
 %     plot(ztmax(3,:),ztmax(6,:),'r*');
+    
+%     quiver((zeros(1,params.num) + q(1))*1e3, rad2deg(zeros(1,params.num) + q(2)), ztmax(3,:)*1e3, rad2deg(ztmax(6,:)), 'ShowArrowHead', 'off', 'AutoScaleFactor', 1, 'Color', 'r', 'LineWidth', 1)
+    % Plot the zonotope generating vectors in separate colors
+    quiver(q(1)*1e3, rad2deg(q(2)), ztmax(3,1)*1e3, rad2deg(ztmax(6,1)), 'ShowArrowHead', 'off', 'AutoScaleFactor', 1, 'Marker', '.', 'Color', [27,158,119]/255, 'LineWidth', 2) % red [227,26,28]/255
+    quiver(q(1)*1e3, rad2deg(q(2)), ztmax(3,2)*1e3, rad2deg(ztmax(6,2)), 'ShowArrowHead', 'off', 'AutoScaleFactor', 1, 'Marker', '.', 'Color', [217,95,2]/255, 'LineWidth', 2)  % yellow [254,204,92]/255
+    quiver(q(1)*1e3, rad2deg(q(2)), ztmax(3,3)*1e3, rad2deg(ztmax(6,3)), 'ShowArrowHead', 'off', 'AutoScaleFactor', 1, 'Marker', '.', 'Color', [117,112,179]/255, 'LineWidth', 2)  % orange [253,141,60]/255
+    hold off
+    
 end
 
 % change/specify plot features
@@ -35,8 +41,8 @@ line([0 0], yL, 'color', 'k');  %x-axis
 line(xL, [0 0], 'color', 'k');  %y-axis
 grid on
 box on
-xlabel('Extension, $s$ (mm)', 'Interpreter', 'LaTex')
-ylabel('Rotation, $w$ (deg)', 'Interpreter', 'LaTex')
+xlabel('Extension, $\Delta l$ (mm)', 'Interpreter', 'LaTex')
+ylabel('Rotation, $\Delta \phi$ (deg)', 'Interpreter', 'LaTex')
 hold off
 
 end
