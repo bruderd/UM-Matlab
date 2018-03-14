@@ -20,8 +20,8 @@ q = x2q(x);
 Jq = calcJq(q, params);
 
 % define output matrices
-H = Jq*(D'*D)*Jq' + penalty*eye(num);
-f = Jq*D'*(C*q + fload);
+H = 2 * Jq*(D'*D)*Jq' + penalty*eye(num);
+f = 2 * Jq*D'*(C*q + fload);
 
 end
 
