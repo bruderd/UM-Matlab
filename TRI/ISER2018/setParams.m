@@ -6,21 +6,21 @@ function params = setParams
 %% (USER EDIT) User defined parameters
 
 num = 3;    % number of FREEs in combination
-Gama = deg2rad([48, -48, -85]); % relaxed fiber angle of each FREE
+Gama = deg2rad([48, -48, -89]); % relaxed fiber angle of each FREE
 R = (10e-3)/2 * ones(1,3);  % relaxed radius of each FREE [m]
 L = 0.10 * ones(1,3);   %  relaxed length of each FREE [m] 
 d = zeros(3,3); % location of attachment points to the end effector [m]
 a = [0,0,1 ; 0,0,1 ; 0,0,1]';    % direction of FREE axis at attachment point [unit vector]
 pmin = [1, 1, 1];   % min gauge pressure for each FREE [Pa]
-pmax = (1/0.14503) * 1e3 * [15 15 15];   % max gauge pressure for each FREE [Pa]
+pmax = (1/0.14503) * 1e3 * [15 15 15] * 2;   % max gauge pressure for each FREE [Pa]
 meff = 1;   % mass of the end effector [kg]
 cmeff = [0,0,0]';   % location of the center of mass of end effector [m]
-C = -1e3*[1 0 0 1; 1 0 0 1; 1 0 0 1]';   % compliance (stiffness) matrix for each FREE vectorized so that [c1, c2; c3, c4] = [c1, c2, c3, c4]', horizontally concatenated
+C = -(1)*[1e1 0 0 1e-3; 1e1 0 0 1e-3; 1e1 0 0 1e-3]';   % compliance (stiffness) matrix for each FREE vectorized so that [c1, c2; c3, c4] = [c1, c2, c3, c4]', horizontally concatenated
 
 %% check that the sizes of parameters entered are consistent
 if ~(all(size(L) == size(R)) && all(size(R) == size(Gama)) && all(size(Gama) == size(pmin))...
         && all(size(pmin) == size(pmax)) && all(size(pmax) == size(d(1,:))) && all(size(d) == size(a)))
-    error('The sizes one or more assigned variables are not consistent');
+    error('The sizes of one or more assigned variables are not consistent');
 end
     
 %% Create struct to store all parameters
@@ -55,7 +55,7 @@ for i = 1:num
 end
 
 % penalty weighting (this is used to focus on the equilibrium point with lowest pressure)
-params.penalty = 1;
+params.penalty = 1e-5;
 
 end
 

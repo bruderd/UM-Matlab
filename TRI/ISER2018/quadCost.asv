@@ -22,7 +22,7 @@ Jq = calcJq(q, params);
 % define output matrices
 H = 2 * Jq*(D'*D)*Jq' + penalty*eye(num);
 f = 2 * Jq*D'*(C*q + fload);
-Aeq = D*Jq';    % equality constraint makes boundary minima infeasable
+Aeq = D*Jq';
 beq = -(D*C*q + fload);
 
 end
