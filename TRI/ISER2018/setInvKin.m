@@ -9,7 +9,7 @@ q = sym('q', [2*params.num, 1], 'real');
 x = sym('x', [6,1], 'real');
 
 % 2 DOF rotation and translation rig
-q(1:2:end) = x(3)*ones(params.num,1);  % dl
+q(1:2:end) = (x(3) - params.deff(3))*ones(params.num,1);  % dl
 q(2:2:end) = x(6)*ones(params.num,1);  % dphi
 
 
