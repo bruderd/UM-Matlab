@@ -12,16 +12,12 @@ end
 num = params.num;
 
 %% Check that the desired end effector position is even physically possible given physical constraints of system
-% If it is possible, replace the desired x with the desired x written in
-% terms of the independent components.
 
-[xgoal, feasability] = checkfeas_xdes( x, params );
-if ~feasability
+[]
+if ~checkfeas_xdes( x, params )
     psol = [];
     exitflag = -2;
     return;
-else
-    x = xgoal';
 end
 
 

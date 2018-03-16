@@ -29,7 +29,8 @@ if ~(all(size(L) == size(R)) && all(size(R) == size(Gama)) && all(size(Gama) == 
 end
     
 %% Create struct to store all parameters
-params = struct;
+global params 
+= struct;
 
 params.num = num;
 params.Gama = Gama;
@@ -66,7 +67,7 @@ params.penalty = 1e-5;
 
 
 %% set the inverse kinematic relationship for the system
-params = setInvKin(params);
+setInvKin(params);
 
 %% save these parameters as a .mat file
 
