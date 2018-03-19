@@ -5,7 +5,8 @@ function [xgoal, feasability] = checkfeas_xdes( xdes, params )
 fun = @(xind) xind2xcoupled(xind) - xdes;
 xind0 = ones(params.xindnum, 1);
 
-[xindsol, ~, exitflag] = fsolve(fun, xind0);
+options = optimoptions('fsolve', 'Algorithm', 'levenberg-marquardt', 'FunctionTolerance', 1e-9);
+[xindsol, ~, exitflag] = fsolve(fun, xind0, options);
 
 if exitflag <= 0
     xgoal = [];

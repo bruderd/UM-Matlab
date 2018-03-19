@@ -1,4 +1,4 @@
-function [psol, exitflag] = calcPressure( x, params, fload)
+function [psol, plin, exitflag] = calcPressure( x, params, fload)
 %calcPressure: Calculates the input pressure needed to acheive some
 %end effector position x by solving for the equilibrium point.
 %   Detailed explanation goes here
@@ -12,12 +12,16 @@ end
 num = params.num;
 
 %% Check that the desired end effector position is even physically possible given physical constraints of system
+% If it is possible, replace the desired x with the desired x written in
+% terms of the independent components.
 
-[]
-if ~checkfeas_xdes( x, params )
+[xgoal, feasability] = checkfeas_xdes( x, params );
+if ~feasability
     psol = [];
     exitflag = -2;
     return;
+else
+    x = xgoal';
 end
 
 
@@ -30,6 +34,8 @@ b = zeros(num, 1);
 
 %% solve for the pressure at equilibrium point
 [psol, ~, exitflag] = quadprog(H,f,[],[],Aeq,beq,params.pmin,params.pmax);
+
+plin = lsqlin(Aeq,beq,[],[],Aeq,beq,lb,ub);
 
 
 %% solve using lsqnonlin (cannot handle casese with non-unique solutions)

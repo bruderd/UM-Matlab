@@ -66,7 +66,7 @@ params.penalty = 1e-5;
 
 
 %% set the inverse kinematic relationship for the system
-params = setInvKin(params);
+params = setInvKin(params); % a few parameters are added in this function
 
 %% save these parameters as a .mat file
 

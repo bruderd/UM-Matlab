@@ -1,4 +1,4 @@
-function [psol, exitflag] = calcPressure( x, params, fload)
+function [psol, plin, exitflag] = calcPressure( x, params, fload)
 %calcPressure: Calculates the input pressure needed to acheive some
 %end effector position x by solving for the equilibrium point.
 %   Detailed explanation goes here
@@ -34,6 +34,10 @@ b = zeros(num, 1);
 
 %% solve for the pressure at equilibrium point
 [psol, ~, exitflag] = quadprog(H,f,[],[],Aeq,beq,params.pmin,params.pmax);
+
+
+%% solution using lsqlin for comparision. It has no penalty term so solutions differ from qp
+% plin = lsqlin(Aeq,beq,[],[],Aeq,beq,params.pmin,params.pmax);
 
 
 %% solve using lsqnonlin (cannot handle casese with non-unique solutions)

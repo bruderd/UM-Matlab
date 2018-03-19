@@ -31,8 +31,8 @@ end
 %% (USER EDIT) Symbolically definded coupling between states
 
 % define which components are independent (all others can be written as a function of these components)
-params.xindselect = [0 0 0 1 1 1];
-params.xindnum = length( params.xindselect(params.xindselect == 1) );
+params.xindselect = [0 0 0 1 1 1];  % specify which states are independent
+params.xindnum = length( params.xindselect(params.xindselect == 1) );   % number of independent states
 
 % % 2 DOF rotation and translation rig (axes aligned)
 % xind = sym('xind', [2,1], 'real'); % size should be number of independent components
@@ -42,8 +42,8 @@ params.xindnum = length( params.xindselect(params.xindselect == 1) );
 %             xind(2),...
 %             0,...
 %             0,];
-% 
-% 
+
+
 % % 2 DOF rotation and translation rig (axes not aligned)
 % xind = sym('xind', [2,1], 'real'); % size should be number of independent components
 % xcoupled = [0,...
