@@ -70,7 +70,7 @@ params = setInvKin(params); % a few parameters are added in this function
 
 %% save these parameters as a .mat file
 
-% check for optional argument
+% check for optional argument, if given, save params as .mat file with that name
 if ~exist('varargin','var')
     current_folder = cd;
     savetolocation = strcat(current_folder, '\configs\', varargin);
