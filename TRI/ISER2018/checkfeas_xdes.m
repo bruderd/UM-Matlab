@@ -1,9 +1,10 @@
 function [xgoal, feasability] = checkfeas_xdes( xdes, params )
-%UNTITLED5 Summary of this function goes here
+%checkfeas_xdes: Checks that the desired state is physically possible with
+%current hardware implementation.
 %   Detailed explanation goes here
 
 fun = @(xind) xind2xcoupled(xind) - xdes;
-xind0 = ones(params.xindnum, 1);
+xind0 = zeros(params.xindnum, 1);
 
 options = optimoptions('fsolve', 'Algorithm', 'levenberg-marquardt', 'FunctionTolerance', 1e-9);
 [xindsol, ~, exitflag] = fsolve(fun, xind0, options);

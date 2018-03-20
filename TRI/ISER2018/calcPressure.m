@@ -1,4 +1,4 @@
-function [psol, plin, exitflag] = calcPressure( x, params, fload)
+function [psol, exitflag] = calcPressure( x, params, fload)
 %calcPressure: Calculates the input pressure needed to acheive some
 %end effector position x by solving for the equilibrium point.
 %   Detailed explanation goes here
@@ -15,14 +15,14 @@ num = params.num;
 % If it is possible, replace the desired x with the desired x written in
 % terms of the independent components.
 
-[xgoal, feasability] = checkfeas_xdes( x, params );
-if ~feasability
-    psol = [];
-    exitflag = -2;
-    return;
-else
-    x = xgoal';
-end
+% [xgoal, feasability] = checkfeas_xdes( x, params );
+% if ~feasability
+%     psol = [];
+%     exitflag = -2;
+%     return;
+% else
+%     x = xgoal';
+% end
 
 
 %% calculate quadratic cost function matrices

@@ -5,17 +5,16 @@ clear;
 
 params = setParams;
 
-
 x = -0.05:0.005:0.05;
 y = -0.05:0.005:0.05;
-z = 0:0.005:0.05;
-phi = -(4*pi):0.5:(4*pi);
+z = -0.05:0.003:0.05;
+phi = -(4*pi):0.3:(4*pi);
 theta = -(pi):0.5:(pi);
 psi = -(pi):0.5:(pi);
 
 % only use 2 at a time for visualization purposes
-in1 = phi;
-in2 = psi;
+in1 = z;
+in2 = phi;
 
 testPoints = combvec(in1,in2);
 
@@ -34,11 +33,19 @@ for i = 1:length(X(:,1))
     for j = 1:length(X(1,:))
         in1i = X(i,j);
         in2i = Y(i,j);
-        [~, Z(i,j)] = calcPressure([0,0,0,in1i,0,0]', params);
+        [~, exitflag] = calcPressure([0,0,in1i,in2i,0,0]', params);
+        if exitflag > 0
+            Z(i,j) = 1; % feasable
+        else
+            Z(i,j) = 0; % infeasable
+        end
     end
 end
 
 %% plot it
 figure
 pcolor(X,Y,Z);
-colorbar
+title(['\Gamma: ', num2str(rad2deg(params.Gama(1))), ', ', num2str(rad2deg(params.Gama(2))), ', ', num2str(rad2deg(params.Gama(3)))])
+colorbar('Ticks', [0, 1], 'TickLabels', {'infeasable', 'feasable'})
+xlabel('\Delta l (m)')
+ylabel('\Delta \phi (rad)')

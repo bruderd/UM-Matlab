@@ -7,7 +7,7 @@ function params = setParams(varargin)
 
 % Actuator parameters
 num = 3;    % number of FREEs in combination
-Gama = deg2rad([38, -38, -89]); % relaxed fiber angle of each FREE
+Gama = deg2rad([18, -38, -80]); % relaxed fiber angle of each FREE
 R = (10e-3)/2 * ones(1,3);  % relaxed radius of each FREE [m]
 L = 0.10 * ones(1,3);   %  relaxed length of each FREE [m] 
 d = zeros(3,3); % location of attachment points to the end effector [m]
