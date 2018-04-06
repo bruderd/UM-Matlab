@@ -1,0 +1,14 @@
+% Matlab code to control myDaq valves
+function controlValves(controlcsv)
+
+s = daq.createSession('ni');        % create a session
+
+addAnalogInputChannel(s, 'myDAQ1', 0, 'Voltage');   % sets function of pin 0 of myDAQ1
+addAnalogOutputChannel(s, 'myDaQ1', 1, 'Voltage');  % sets funtion of pin 1 of myDAQ1
+
+s.Rate = 10;    % set scan rate to 10 samples per second
+s.DurationInSeconds = 10;   % run the aquisition for 10 seconds
+
+queueOutputData(s, controlPressures);   % 
+
+data = s.startForeground();     % starts the aquisition and returns the results
