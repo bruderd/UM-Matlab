@@ -1,0 +1,3 @@
+EVENT        time           time0         Percent         Vframes        Vframes0         Aframes        Aframes0
+rFS		    1.208		    0.000		    0.000		  146.000		    1.000		 1306.000		    1.000
+rFO		    1.292		    0.083		  100.000		  156.000		   11.000		 1396.000		   91.000

@@ -1,0 +1,118 @@
+{
+    "date": "2018-04-13",
+    "finishTime": 252983333,
+    "frames": 1709,
+    "freq": 960,
+    "length": "28.467",
+    "markers": 16,
+    "name": "record_20180202_003",
+    "path": "C:/Users/Public/Downloads/record_20180202_003.rpd",
+    "startTime": 224516667,
+    "time": "16:30:54",
+    "trackers": [
+        {
+            "id": 0,
+            "markers": [
+                {
+                    "id": 0,
+                    "name": "0",
+                    "options": ""
+                },
+                {
+                    "id": 1,
+                    "name": "1",
+                    "options": ""
+                },
+                {
+                    "id": 2,
+                    "name": "2",
+                    "options": ""
+                },
+                {
+                    "id": 3,
+                    "name": "3",
+                    "options": ""
+                },
+                {
+                    "id": 4,
+                    "name": "4",
+                    "options": ""
+                },
+                {
+                    "id": 5,
+                    "name": "5",
+                    "options": ""
+                },
+                {
+                    "id": 6,
+                    "name": "6",
+                    "options": ""
+                },
+                {
+                    "id": 7,
+                    "name": "7",
+                    "options": ""
+                }
+            ],
+            "name": "default",
+            "options": "",
+            "type": "point"
+        },
+        {
+            "id": 1,
+            "markers": [
+                {
+                    "id": 8,
+                    "name": "8",
+                    "options": "pos=18.7779,-4.24385,21.9406"
+                },
+                {
+                    "id": 10,
+                    "name": "10",
+                    "options": "pos=23.8565,0.676751,-8.249"
+                },
+                {
+                    "id": 11,
+                    "name": "11",
+                    "options": "pos=1.07935,4.94569,-29.4626"
+                },
+                {
+                    "id": 12,
+                    "name": "12",
+                    "options": "pos=-31.0051,3.56835,-17.5104"
+                },
+                {
+                    "id": 14,
+                    "name": "14",
+                    "options": "pos=-12.7088,-4.94713,33.2814"
+                }
+            ],
+            "name": "tracker1",
+            "options": "",
+            "type": "rigid"
+        },
+        {
+            "id": 2,
+            "markers": [
+                {
+                    "id": 9,
+                    "name": "9",
+                    "options": "pos=-17.5482,-3.53658,20.9497"
+                },
+                {
+                    "id": 13,
+                    "name": "13",
+                    "options": "pos=-14.7878,3.84659,-26.1121"
+                },
+                {
+                    "id": 15,
+                    "name": "15",
+                    "options": "pos=32.336,-0.310063,5.16242"
+                }
+            ],
+            "name": "tracker2",
+            "options": "",
+            "type": "rigid"
+        }
+    ]
+}
