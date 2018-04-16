@@ -1,0 +1,110 @@
+{
+    "date": "2018-04-16",
+    "finishTime": 911050000,
+    "frames": 2707,
+    "freq": 960,
+    "length": "45.100",
+    "markers": 16,
+    "name": "Dan_test0",
+    "path": "C:/Users/Public/Downloads/Dan_test0.rpd",
+    "startTime": 865950000,
+    "time": "11:55:42",
+    "trackers": [
+        {
+            "id": 0,
+            "markers": [
+                {
+                    "id": 0,
+                    "name": "0",
+                    "options": ""
+                },
+                {
+                    "id": 1,
+                    "name": "1",
+                    "options": ""
+                },
+                {
+                    "id": 2,
+                    "name": "2",
+                    "options": ""
+                },
+                {
+                    "id": 3,
+                    "name": "3",
+                    "options": ""
+                },
+                {
+                    "id": 4,
+                    "name": "4",
+                    "options": ""
+                },
+                {
+                    "id": 5,
+                    "name": "5",
+                    "options": ""
+                },
+                {
+                    "id": 6,
+                    "name": "6",
+                    "options": ""
+                },
+                {
+                    "id": 7,
+                    "name": "7",
+                    "options": ""
+                },
+                {
+                    "id": 9,
+                    "name": "9",
+                    "options": ""
+                },
+                {
+                    "id": 13,
+                    "name": "13",
+                    "options": ""
+                },
+                {
+                    "id": 15,
+                    "name": "15",
+                    "options": ""
+                }
+            ],
+            "name": "default",
+            "options": "",
+            "type": "point"
+        },
+        {
+            "id": 1,
+            "markers": [
+                {
+                    "id": 8,
+                    "name": "8",
+                    "options": "pos=-4.25914,-0.689387,-31.7549"
+                },
+                {
+                    "id": 10,
+                    "name": "10",
+                    "options": "pos=20.8087,-0.589132,-12.2717"
+                },
+                {
+                    "id": 11,
+                    "name": "11",
+                    "options": "pos=21.6356,-0.0840425,19.6314"
+                },
+                {
+                    "id": 12,
+                    "name": "12",
+                    "options": "pos=-7.95081,1.26839,36.1839"
+                },
+                {
+                    "id": 14,
+                    "name": "14",
+                    "options": "pos=-30.2343,0.0941753,-11.7886"
+                }
+            ],
+            "name": "tracker1",
+            "options": "",
+            "type": "rigid"
+        }
+    ]
+}

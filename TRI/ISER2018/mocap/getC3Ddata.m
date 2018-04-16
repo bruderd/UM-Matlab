@@ -1,0 +1,14 @@
+function [ XYZ, time, frames ] = getC3Ddata
+%getC3Ddata - extracts marker positions from a c3d data file
+%   Detailed explanation goes here
+
+itf = c3dserver();
+openc3d(itf, 1);
+
+frames = nframes(itf);
+time = (1/60) * [1:frames]';
+
+XYZ = get3dtargets(itf, 1);
+
+end
+

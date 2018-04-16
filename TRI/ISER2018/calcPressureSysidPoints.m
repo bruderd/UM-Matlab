@@ -1,7 +1,6 @@
 function Psysid = calcPressureSysidPoints(params)
 %setTestPoints: Create matrix containing the desired test points
-%   Each row is a single test point. Columns are: (1)s, (2)w, (3)P1, (4)P2,
-%   (5)P3, ...
+%   Each row is a single test point. Columns are: (1)P1, (2)P2, (3)P3, ...
 
 num = params.num;   % number of actuators in parallel configuration
 pmin = params.pmin;

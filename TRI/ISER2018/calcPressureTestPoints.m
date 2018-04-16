@@ -8,10 +8,10 @@ infeascount = 1;
 Pcontrol = zeros(length(testPoints(:,1)), params.num);
 for i = 1:length(testPoints(:,1))
     [psol, exitflag] = calcPressure(testPoints(i,:)', params);
-    Pcontrol(i,:) = psol';
     
     % show me which points are infeasable
     if exitflag > 0
+        Pcontrol(i,:) = psol';
         feas(feascount,:) = testPoints(i,3:4); % feasable
         feascount = feascount + 1;
     else
