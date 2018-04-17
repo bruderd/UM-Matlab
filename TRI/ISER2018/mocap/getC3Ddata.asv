@@ -10,5 +10,8 @@ time = (1/60) * [1:frames]';
 
 XYZ = get3dtargets(itf, 1);
 
+data = struct;
+data.pos = 
+
 end
 
