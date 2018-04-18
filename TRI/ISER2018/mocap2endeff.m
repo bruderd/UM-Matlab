@@ -21,9 +21,9 @@ end
 % end effector origin and coordinate axes expressed in mocap coordinates
 origine = effcent;
 ze = (effcent - topcent) / norm(effcent - topcent);
-led = nanmean(mocap.effxyz(1:60,:,1));    
-xdir = (effcent - led); % vector pointing from center to one of the LED's, will point roughly along x-axis
-ye = cross(ze,xdir) / norm( cross(ze,xdir) );
+lede = nanmean(mocap.effxyz(1:60,:,1));    % pick one of the LEDs, i.e. the "first" one
+xedir = (lede - effcent); % vector pointing from center to one of the LEDs, will point roughly along x-axis
+ye = cross(ze,xedir) / norm( cross(ze,xedir) );
 xe = cross(ye,ze) / norm( cross(ye,ze) );
 
 % Homogeneous transformation from end effector coordinates to mocap coordinates
@@ -47,23 +47,40 @@ end
 %% calculate the state vector for the end effector at each frame
 
 % postition of end effector, as average location of leds 
-total = zeros(mocap.frames,3);
+total = zeros(mocap.frames, 3);
 for i = 1 : size(endeff.LEDxyz, 3)
    total = total + endeff.LEDxyz(:,:,i);
    pos = total / i;
 end
 
 % orientation of the end effector
-% find z-axis (just at one point for now for practice)
-A = [endeff.LEDxyz(1,:,1); endeff.LEDxyz(1,:,2); endeff.LEDxyz(1,:,3); endeff.LEDxyz(1,:,4)];
-[U,S,V] = svd(A);
-z = -V'\[0 0 1]';
+orient = zeros(mocap.frames, 3);
+for i = 1 : mocap.frames
+    % find z-axis (just at one point for now for practice)
+    A = endeff.LEDxyz(i,:,1);
+    for j = 2 : size(endeff.LEDxyz, 3)
+        A = [A ; endeff.LEDxyz(i,:,j)];    % build A one row at a time
+    end
+    checkA = isnan(A);
+    if any(checkA(:) == 1)
+        orient(i,:) = [NaN, NaN, NaN];      % if no sensor data, return NaN
+    else
+        [U,S,V] = svd(A);
+        z = V'\[0 0 1]';
+        led = endeff.LEDxyz(i,:,1);    % pick one of the LEDs, i.e. the "first" one
+        xdir = (led - pos(i,:))';
+        y = cross(z,xdir) / norm( cross(z,xdir) );
+        x = cross(y,z) / norm( cross(y,z) );
+        Rb2e = [x, y, z];
+        Re2b = Rb2e';
+        orient(i,:) = rotm2eul(Re2b);
+    end
+end
 
-
-
-%% create output struct with state and timestamp of end effector
-endeff.x = x;
+% state vector at each sample
+endeff.x = [pos, orient];
 endeff.t = mocap.t;
+
 
 end
 
