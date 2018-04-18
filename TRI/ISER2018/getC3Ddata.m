@@ -1,4 +1,4 @@
-function [ mocap, frames ] = getC3Ddata(params, C3Dfile)
+function mocap = getC3Ddata(params, C3Dfile)
 %getC3Ddata - extracts marker positions from a c3d data file
 %   Detailed explanation goes here
 
@@ -19,25 +19,27 @@ time = (1/60) * [1:frames]';
 % get the data from the C3D file
 xyz = get3dtargets(itf, 0); % second argument determines if residual should be included
 
-topData = zeros(frames, 3, length(topIDs));
+topxyz = zeros(frames, 3, length(topIDs));
 for i = 1 : length(topIDs)
     topLEDs(i) = string( strcat( 'xyz.M', sprintf('%03d', topIDs(i)) ) );
-    topData(:,:,i) = eval( strcat( 'xyz.M', sprintf('%03d', topIDs(i)) ) );
+    topxyz(:,:,i) = eval( strcat( 'xyz.M', sprintf('%03d', topIDs(i)) ) );
 end
 
-effData = zeros(frames, 3, length(effIDs));
+effxyz = zeros(frames, 3, length(effIDs));
 for i = 1 : length(effIDs)
     effLEDs(i) = string( strcat( 'xyz.M', sprintf('%03d', effIDs(i)) ) );
-    effData(:,:,i) = eval( strcat( 'xyz.M', sprintf('%03d', effIDs(i)) ) );
+    effxyz(:,:,i) = eval( strcat( 'xyz.M', sprintf('%03d', effIDs(i)) ) );
 end
 
+
 mocap = struct;
+mocap.frames = frames;  % total number of frames
 mocap.xyz = xyz;    % raw mocap position data for each marker
 mocap.t = time;     % time of each sample (s)
 mocap.topLEDs = topLEDs;    % string array with the names of the LED markers for the top block
 mocap.endeffLEDs = effLEDs; % string array with the names of the LED markers for the end effector
-mocap.topData = topData;    % 3D matrix containing the marker data for all top block markers
-mocap.effData = effData;    % 3D matrix containing the marker data for all end effector markers
+mocap.topxyz = topxyz;    % 3D matrix containing the marker data for all top block markers
+mocap.effxyz = effxyz;    % 3D matrix containing the marker data for all end effector markers
 
 end
 
