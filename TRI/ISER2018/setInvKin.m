@@ -64,8 +64,8 @@ xcoupled = [0,...
 %             xind(3)];
 
 %% Convert symbolic expression to matlab function
-matlabFunction(q, 'File', 'x2q', 'Vars', {x});  
-matlabFunction(xcoupled, 'File', 'xind2xcoupled', 'Vars', {xind});
+matlabFunction(q, 'File', 'x2q', 'Vars', {x});  % solve for q given x 
+matlabFunction(xcoupled, 'File', 'xind2xcoupled', 'Vars', {xind});  % solves for dependent state variables from independent ones
 
 end
 
