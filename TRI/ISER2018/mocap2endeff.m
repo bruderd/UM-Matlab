@@ -10,10 +10,10 @@ for i = 1 : size(mocap.topxyz, 3)
    topcent = total / i;
 end
 
-% calculate center of end effector as the average position of end effector markers at first 60 points (1 s)
+% calculate center of end effector as the average position of end effector markers at first 20 points (0.33 s)
 total = zeros(1,3);
-for i = 1 : size(mocap.topxyz, 3)
-   total = total + nanmean(mocap.effxyz(1:60,:,i));
+for i = 1 : size(mocap.effxyz, 3)
+   total = total + nanmean(mocap.effxyz(1:20,:,i));
    effcent = total / i;
 end
 
@@ -53,6 +53,17 @@ for i = 1 : size(endeff.LEDxyz, 3)
    pos = total / i;
 end
 
+% DIFFERENT APPROACH: take average first then transform
+total = zeros(mocap.frames, 3);
+for i = 1 : size(mocap.effxyz, 3)
+   total = total + mocap.effxyz(:,:,i);
+   pos2m = total / i;
+end
+for j = 1:length(pos2m)
+   foo = Hm2e * [pos2m(j,:), 1]';
+   pos2(j,:) = foo;
+end
+
 % orientation of the end effector
 orient = zeros(mocap.frames, 3);
 for i = 1 : mocap.frames
@@ -81,19 +92,12 @@ end
 endeff.x = [pos, orient];
 endeff.t = mocap.t;
 
-
-end
-
-
-
-
-
-% %% CHECK CODE by plotting location of all LEDs at initial point in end effector coordinates
+%% CHECK TRANSFORMATION CODE by plotting location of all LEDs at initial point in end effector coordinates
 % for j = 1:3
 %     poop = Hm2e*[mocap.topxyz(1,:,j),  1]';
 %     pee(:,j) = poop(1:3);
 % end
-% for j = 1:5
+% for j = 1:4
 %     fart = Hm2e*[mocap.effxyz(1,:,j),  1]';
 %     butt(:,j) = fart(1:3);
 % end
@@ -102,4 +106,13 @@ end
 % hold on
 % plot3(pee(1,:), pee(2,:), pee(3,:), '*')
 % plot3(butt(1,:), butt(2,:), butt(3,:), '*')
+% axis([-50 50 -50 50 -300 50])
 % hold off
+
+
+end
+
+
+
+
+
