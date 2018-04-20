@@ -66,7 +66,7 @@ params.N = -params.L ./ (2*pi*params.R) .* tan(params.Gama); % total fiber windi
 params.D = zeros(6,2*num);
 for i = 1:num
     dix = [0, -d(3,i), d(2,i); d(3,i), 0, -d(1,i); -d(2,i), d(1,i), 0];
-    params.D(: , 2*(i-1)+1:2*i) = [[a(:,i), zeros(3,1)] ; [dix*a(:,i), zeros(3,1)] + [zeros(3,1), a(:,1)]];  % Di's are horizontally concatenated
+    params.D(: , 2*(i-1)+1:2*i) = [[a(:,i), zeros(3,1)] ; [flipud(dix*a(:,i)), zeros(3,1)] + [zeros(3,1), flipud(a(:,1))]];  % Di's are horizontally concatenated
 end
 
 % compliance matrix (cumulative)

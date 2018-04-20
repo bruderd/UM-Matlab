@@ -12,7 +12,7 @@ end
 
 % calculate center of end effector as the average position of end effector markers at first 20 points (0.33 s)
 total = zeros(1,3);
-for i = 1 : size(mocap.topxyz, 3)
+for i = 1 : size(mocap.effxyz, 3)
    total = total + nanmean(mocap.effxyz(1:20,:,i));
    effcent = total / i;
 end
@@ -21,7 +21,7 @@ end
 % end effector origin and coordinate axes expressed in mocap coordinates
 origine = effcent;
 ze = (effcent - topcent) / norm(effcent - topcent);
-lede = nanmean(mocap.effxyz(1:60,:,1));    % pick one of the LEDs, i.e. the "first" one
+lede = nanmean(mocap.effxyz(1:20,:,1));    % pick one of the LEDs, i.e. the "first" one
 xedir = (lede - effcent); % vector pointing from center to one of the LEDs, will point roughly along x-axis
 ye = cross(ze,xedir) / norm( cross(ze,xedir) );
 xe = cross(ye,ze) / norm( cross(ye,ze) );
@@ -57,7 +57,7 @@ end
 total = zeros(mocap.frames, 3);
 for i = 1 : size(mocap.effxyz, 3)
    total = total + mocap.effxyz(:,:,i);
-   pos2 = total / i;
+   pos2m = total / i;
 end
 
 % orientation of the end effector
@@ -81,6 +81,11 @@ for i = 1 : mocap.frames
         Rb2e = [x, y, z];
         Re2b = Rb2e';
         orient(i,:) = rotm2eul(Re2b);
+        
+        % for debugging purposes
+        xyzcheck.x = x';
+        xyzcheck.y = y';
+        xyzcheck.x = x';
     end
 end
 
@@ -89,21 +94,21 @@ endeff.x = [pos, orient];
 endeff.t = mocap.t;
 
 %% CHECK TRANSFORMATION CODE by plotting location of all LEDs at initial point in end effector coordinates
-for j = 1:3
-    poop = Hm2e*[mocap.topxyz(1,:,j),  1]';
-    pee(:,j) = poop(1:3);
-end
-for j = 1:4
-    fart = Hm2e*[mocap.effxyz(1,:,j),  1]';
-    butt(:,j) = fart(1:3);
-end
-
-figure
-hold on
-plot3(pee(1,:), pee(2,:), pee(3,:), '*')
-plot3(butt(1,:), butt(2,:), butt(3,:), '*')
-axis([-50 50 -50 50 -300 50])
-hold off
+% for j = 1:3
+%     poop = Hm2e*[mocap.topxyz(1,:,j),  1]';
+%     pee(:,j) = poop(1:3);
+% end
+% for j = 1:4
+%     fart = Hm2e*[mocap.effxyz(1,:,j),  1]';
+%     butt(:,j) = fart(1:3);
+% end
+% 
+% figure
+% hold on
+% plot3(pee(1,:), pee(2,:), pee(3,:), '*')
+% plot3(butt(1,:), butt(2,:), butt(3,:), '*')
+% axis([-50 50 -50 50 -300 50])
+% hold off
 
 
 end

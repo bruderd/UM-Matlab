@@ -21,7 +21,7 @@ end
 % end effector origin and coordinate axes expressed in mocap coordinates
 origine = effcent;
 ze = (effcent - topcent) / norm(effcent - topcent);
-lede = nanmean(mocap.effxyz(1:60,:,1));    % pick one of the LEDs, i.e. the "first" one
+lede = nanmean(mocap.effxyz(1:20,:,1));    % pick one of the LEDs, i.e. the "first" one
 xedir = (lede - effcent); % vector pointing from center to one of the LEDs, will point roughly along x-axis
 ye = cross(ze,xedir) / norm( cross(ze,xedir) );
 xe = cross(ye,ze) / norm( cross(ye,ze) );
@@ -59,11 +59,8 @@ for i = 1 : size(mocap.effxyz, 3)
    total = total + mocap.effxyz(:,:,i);
    pos2m = total / i;
 end
-for j = 1:length(pos2m)
-   foo = Hm2e * [pos2m(j,:), 1]';
-   pos2(j,:) = foo;
-end
 
+xyzcheck = struct;
 % orientation of the end effector
 orient = zeros(mocap.frames, 3);
 for i = 1 : mocap.frames
@@ -77,7 +74,7 @@ for i = 1 : mocap.frames
         orient(i,:) = [NaN, NaN, NaN];      % if no sensor data, return NaN
     else
         [U,S,V] = svd(A);
-        z = V'\[0 0 1]';
+        z = abs( V'\[0 0 1]' );
         led = endeff.LEDxyz(i,:,1);    % pick one of the LEDs, i.e. the "first" one
         xdir = (led - pos(i,:))';
         y = cross(z,xdir) / norm( cross(z,xdir) );
