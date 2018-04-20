@@ -1,0 +1,2 @@
+test0 README:
+FREEs: 45, -45, 90

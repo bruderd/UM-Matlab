@@ -7,7 +7,7 @@ function params = setParams(filename)
 
 % Actuator parameters
 num = 3;    % number of FREEs in combination
-Gama = deg2rad([45, -45, -89]); % relaxed fiber angle of each FREE
+Gama = deg2rad([45, -45, -5]); % relaxed fiber angle of each FREE
 R = (10e-3)/2 * ones(1,3);  % relaxed radius of each FREE [m]
 L = 0.10 * ones(1,3);   %  relaxed length of each FREE [m] 
 d = zeros(3,3); % location of attachment points to the end effector [m]
@@ -87,7 +87,7 @@ params = setInvKin(params); % a few parameters are added in this function
 % check for optional argument, if given, save params as .mat file with that name
 if exist('filename','var')
     current_folder = cd;
-    savetolocation = strcat(current_folder, '\configs\', varargin);
+    savetolocation = strcat(current_folder, '\configs\', filename);
     save(char(savetolocation), 'params');
 end
 

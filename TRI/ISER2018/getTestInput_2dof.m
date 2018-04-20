@@ -1,4 +1,4 @@
-function [ Psysid_V, Ptest_V ] = getTestInput_2dof( testPoints, params, filename )
+function [ Psysid_V, Ptest_V ] = getTestInput_2dof( testPoints, params, testname )
 %getTestInput_2dof - creates the control input files for sysid and testing
 %on the 2dof system
 %   varargin is the name of the folder the csv's are to be saved in
@@ -14,10 +14,10 @@ Ptest_V = [zeros(size(Ptest_V(:,1))), Ptest_V];  % add column of zeros since onl
 
 %% save these pressures as .csv files
 
-% check for optional argument, if given, save params as .mat file with that name
-if exist('filename','var')
+% check for optional argument, if given, save csv files with that name
+if exist('testname','var')
     current_folder = cd;
-    dir = strcat(current_folder, '\testPoints\', varargin);
+    dir = strcat(current_folder, '\testPoints\', testname);
     mkdir(char(dir));
     
     saveas1 = strcat(dir, '\sysid.csv');
