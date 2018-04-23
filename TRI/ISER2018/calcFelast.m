@@ -1,14 +1,16 @@
-function Felast = calcFelast(pDatafile ,params)
-%calcFelast - performs system identification to determine the cumulative
-%elastomer contribution.z
+function f = calcFelast( x, params )
+%calcFelast - Evaluates the elastomer force at a specific point x. 
+%   Must run getFelast_... prior to calling this funcion
 
+felast = params.felast;
 
-mocap = getC3Ddata(params); 
-endeff = mocap2endeff(mocap);
+f = [felast.x1.PolynomialExpression(x(1), x(2), x(3), x(4), x(5), x(6)) ;...
+     felast.x2.PolynomialExpression(x(1), x(2), x(3), x(4), x(5), x(6)) ;...
+     felast.x3.PolynomialExpression(x(1), x(2), x(3), x(4), x(5), x(6)) ;...
+     felast.x4.PolynomialExpression(x(1), x(2), x(3), x(4), x(5), x(6)) ;...
+     felast.x5.PolynomialExpression(x(1), x(2), x(3), x(4), x(5), x(6)) ;...
+     felast.x6.PolynomialExpression(x(1), x(2), x(3), x(4), x(5), x(6)) ;...
+    ];
 
-% find all of the times when new control pressure signal sent
-TR = struct;
-pData = csvread('pDatafile');
-TR.t = pData(:,1);
-TR.pcontrol = pData(:,2:9);
-TR.pmonitor = pData(:,10:17);
+end
+

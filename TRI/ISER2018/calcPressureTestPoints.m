@@ -21,10 +21,14 @@ for i = 1:length(testPoints(:,1))
 end
 
 %% plot the feasable and infeasable points in different colors (optional)
-% figure
-% hold on
-% plot(feas(:,1), feas(:,2), 'b*')
-% plot(infeas(:,1), infeas(:,2), 'r*')
-% hold off
+figure
+hold on
+if exist('feas', 'var')
+    plot(feas(:,1), feas(:,2), 'b*');
+end
+if exist('infeas', 'var')
+    plot(infeas(:,1), infeas(:,2), 'r*')
+end
+hold off
 
 end

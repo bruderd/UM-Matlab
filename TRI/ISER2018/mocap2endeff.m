@@ -50,14 +50,7 @@ end
 total = zeros(mocap.frames, 3);
 for i = 1 : size(endeff.LEDxyz, 3)
    total = total + endeff.LEDxyz(:,:,i);
-   pos = total / i;
-end
-
-% DIFFERENT APPROACH: take average first then transform
-total = zeros(mocap.frames, 3);
-for i = 1 : size(mocap.effxyz, 3)
-   total = total + mocap.effxyz(:,:,i);
-   pos2m = total / i;
+   pos = total / i ;   
 end
 
 xyzcheck = struct;
@@ -86,7 +79,7 @@ for i = 1 : mocap.frames
 end
 
 % state vector at each sample
-endeff.x = [pos, orient];
+endeff.x = [pos * 1e-3, orient];    % here we convert mm to m
 endeff.t = mocap.t;
 
 %% CHECK TRANSFORMATION CODE by plotting location of all LEDs at initial point in end effector coordinates

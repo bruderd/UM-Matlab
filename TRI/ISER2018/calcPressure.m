@@ -26,14 +26,14 @@ num = params.num;
 
 
 %% calculate quadratic cost function matrices
-[H, f, Aeq, beq] = quadCost(x, params, fload, params.penalty);
-A = zeros(num, num);
-b = zeros(num, 1);
+[H, f, A, b, Aeq, beq] = quadCost(x, params, fload, params.penalty);
+% A = zeros(num, num);
+% b = zeros(num, 1);
 % Aeq = zeros(num, num);
 % beq = zeros(num, 1);
 
 %% solve for the pressure at equilibrium point
-[psol, ~, exitflag] = quadprog(H,f,[],[],Aeq,beq,params.pmin,params.pmax);
+[psol, ~, exitflag] = quadprog(H,f,A,b,[],[],params.pmin,params.pmax);
 
 
 %% solution using lsqlin for comparision. It has no penalty term so solutions differ from qp

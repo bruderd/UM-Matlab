@@ -9,8 +9,8 @@ function params = setParams(filename)
 num = 3;    % number of FREEs in combination
 Gama = deg2rad([45, -45, -45]); % relaxed fiber angle of each FREE
 R = (10e-3)/2 * ones(1,num);  % relaxed radius of each FREE [m]
-L = 0.10 * ones(1,num);   %  relaxed length of each FREE [m] 
-d = zeros(3,num); % location of attachment points to the end effector [m]
+L = 0.18 * ones(1,num);   %  relaxed length of each FREE [m] 
+d = [0, -0.02286, 0 ; 0.01979676, 0.01143, 0 ; -0.01979676, 0.01143, 0]'; % location of attachment points to the end effector [m]
 a = [0,0,1 ; 0,0,1 ; 0,0,1]';    % direction of FREE axis at attachment point [unit vector]
 pmin = (1/0.145038) * 1e3 * [1 1 1];   % min gauge pressure for each FREE [Pa]
 pmax = (1/0.145038) * 1e3 * [20 20 20];   % max gauge pressure for each FREE [Pa]
@@ -18,7 +18,7 @@ pmax = (1/0.145038) * 1e3 * [20 20 20];   % max gauge pressure for each FREE [Pa
 % End effector parameters
 deff = [0,0,0]; % location of origin of end effector coordinates in global coordinates
 euleff = eye(3);  % orientation of end effector coordinate frame in global coordinates, written as rotation matrix
-meff = 1;   % mass of the end effector [kg]
+meff = 0;   % mass of the end effector [kg]
 cmeff = [0,0,0]';   % location of the center of mass of end effector [m]
 C = -(1)*[1e1 0 0 1e-3; 1e1 0 0 1e-3; 1e1 0 0 1e-3]';   % compliance (stiffness) matrix for each FREE vectorized so that [c1, c2; c3, c4] = [c1, c2, c3, c4]', horizontally concatenated
 
@@ -77,7 +77,7 @@ end
 
 % penalty weighting (this is used to focus on the equilibrium point with lowest pressure)
 params.penalty = 1e-5;
-
+params.tol = 8e-1;  % tolerance to within which equality constraint of quadprog will  be satisfied
 
 %% set the inverse kinematic relationship for the system
 params = setInvKin(params); % a few parameters are added in this function

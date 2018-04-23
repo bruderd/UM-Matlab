@@ -1,4 +1,4 @@
-function felast = calcFelast_2dof(pDatafile ,params)
+function [TR, PS] = getTestData(pDatafile ,params)
 %calcFelast - performs system identification to determine the cumulative
 %elastomer contribution.z
 
@@ -58,31 +58,6 @@ PS.tsteps = TR.tsteps;  % now they are synchronized in time
 for i = 1:length(TR.tsteps) - 1
     PS.xsteps(i,:) = nanmean( PS.x( TR.tsteps(i,1)+5:TR.tsteps(i+1,1)-5, : ) );    % excludes some points that are in the transition region
 end
-
-% plot to see if averaging x at each time step worked (for DEBUGGING)
-figure
-hold on
-plot(TR.t, PS.x(:,4), 'k')  % 
-stairs(TR.tsteps(1:end-1,2), PS.xsteps(:,4))    % 
-hold off
-
-%% Calculate elastomer force (y) at each point
-for i = 1 : length(TR.tsteps)-1
-    elast = calcf(PS.xsteps(i,:)', TR.psteps(i,:)', params);
-    y(i,:) = -elast';
-end
-
-felast = struct;
-% fit polynomial to elestomer force: e(x)
-felast.x1 = MultiPolyRegress(PS.xsteps, y(:,1), 2);
-felast.x2 = MultiPolyRegress(PS.xsteps, y(:,2), 2);
-felast.x3 = MultiPolyRegress(PS.xsteps, y(:,3), 2);
-felast.x4 = MultiPolyRegress(PS.xsteps, y(:,4), 4);
-felast.x5 = MultiPolyRegress(PS.xsteps, y(:,5), 2);
-felast.x6 = MultiPolyRegress(PS.xsteps, y(:,6), 2);
-
-% save the elastomer force within the params struct
-params.felast = felast;
 
 
 end

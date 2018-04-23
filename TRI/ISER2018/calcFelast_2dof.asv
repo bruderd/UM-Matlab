@@ -1,4 +1,4 @@
-function Felast = calcFelast_2dof(pDatafile ,params)
+function felast = calcFelast_2dof(pDatafile ,params)
 %calcFelast - performs system identification to determine the cumulative
 %elastomer contribution.z
 
@@ -43,7 +43,7 @@ hold off
 % the plot
 prompt = 'What is the time offset between the PhaseSpace and TR data, in seconds?:';
 offset = input(prompt);     % the start of the mocap trial expressed in pressure time
-if isfloat(prompt)
+if isnumeric(offset)
     PS.t0 = offset;
 else
     disp('Invalid. You must enter a numeric value.');
@@ -51,33 +51,37 @@ else
 end
 
 PS.t = endeff.t + PS.t0;  % add the offset to sync the start times
-PS.x  = interp1(t_mocap, endeff.x, TR.t);    % interpolate to get everything on the same time scale BUT REMEMBER YOU CAN'T INTERPOLATE EULER ANGLES SO YOU MUST CHANGE THIS!
+PS.x  = interp1(PS.t, endeff.x, TR.t);    % interpolate to get everything on the same time scale BUT REMEMBER YOU CAN'T INTERPOLATE EULER ANGLES SO YOU MUST CHANGE THIS!
+PS.tsteps = TR.tsteps;  % now they are synchronized in time
 
 % take average x at each step
 for i = 1:length(TR.tsteps) - 1
-    xsteps(i,:) = nanmean( x_mocap( TR.tsteps(i,1)+5:TR.tsteps(i+1,1)-5, : ) );    % excludes some points that are in the transition region
+    PS.xsteps(i,:) = nanmean( PS.x( TR.tsteps(i,1)+5:TR.tsteps(i+1,1)-5, : ) );    % excludes some points that are in the transition region
 end
 
-% plot to see if averaging x at each time step worked
+% plot to see if averaging x at each time step worked (for DEBUGGING)
 figure
 hold on
-plot(TR.t, x_mocap(:,4), 'k')  % 
-stairs(TR.tsteps(1:end-1,2), xsteps(:,4))    % 
+plot(TR.t, PS.x(:,4), 'k')  % 
+stairs(TR.tsteps(1:end-1,2), PS.xsteps(:,4))    % 
 hold off
 
 %% Calculate elastomer force (y) at each point
 for i = 1 : length(TR.tsteps)-1
-    felast = calcf(xsteps(i,:)', TR.psteps(i,:)', params);
-    y(i,:) = -felast';
+    elast = calcf(PS.xsteps(i,:)', TR.psteps(i,:)', params);
+    y(i,:) = -elast';
 end
 
+felast = struct;
 % fit polynomial to elestomer force: e(x)
-ex1 = MultiPolyRegress(xsteps, y(:,1), 2);
-ex2 = MultiPolyRegress(xsteps, y(:,2), 2);
-ex3 = MultiPolyRegress(xsteps, y(:,3), 2);
-ex4 = MultiPolyRegress(xsteps, y(:,4), 2);
-ex5 = MultiPolyRegress(xsteps, y(:,5), 2);
-ex6 = MultiPolyRegress(xsteps, y(:,6), 2);
+felast.x1 = MultiPolyRegress(PS.xsteps, y(:,1), 2);
+felast.x2 = MultiPolyRegress(PS.xsteps, y(:,2), 2);
+felast.x3 = MultiPolyRegress(PS.xsteps, y(:,3), 2);
+felast.x4 = MultiPolyRegress(PS.xsteps, y(:,4), 2);
+felast.x5 = MultiPolyRegress(PS.xsteps, y(:,5), 2);
+felast.x6 = MultiPolyRegress(PS.xsteps, y(:,6), 2);
+
+params.felast = @felast;
 
 
 end

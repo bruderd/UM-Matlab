@@ -1,6 +1,6 @@
 function f = calcf( x, p, params )
 %calcf: Calculates the force felt by the end effector with respect to its
-%local body-fixed coordinate frame
+%local body-fixed coordinate frame due to fiber forces only (no elastomer)
 %   Detailed explanation goes here
 
 D = params.D;

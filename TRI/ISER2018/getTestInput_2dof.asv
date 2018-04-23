@@ -1,29 +1,29 @@
-function [ Psysid_V, Ptest_V ] = getTestInput_2dof( testPoints, params, varargin )
-%getTestInput_2dof - creates the control input files for sysid and testing
-%on the 2dof system
-%   varargin is the name of the folder the csv's are to be saved in
-
-Psysid_Pa = calcPressureSysidPoints(params);    % sysid control pressure [Pa]
-Psysid_V = Pa2V(Psysid_Pa, params);     % sysid control pressure [V]
-Psysid_V = [zeros(size(Psysid_V(:,1))), Psysid_V];  % add column of zeros since only using valves 2-4
+function Ptest_V = getTestInput_2dof( testPoints, params, testname )
+%getTestInput_2dof - creates the control input files for testing on the 2dof system
+%   testname is the name of the folder the csv's are to be saved in
 
 Ptest_Pa = calcPressureTestPoints(testPoints, params);  % test control pressure [Pa]
+
+proceed = input('Are all of the testPoints feasable? y = 1, 0 = n: ');
+if proceed == 1
+    PS.t0 = offset;
+else
+    disp('Try different dimension of test region until all point are feasable.');
+    return;
+end
+
 Ptest_V = Pa2V(Ptest_Pa, params);       % test control pressure [V]
 Ptest_V = [zeros(size(Ptest_V(:,1))), Ptest_V];  % add column of zeros since only using valves 2-4
 
 
 %% save these pressures as .csv files
 
-% check for optional argument, if given, save params as .mat file with that name
-if exist('varargin','var')
+% check for optional argument, if given, save csv files with that name
+if exist('testname','var')
     current_folder = cd;
+    dir = strcat(current_folder, '\testPoints\', testname);
     
-    dir1 = strcat(current_folder, '\testPoints\', varargin);
-    saveas1 = strcat(dir1, '\sysid.csv');
-    mkdir(dir1);
-    csvwrite(char(saveas1), Psysid_V, 0, 0);
-    
-    saveas2 = strcat(current_folder, '\testPoints\', varargin, '\test.csv');
+    saveas2 = strcat(dir, '\test.csv');
     csvwrite(char(saveas2), Ptest_V, 0, 0);
 end
 

@@ -1,4 +1,4 @@
-function felast = calcFelast_2dof(pDatafile ,params)
+function [params, TR, PS] = getFelast_2dof(pDatafile ,params)
 %calcFelast - performs system identification to determine the cumulative
 %elastomer contribution.z
 
