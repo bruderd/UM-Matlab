@@ -77,7 +77,7 @@ end
 
 % penalty weighting (this is used to focus on the equilibrium point with lowest pressure)
 params.penalty = 1e-5;
-params.tol = 8e-1;  % tolerance to within which equality constraint of quadprog will  be satisfied
+params.tol = 1e-2;  % tolerance to within which equality constraint of quadprog will  be satisfied
 
 %% set the inverse kinematic relationship for the system
 params = setInvKin(params); % a few parameters are added in this function

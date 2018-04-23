@@ -1,4 +1,4 @@
-function p = calcROM( zrange, phirange, params )
+function p = calcROM( zrange, phirange, res, params )
 %calcROM - Calculates the Range of Motion of a module
 %   Detailed explanation goes here
 
@@ -8,8 +8,8 @@ function p = calcROM( zrange, phirange, params )
 
 x = -0.05:0.005:0.05;
 y = -0.05:0.005:0.05;
-z = linspace(zrange(1), zrange(2), 20); 
-phi = linspace(phirange(1), phirange(2), 20);
+z = linspace(zrange(1), zrange(2), res); 
+phi = linspace(phirange(1), phirange(2), res);
 theta = -(pi):0.5:(pi);
 psi = -(pi):0.5:(pi);
 

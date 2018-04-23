@@ -26,28 +26,19 @@ felast = calcFelast( x, params );
 
 % define output matrices
 H = penalty*eye(num);
-f = zeros(num,1);
+f = ;
+
+
+% define output matrices
+H = 2 * Jq*(D'*D)*Jq' + penalty*eye(num);
+f = 2 * Jq*D'*(felast + fload);
 Aeq = D*Jq';    % equality constraint makes boundary minima infeasable
 beq = -(felast + fload);
 
 % need more slack so will use inequality constraint instead
-tol = 8e-2;
 A = [D*Jq' ; -D*Jq'];
-b = [-(felast + fload) + tol ;...
-    -( -(felast + fload) - tol ) ];
-
-
-%% Older version
-% % define output matrices
-% H = 2 * Jq*(D'*D)*Jq' + penalty*eye(num);
-% f = 2 * Jq*D'*(felast + fload);
-% Aeq = D*Jq';    % equality constraint makes boundary minima infeasable
-% beq = -(felast + fload);
-% 
-% % need more slack so will use inequality constraint instead
-% A = [D*Jq' ; -D*Jq'];
-% b = [-(felast + fload) + params.tol ;...
-%     -( -(felast + fload) - params.tol ) ];
+b = [-(felast + fload) + params.tol ;...
+    -( -(felast + fload) - params.tol ) ];
 
 
 %% older version with linear stiffness matrix instead of elastomer function
