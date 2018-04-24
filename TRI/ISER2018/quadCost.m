@@ -22,19 +22,34 @@ Jq = calcJq(q, params);
 % calculate the elastomer force
 felast = calcFelast( x, params );
 
+%% Put the tolerance value into the cost and optimize over it along with p, don't even minimize pressure
+
+H = blkdiag( zeros(3,3), eye(1) );
+f = zeros(num + 1,1);
+
+% need more slack so will use inequality constraints with tolerance
+A = [D*Jq', -ones(6,1);...
+    -D*Jq', -ones(6,1)];
+b = [-(felast + fload);...
+    (felast + fload)];
+
+Aeq = [];
+beq = [];
+
+
 %% New version hopefully works better
 
-% define output matrices
-H = penalty*eye(num);
-f = zeros(num,1);
-Aeq = D*Jq';    % equality constraint makes boundary minima infeasable
-beq = -(felast + fload);
-
-% need more slack so will use inequality constraint instead
-tol = 8e-2;
-A = [D*Jq' ; -D*Jq'];
-b = [-(felast + fload) + tol ;...
-    -( -(felast + fload) - tol ) ];
+% % define output matrices
+% H = penalty*eye(num);
+% f = zeros(num,1);
+% Aeq = D*Jq';    % equality constraint makes boundary minima infeasable
+% beq = -(felast + fload);
+% 
+% % need more slack so will use inequality constraint instead
+% tol = 8e-2;
+% A = [D*Jq' ; -D*Jq'];
+% b = [-(felast + fload) + tol ;...
+%     -( -(felast + fload) - tol ) ];
 
 
 %% Older version

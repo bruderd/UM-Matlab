@@ -1,4 +1,4 @@
-function p = calcROM( zrange, phirange, res, params )
+function [p, tol] = calcROM( zrange, phirange, res, params )
 %calcROM - Calculates the Range of Motion of a module
 %   Detailed explanation goes here
 
@@ -37,15 +37,17 @@ for i = 1:length(X(:,1))
         [sol, exitflag] = calcPressure([0,0,in1i,in2i,0,0]', params);
         if exitflag > 0
             Z(i,j) = 1; % feasable
-            p(i,j,:) = sol;
+            p(i,j,:) = sol(1:3);
+            tol(i,j) = sol(4);
         else
             Z(i,j) = 0; % infeasable
-            p(i,j,:) = zeros(params.num, 1);
+            p(i,j,:) = NaN(params.num, 1);
+            tol(i,j) = NaN;
         end
     end
 end
 
-% convert pressure to psi for easier heuristics
+% convert pressure to psi for easier comprehension
 p = p * 0.000145038;
 
 %% plot it

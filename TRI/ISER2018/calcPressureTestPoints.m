@@ -11,7 +11,7 @@ for i = 1:length(testPoints(:,1))
     
     % show me which points are infeasable
     if exitflag > 0
-        Pcontrol(i,:) = psol';
+        Pcontrol(i,:) = psol(1:params.num)';    % just get the pressure values not the tolerance
         feas(feascount,:) = testPoints(i,3:4); % feasable
         feascount = feascount + 1;
     else

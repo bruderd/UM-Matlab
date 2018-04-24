@@ -78,5 +78,8 @@ end
 Mpoints = zeros(length(outline(:,1)),6);
 Mpoints(:,3:4) = outline;
 
+% Add a row of zeros at the top for calibration purposes
+Mpoints = [zeros(1,6); Mpoints];
+
 end
 

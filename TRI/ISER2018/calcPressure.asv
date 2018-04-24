@@ -33,8 +33,13 @@ num = params.num;
 % beq = zeros(num, 1);
 
 %% solve for the pressure at equilibrium point
-options = optimoptions('quadprog', 'Display', 'iter', 'ConstraintTolerance', 1e-3);
-[psol, ~, exitflag] = quadprog(H, f, A, [], Aeq, beq, params.pmin, params.pmax, [], options);
+options = optimoptions('quadprog', 'Display', 'iter', 'ConstraintTolerance', 2.5e-2);
+tolmin = 0; % the minimum equilibrium constraint tolerance
+tolmax = 1e-1;  % the maximum constraint tolerance
+[psol, ~, exitflag] = quadprog(H, f, A, b, [], [], [params.pmin,0], [params.pmax, 1e-1], [], options);
+
+%% older version where tolerance is not optimized over
+% [psol, ~, exitflag] = quadprog(H, f, [], [], Aeq, beq, params.pmin, params.pmax, [], options);
 
 
 %% solution using lsqlin for comparision. It has no penalty term so solutions differ from qp
