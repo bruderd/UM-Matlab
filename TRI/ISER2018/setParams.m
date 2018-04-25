@@ -7,13 +7,13 @@ function params = setParams(filename)
 
 % Actuator parameters
 num = 3;    % number of FREEs in combination
-Gama = deg2rad([45, -45, 20]); % relaxed fiber angle of each FREE
+Gama = deg2rad([15, -15, 45]); % relaxed fiber angle of each FREE
 R = (10e-3)/2 * ones(1,num);  % relaxed radius of each FREE [m]
-L = 0.18 * ones(1,num);   %  relaxed length of each FREE [m] 
+L = 0.16 * ones(1,num);   %  relaxed length of each FREE [m] 
 d = [0, -0.02286, 0 ; 0.01979676, 0.01143, 0 ; -0.01979676, 0.01143, 0]'; % location of attachment points to the end effector [m]
 a = [0,0,1 ; 0,0,1 ; 0,0,1]';    % direction of FREE axis at attachment point [unit vector]
 pmin = (1/0.145038) * 1e3 * [1 1 1];   % min gauge pressure for each FREE [Pa]
-pmax = (1/0.145038) * 1e3 * [20 20 20];   % max gauge pressure for each FREE [Pa]
+pmax = (1/0.145038) * 1e3 * [13 13 20];   % max gauge pressure for each FREE [Pa]
 
 % End effector parameters
 deff = [0,0,0]; % location of origin of end effector coordinates in global coordinates
