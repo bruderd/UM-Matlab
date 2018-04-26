@@ -1,0 +1,18 @@
+function [ output_args ] = debugEvalQPconstraints( TR, PS, params )
+%UNTITLED4 Summary of this function goes here
+%   Detailed explanation goes here
+
+
+for i = 1:length(PS.xsteps_nonan)
+    x = PS.xsteps_nonan(i,:)';
+    p = TR.psteps_nonan(i,:)';
+    
+    [H, f , A, b, Aeq, beq] = quadCost( x, params);
+    
+    model(i,:) = ( - A * [p; 0] + b )';       % should be positive if c 
+    pressure(i,:) = (p < params.pmax');     % returns 0 if constraint violated
+
+end
+
+const.model = model;
+const.pressure = pressure;

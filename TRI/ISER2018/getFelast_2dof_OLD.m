@@ -1,6 +1,4 @@
-function [TR, PS] = getTestData(pDatafile ,params)
-%calcFelast - performs system identification to determine the cumulative
-%elastomer contribution.z
+function [felast, params] = getFelast_2dof_OLD(TR, PS, params)
 
 %%  Read in mocap data, save it in 'endeff' struct
 mocap = getC3Ddata(params);     % read in raw mocap data from C3D file
@@ -25,10 +23,11 @@ end
 
 % take average pressure at each step
 for i = 1:length(TR.tsteps) - 1
-    TR.psteps(i,:) = nanmean( TR.pmonitor( TR.tsteps(i,1)+5:TR.tsteps(i+1,1)-5, : ) );    % excludes some points that are in the transition region
+    TR.psteps_V(i,:) = nanmean( TR.pmonitor( TR.tsteps(i,1)+5:TR.tsteps(i+1,1)-5, : ) );    % excludes some points that are in the transition region
+    TR.pcontrolsteps_V(i,:) = nanmean( TR.pcontrol( TR.tsteps(i,1)+5:TR.tsteps(i+1,1)-5, : ) );    % excludes some points that are in the transition region
 end
-% convert pressure in psteps into units of Pa
-TR.psteps = V2Pa(TR.psteps); 
+TR.psteps = TR.psteps_V * (150/10) * (6894.76/1);    % convert pressure voltage back into psi
+TR.pcontrolsteps = TR.pcontrolsteps_V * (params.TRpsimax/10) * (6894.76/1); 
 
 %% Line up mocap and pressure data, and partition mocap data
 
@@ -36,7 +35,7 @@ TR.psteps = V2Pa(TR.psteps);
 figure
 hold on
 plot(endeff.t, endeff.x(:,4), 'k')  % phi wrt time
-stairs(TR.tsteps(1:end-1,2), TR.psteps(:,3))    % average pressure wrt time
+stairs(TR.tsteps(1:end-1,2), TR.psteps_V(:,3))    % average pressure wrt time
 title('Mocap and Pressure Data Together')
 legend('Mocap: PhaseSpace', 'Pressure: TR')
 hold off
@@ -61,7 +60,14 @@ for i = 1:length(TR.tsteps) - 1
     PS.xsteps(i,:) = nanmean( PS.x( TR.tsteps(i,1)+5:TR.tsteps(i+1,1)-5, : ) );    % excludes some points that are in the transition region
 end
 
-%% Remove Nans from data
+% plot to see if averaging x at each time step worked (for DEBUGGING)
+figure
+hold on
+plot(TR.t, PS.x(:,4), 'k')  % 
+stairs(TR.tsteps(1:end-1,2), PS.xsteps(:,4))    % 
+hold off
+
+%% Elastomer polynomial fit
 
 % Remove all the NaNs from xsteps
 xsteps_nonan = PS.xsteps;
@@ -69,9 +75,21 @@ psteps_nonan = TR.psteps;
 psteps_nonan(~any(~isnan(xsteps_nonan), 2),:)=[];
 xsteps_nonan(~any(~isnan(xsteps_nonan), 2),:)=[];
 
-% save in output structs
-PS.xsteps_nonan = xsteps_nonan;
-TR.psteps_nonan = psteps_nonan;
+for i = 1 : length(psteps_nonan)
+    elast = calcf(xsteps_nonan(i,:)', psteps_nonan(i,:)', params); % no load force included for now
+    y(i,:) = -elast';
+end
 
+felast = struct;
+% fit polynomial to elestomer force: felast
+felast.x1 = MultiPolyRegress(xsteps_nonan, y(:,1), 2);
+felast.x2 = MultiPolyRegress(xsteps_nonan, y(:,2), 2);
+felast.x3 = MultiPolyRegress(xsteps_nonan, y(:,3), 2);
+felast.x4 = MultiPolyRegress(xsteps_nonan, y(:,4), 2);
+felast.x5 = MultiPolyRegress(xsteps_nonan, y(:,5), 2);
+felast.x6 = MultiPolyRegress(xsteps_nonan, y(:,6), 2);
+
+% save the elastomer force within the params struct
+params.felast = felast;
 
 end
