@@ -13,7 +13,7 @@ L = 0.16 * ones(1,num);   %  relaxed length of each FREE [m]
 d = [0, -0.02286, 0 ; 0.01979676, 0.01143, 0 ; -0.01979676, 0.01143, 0]'; % location of attachment points to the end effector [m]
 a = [0,0,1 ; 0,0,1 ; 0,0,1]';    % direction of FREE axis at attachment point [unit vector]
 pmin = (1/0.145038) * 1e3 * [1 1 1];   % min gauge pressure for each FREE [Pa]
-pmax = (1/0.145038) * 1e3 * [13 13 20];   % max gauge pressure for each FREE [Pa]
+pmax = (1/0.145038) * 1e3 * [12 12 20];   % max gauge pressure for each FREE [Pa]
 
 % End effector parameters
 deff = [0,0,0]; % location of origin of end effector coordinates in global coordinates
@@ -22,8 +22,11 @@ meff = 0;   % mass of the end effector [kg]
 cmeff = [0,0,0]';   % location of the center of mass of end effector [m]
 C = -(1)*[1e1 0 0 1e-3; 1e1 0 0 1e-3; 1e1 0 0 1e-3]';   % compliance (stiffness) matrix for each FREE vectorized so that [c1, c2; c3, c4] = [c1, c2, c3, c4]', horizontally concatenated
 
+% QP parameters
+tol = 1e-1;   % constraint tolerance of the QP
+
 % SysID parameters
-psteps = 5;     % how finely to break up pmax
+psteps = 8;     % how finely to break up pmax
 
 % Enfield TR parameters
 TRpsimax = 25;      % pressure (in psi) that corresponds to 10V input signal to TR pressure regulator
@@ -57,6 +60,7 @@ params.psteps = psteps;
 params.TRpsimax = TRpsimax;
 params.topIDs = topIDs;
 params.effIDs = effIDs;
+params.tol = tol;
 
 params.B = abs(params.L ./ cos(params.Gama));   % fiber length (must be positive))
 params.N = -params.L ./ (2*pi*params.R) .* tan(params.Gama); % total fiber windings in revolutions (when relaxed)

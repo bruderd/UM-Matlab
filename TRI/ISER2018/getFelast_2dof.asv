@@ -26,10 +26,10 @@ end
 % take average pressure at each step
 for i = 1:length(TR.tsteps) - 1
     TR.psteps_V(i,:) = nanmean( TR.pmonitor( TR.tsteps(i,1)+5:TR.tsteps(i+1,1)-5, : ) );    % excludes some points that are in the transition region
-    TR.pcontrolsteps_V(i,:) = nanmean( TR.pmonitor( TR.tsteps(i,1)+5:TR.tsteps(i+1,1)-5, : ) );    % excludes some points that are in the transition region
+    TR.pcontrolsteps_V(i,:) = nanmean( TR.pcontrol( TR.tsteps(i,1)+5:TR.tsteps(i+1,1)-5, : ) );    % excludes some points that are in the transition region
 end
 TR.psteps = TR.psteps_V * (150/10) * (6894.76/1);    % convert pressure voltage back into psi
-TR.pcontrolsteps = TR.pcontrolsteps_V *; 
+TR.pcontrolsteps = TR.pcontrolsteps_V * (params.TRpsimax/10) * (6894.76/1); 
 
 %% Line up mocap and pressure data, and partition mocap data
 
@@ -37,7 +37,7 @@ TR.pcontrolsteps = TR.pcontrolsteps_V *;
 figure
 hold on
 plot(endeff.t, endeff.x(:,4), 'k')  % phi wrt time
-stairs(TR.tsteps(1:end-1,2), TR.psteps(:,3))    % average pressure wrt time
+stairs(TR.tsteps(1:end-1,2), TR.psteps_V(:,3))    % average pressure wrt time
 title('Mocap and Pressure Data Together')
 legend('Mocap: PhaseSpace', 'Pressure: TR')
 hold off
@@ -70,17 +70,24 @@ stairs(TR.tsteps(1:end-1,2), PS.xsteps(:,4))    %
 hold off
 
 %% Calculate elastomer force (y) at each point
+
+% Remove all the NaNs from xsteps
+xsteps_nonan = PS.xsteps;
+
+tsteps_nonan(~any(~isnan(xsteps_nonan), 2),:)=[];
+xsteps_nonan(~any(~isnan(xsteps_nonan), 2),:)=[];
+
 for i = 1 : length(TR.tsteps)-1
-    elast = calcf(PS.xsteps(i,:)', TR.psteps(i,:)', params);
+    elast = calcf(xsteps_nonan(i,:)', TR.psteps(i,:)', params); % no load force included for now
     y(i,:) = -elast';
 end
 
 felast = struct;
-% fit polynomial to elestomer force: e(x)
+% fit polynomial to elestomer force: felast
 felast.x1 = MultiPolyRegress(PS.xsteps, y(:,1), 2);
 felast.x2 = MultiPolyRegress(PS.xsteps, y(:,2), 2);
 felast.x3 = MultiPolyRegress(PS.xsteps, y(:,3), 2);
-felast.x4 = MultiPolyRegress(PS.xsteps, y(:,4), 4);
+felast.x4 = MultiPolyRegress(PS.xsteps, y(:,4), 2);
 felast.x5 = MultiPolyRegress(PS.xsteps, y(:,5), 2);
 felast.x6 = MultiPolyRegress(PS.xsteps, y(:,6), 2);
 

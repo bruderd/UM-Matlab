@@ -1,4 +1,4 @@
-function Ptest_V = getTestInput_2dof( testPoints, params, testname )
+function Ptest_V = getTestInput_2dof( testPoints, params, testname, pointsname )
 %getTestInput_2dof - creates the control input files for testing on the 2dof system
 %   testname is the name of the folder the csv's are to be saved in
 
@@ -23,12 +23,21 @@ if exist('testname','var')
     dir = strcat(current_folder, '\testPoints\', testname);
     
     % save csv file of control inputs
-    saveas1 = strcat(dir, '\test.csv');
+    saveas1 = strcat(dir, '\', pointsname, '.csv');
     csvwrite(char(saveas1), Ptest_V, 0, 0);
     
     % create blank csv file of test data. Will be filled in by labview
-    saveas2 = strcat(dir, '\testData.csv');
+    saveas2 = strcat(dir, '\', pointsname, 'Data.csv');
     csvwrite(char(saveas2), [], 0, 0)
+
+    
+%     % save csv file of control inputs
+%     saveas1 = strcat(dir, '\test.csv');
+%     csvwrite(char(saveas1), Ptest_V, 0, 0);
+%     
+%     % create blank csv file of test data. Will be filled in by labview
+%     saveas2 = strcat(dir, '\testData.csv');
+%     csvwrite(char(saveas2), [], 0, 0)
 end
 
 end

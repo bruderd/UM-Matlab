@@ -1,13 +1,12 @@
-function Ptest_V = getTestInput_2dof( testPoints, params, testname )
+function Ptest_V = getTestInput_2dof( testPoints, params, testname, pointsname )
 %getTestInput_2dof - creates the control input files for testing on the 2dof system
 %   testname is the name of the folder the csv's are to be saved in
 
 Ptest_Pa = calcPressureTestPoints(testPoints, params);  % test control pressure [Pa]
 
+% Make sure all of the input points are feasable before proceeding
 proceed = input('Are all of the testPoints feasable? y = 1, 0 = n: ');
-if proceed == 1
-    PS.t0 = offset;
-else
+if proceed ~= 1
     disp('Try different dimension of test region until all point are feasable.');
     return;
 end
@@ -23,8 +22,13 @@ if exist('testname','var')
     current_folder = cd;
     dir = strcat(current_folder, '\testPoints\', testname);
     
-    saveas2 = strcat(dir, '\test.csv');
-    csvwrite(char(saveas2), Ptest_V, 0, 0);
+    % save csv file of control inputs
+    saveas1 = strcat(dir, '\test.csv');
+    csvwrite(char(saveas1), Ptest_V, 0, 0);
+    
+    % create blank csv file of test data. Will be filled in by labview
+    saveas2 = strcat(dir, '\testData.csv');
+    csvwrite(char(saveas2), [], 0, 0)
 end
 
 end

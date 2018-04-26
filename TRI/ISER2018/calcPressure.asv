@@ -1,7 +1,7 @@
 function [psol, exitflag] = calcPressure( x, params, fload)
 %calcPressure: Calculates the input pressure needed to acheive some
 %end effector position x by solving for the equilibrium point.
-%   Detailed explanation goes here
+%   FYI the last element of psol is the constraint tolerance at that point
 
 % check for optional argument fload
 if ~exist('fload','var')
@@ -33,10 +33,11 @@ num = params.num;
 % beq = zeros(num, 1);
 
 %% solve for the pressure at equilibrium point
-options = optimoptions('quadprog', 'Display', 'iter', 'ConstraintTolerance', 2.5e-2);
-tolmin = 0; % the minimum equilibrium constraint tolerance
-tolmax = 1e-1;  % the maximum constraint tolerance
-[psol, ~, exitflag] = quadprog(H, f, A, b, [], [], [params.pmin,0], [params.pmax, 1e-1], [], options);
+options = optimoptions('quadprog', 'Display', 'iter');  % 'ConstraintTolerance', 2.5e-2);
+tolmin = 0; % the minimum equality constraint tolerance
+tolmax = 21.1e0;  % the maximum equality constraint tolerance
+[psol, ~, exitflag] = quadprog(H, f, A, b, [], [], [params.pmin, tolmin], [params.pmax, tolmax], [], options);
+
 
 %% older version where tolerance is not optimized over
 % [psol, ~, exitflag] = quadprog(H, f, [], [], Aeq, beq, params.pmin, params.pmax, [], options);
