@@ -23,7 +23,9 @@ cmeff = [0,0,0]';   % location of the center of mass of end effector [m]
 C = -(1)*[1e1 0 0 1e-3; 1e1 0 0 1e-3; 1e1 0 0 1e-3]';   % compliance (stiffness) matrix for each FREE vectorized so that [c1, c2; c3, c4] = [c1, c2, c3, c4]', horizontally concatenated
 
 % QP parameters
-tol = 1e-1;   % constraint tolerance of the QP
+tol = = [1e-3, 1e-3, 85.0827, 0.1985, 1.6886, 2.1278];
+% tol = [1e-3, 1e-3, 148, 0.4062, 2.9761, 2.4365]/2;
+% tol = 1e-1 * [1, 1, 100, 1, 1, 1];   % constraint tolerance of the QP
 
 % SysID parameters
 psteps = 8;     % how finely to break up pmax
@@ -60,7 +62,6 @@ params.psteps = psteps;
 params.TRpsimax = TRpsimax;
 params.topIDs = topIDs;
 params.effIDs = effIDs;
-params.tol = tol;
 
 params.B = abs(params.L ./ cos(params.Gama));   % fiber length (must be positive))
 params.N = -params.L ./ (2*pi*params.R) .* tan(params.Gama); % total fiber windings in revolutions (when relaxed)
@@ -81,7 +82,7 @@ end
 
 % penalty weighting (this is used to focus on the equilibrium point with lowest pressure)
 params.penalty = 1e-5;
-params.tol = 1e-2;  % tolerance to within which equality constraint of quadprog will  be satisfied
+params.tol = tol;  % tolerance to within which equality constraint of quadprog will  be satisfied
 
 %% set the inverse kinematic relationship for the system
 params = setInvKin(params); % a few parameters are added in this function

@@ -36,7 +36,7 @@ TR.psteps = V2Pa(TR.psteps);
 figure
 hold on
 plot(endeff.t, endeff.x(:,4), 'k')  % phi wrt time
-stairs(TR.tsteps(1:end-1,2), TR.psteps(:,3))    % average pressure wrt time
+stairs(TR.tsteps(1:end-1,2), TR.psteps(:,3)/10000)    % average pressure wrt time
 title('Mocap and Pressure Data Together')
 legend('Mocap: PhaseSpace', 'Pressure: TR')
 hold off
@@ -72,6 +72,12 @@ xsteps_nonan(~any(~isnan(xsteps_nonan), 2),:)=[];
 % save in output structs
 PS.xsteps_nonan = xsteps_nonan;
 TR.psteps_nonan = psteps_nonan;
+
+%% Remove all points where pressure constraint was violated
+
+% just remove points when constraint was violated on FREEs 1 and 2
+TR.psteps_safe = TR.psteps_nonan( all(TR.psteps_nonan(:,2:3) < ones(size(TR.psteps_nonan(:,1))) * params.pmax(2:3), 2), : );
+PS.xsteps_safe = PS.xsteps_nonan( all(TR.psteps_nonan(:,2:3) < ones(size(TR.psteps_nonan(:,1))) * params.pmax(2:3), 2), : );
 
 
 end

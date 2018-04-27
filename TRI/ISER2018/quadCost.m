@@ -24,12 +24,12 @@ felast = calcFelast( x, params );
 
 %% Put the tolerance value into the cost and optimize over it along with p, don't even minimize pressure
 
-H = blkdiag( zeros(3,3), eye(1) );
-f = zeros(num + 1,1);
+H = blkdiag( zeros(num,num), eye(6) );
+f = zeros(num + 6,1);
 
 % need more slack so will use inequality constraints with tolerance
-A = [D*Jq', -ones(6,1);...
-    -D*Jq', -ones(6,1)];
+A = [D*Jq', -eye(6);...
+    -D*Jq', -eye(6)];
 b = [-(felast + fload);...
     (felast + fload)];
 

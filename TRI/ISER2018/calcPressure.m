@@ -34,7 +34,7 @@ num = params.num;
 
 %% solve for the pressure at equilibrium point
 options = optimoptions('quadprog', 'Display', 'iter');  % 'ConstraintTolerance', 2.5e-2);
-tolmin = 0; % the minimum equality constraint tolerance
+tolmin = zeros(1,6); % the minimum equality constraint tolerance
 tolmax = params.tol;  % the maximum equality constraint tolerance
 
 pmax = (6894.76) * [12 12 20];
