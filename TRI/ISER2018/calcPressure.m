@@ -37,9 +37,9 @@ options = optimoptions('quadprog', 'Display', 'iter');  % 'ConstraintTolerance',
 tolmin = zeros(1,6); % the minimum equality constraint tolerance
 tolmax = params.tol;  % the maximum equality constraint tolerance
 
-pmax = (6894.76) * [12 12 20];
+% pmax = (6894.76) * [12 12 22]; % unused
 
-[psol, ~, exitflag] = quadprog(H, f, A, b, [], [], [params.pmin, tolmin], [pmax, tolmax], [], options);
+[psol, ~, exitflag] = quadprog(H, f, A, b, [], [], [params.pmin, tolmin], [params.pmax, tolmax], [], options);
 
 
 %% older version where tolerance is not optimized over

@@ -1,4 +1,4 @@
-function [TR, PS] = getTestData(pDatafile ,params)
+function [TR, PS] = getTestData(pControlfile, pDatafile ,params)
 %calcFelast - performs system identification to determine the cumulative
 %elastomer contribution.z
 
@@ -6,8 +6,10 @@ function [TR, PS] = getTestData(pDatafile ,params)
 mocap = getC3Ddata(params);     % read in raw mocap data from C3D file
 endeff = mocap2endeff(mocap);   % convert raw mocap data into endeffector coordinates
 
-%% Read in pressure data, save it in 'TR' struct
+%% Read in pressure data, save it in 'TR' struct (NOTE: some stuff here is specific to 2dof system)
 TR = struct;
+TR.pin = csvread(pControlfile);    % the commanded voltages for each regulator
+TR.pin = TR.pin(:,2:4); % remove first column of the data
 pData = csvread(pDatafile);
 TR.t = pData(:,1);
 TR.pcontrol = pData(:,3:5);
@@ -29,6 +31,7 @@ for i = 1:length(TR.tsteps) - 1
 end
 % convert pressure in psteps into units of Pa
 TR.psteps = V2Pa(TR.psteps); 
+TR.pin = Vin2Pa(TR.pin, params);
 
 %% Line up mocap and pressure data, and partition mocap data
 
@@ -61,23 +64,35 @@ for i = 1:length(TR.tsteps) - 1
     PS.xsteps(i,:) = nanmean( PS.x( TR.tsteps(i,1)+5:TR.tsteps(i+1,1)-5, : ) );    % excludes some points that are in the transition region
 end
 
+%% Remove one outlier point (ONLY FOR TEST 9!)
+TR.psteps = TR.psteps( find(PS.xsteps(:,3) > -0.007), : );
+TR.pin = TR.pin( find(PS.xsteps(:,3) > -0.007), : );
+PS.xsteps = PS.xsteps( find(PS.xsteps(:,3) > -0.007), : );
+
+
 %% Remove Nans from data
 
 % Remove all the NaNs from xsteps
 xsteps_nonan = PS.xsteps;
 psteps_nonan = TR.psteps;
+pin_nonan = TR.pin;
+
 psteps_nonan(~any(~isnan(xsteps_nonan), 2),:)=[];
+pin_nonan(~any(~isnan(xsteps_nonan), 2),:)=[];
 xsteps_nonan(~any(~isnan(xsteps_nonan), 2),:)=[];
 
-% save in output structs
-PS.xsteps_nonan = xsteps_nonan;
+% store in structs
 TR.psteps_nonan = psteps_nonan;
+TR.pin_nonan = pin_nonan;
+PS.xsteps_nonan = xsteps_nonan;
+
 
 %% Remove all points where pressure constraint was violated
 
 % just remove points when constraint was violated on FREEs 1 and 2
-TR.psteps_safe = TR.psteps_nonan( all(TR.psteps_nonan(:,2:3) < ones(size(TR.psteps_nonan(:,1))) * params.pmax(2:3), 2), : );
-PS.xsteps_safe = PS.xsteps_nonan( all(TR.psteps_nonan(:,2:3) < ones(size(TR.psteps_nonan(:,1))) * params.pmax(2:3), 2), : );
+TR.psteps_safe = TR.psteps_nonan( all(TR.psteps_nonan(:,1:2) < ones(size(TR.psteps_nonan(:,1))) * params.pmax(1:2), 2), : );
+PS.xsteps_safe = PS.xsteps_nonan( all(TR.psteps_nonan(:,1:2) < ones(size(TR.psteps_nonan(:,1))) * params.pmax(1:2), 2), : );
+TR.pin_safe = TR.pin_nonan( all(TR.psteps_nonan(:,1:2) < ones(size(TR.psteps_nonan(:,1))) * params.pmax(1:2), 2), : );
 
 
 end
