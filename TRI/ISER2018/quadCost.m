@@ -28,7 +28,8 @@ felast = calcFelast( x, params );
 % H = blkdiag( zeros(num,num), blkdiag( eye(4), zeros(2,2) ) );    % want to find solution that minimizes tolerance and satisfies model constraints
 % H = blkdiag( eye(num) * 1e-6, blkdiag( eye(4), zeros(2,2) ) * 1e3 );    % want to find solution that minimizes pressure and tolerance and satisfies model constraints
 % H = blkdiag( eye(num), zeros(6,6) );    % want to find solution that minimizes pressure and satisfies model constraints
-H = blkdiag( blkdiag( eye(2), [1.5e-2] ), zeros(6,6) );    % want to find solution that minimizes pressure of FREEs 1 and 2 and satisfies model constraints
+H = blkdiag( blkdiag( eye(3) ), zeros(6,6) );    % want to find solution that minimizes pressure of FREEs 1 and 2 and satisfies model constraints
+% H = blkdiag( blkdiag( eye(2), [1.5e-2] ), zeros(6,6) );    % want to find solution that minimizes pressure of FREEs 1 and 2 and satisfies model constraints
 f = zeros(num + 6,1);
 
 % need more slack so will use inequality constraints with tolerance
@@ -36,6 +37,7 @@ A = [D*Jq', -eye(6);...
     -D*Jq', -eye(6)];
 b = [-(felast + fload);...
     (felast + fload)];
+
 
 Aeq = [];
 beq = [];

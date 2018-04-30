@@ -23,7 +23,7 @@ cmeff = [0,0,0]';   % location of the center of mass of end effector [m]
 C = -(1)*[1e1 0 0 1e-3; 1e1 0 0 1e-3; 1e1 0 0 1e-3]';   % compliance (stiffness) matrix for each FREE vectorized so that [c1, c2; c3, c4] = [c1, c2, c3, c4]', horizontally concatenated
 
 % QP parameters
-tol = [1e-3, 1e-3, 153, 0.5, Inf, Inf]/10; %/80   % test9 (4th order fit of just x3 and x4)
+tol = [1e-3, 1e-3, 153, 0.5, Inf, Inf]/80; %/80   % test9 (4th order fit of just x3 and x4)
 % tol = [1e-3, 1e-3, 114, 0.24, 3.5, 3.5];    % test9 (3rd order fit, with other states zerod)
 % tol = [1e-3, 1e-3, 146, 0.28, 2.8, 2.6];  % test 9 (2nd order fit)
 % tol = [1e-3, 1e-3, 114, 0.24, 2.1, 2.5];  % test 9 (3rd order fit)
