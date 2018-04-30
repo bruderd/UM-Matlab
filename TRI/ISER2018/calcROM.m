@@ -34,7 +34,8 @@ for i = 1:length(X(:,1))
     for j = 1:length(X(1,:))
         in1i = X(i,j);
         in2i = Y(i,j);
-        [sol, exitflag] = calcPressure([0, 0, in1i, in2i, -0.0395, 0.0623]', params);
+%         [sol, exitflag] = calcPressure([0, 0, in1i, in2i, params.x5_offset, params.x6_offset]', params);
+        [sol, exitflag] = calcPressure([0, 0, in1i, in2i, 0, 0]', params);
         if exitflag > 0
             Z(i,j) = 1; % feasable
             p(i,j,:) = sol(1:3);

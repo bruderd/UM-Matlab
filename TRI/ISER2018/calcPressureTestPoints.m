@@ -5,17 +5,21 @@ function [Pcontrol, feas, infeas] = calcPressureTestPoints(testPoints, params)
 
 feascount = 1;
 infeascount = 1;
-Pcontrol = zeros(length(testPoints(:,1)), params.num);
+Pcontrol = zeros(length(testPoints(:,1)) + 1, params.num);
+
+Pcontrol(1,:) = zeros(1, params.num);   % for calibration, first point is zero pressure
+
 for i = 1:length(testPoints(:,1))
     [psol, exitflag] = calcPressure(testPoints(i,:)', params);
     
     % show me which points are infeasable
     if exitflag > 0
-        Pcontrol(i,:) = psol(1:params.num)';    % just get the pressure values not the tolerance
+        Pcontrol(i+1,:) = psol(1:params.num)';    % just get the pressure values not the tolerance
         feas(feascount,:) = testPoints(i,3:4); % feasable
         feascount = feascount + 1;
     else
-        infeas(infeascount,:) = testPoints(i,3:4); % feasable
+        Pcontrol(i+1,:) = zeros(1, params.num);    % set pressure = 0 at infeasable points
+        infeas(infeascount,:) = testPoints(i,3:4); % infeasable
         infeascount = infeascount + 1;
     end
 end

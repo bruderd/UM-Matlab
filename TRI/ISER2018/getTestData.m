@@ -64,7 +64,7 @@ for i = 1:length(TR.tsteps) - 1
     PS.xsteps(i,:) = nanmean( PS.x( TR.tsteps(i,1)+5:TR.tsteps(i+1,1)-5, : ) );    % excludes some points that are in the transition region
 end
 
-%% Remove one outlier point (ONLY FOR TEST 9!)
+%% Remove one outlier point (ONLY VALID FOR TEST 9!)!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 TR.psteps = TR.psteps( find(PS.xsteps(:,3) > -0.007), : );
 TR.pin = TR.pin( find(PS.xsteps(:,3) > -0.007), : );
 PS.xsteps = PS.xsteps( find(PS.xsteps(:,3) > -0.007), : );
