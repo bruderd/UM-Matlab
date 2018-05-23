@@ -20,7 +20,7 @@ testParams.TRmax = (1/0.14503) * 1e3 * 15;   % Pa = 15psi
 
 testParams.servoOffset = 35;    % deg
 % testParams.linOffset = 3.5427; % V (for tests 4 and 5)
-testParams.linOffset = 3.70979; % V (for test 6 and 7)
+testParams.linOffset = 3.5427; % V (for tests 4 and 5)
 
 % % Much smaller set of points for debugging
 % testParams.Psteps = 1;     % how finely to break up Pmax
@@ -37,7 +37,7 @@ dlmwrite('testPoints.txt',testPoints_out, 'delimiter', '\t', 'newline', 'pc');
 
 %% Calculate Error between test data and measured data
 % [FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE, maxERR, percERR] = treatData('testData/testData_3.mat', testPoints, testPoints_out, params, testParams);
-[FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE, maxERR, percERR] = treatData_v2('testData/testData_8.mat', testParams, params);  % for test4 and above
+[FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE, maxERR, percERR] = treatData_v2('testData/testData_5.mat', testParams, params);  % for test4 and above
 
 %% Calculate the force zonotope for each test configuration
 for i = 1:length(testParams.stest)
