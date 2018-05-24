@@ -18,8 +18,11 @@ RESraw_t = RESraw(1:end, 1);    % save the time series vector
 % % shift FM data to the left 5 seconds (i.e. 20 measurements) to properly align them, append zeros to the end so that their lengths will still match up (only test 4, 7)
 % FMraw = [FMraw(21:end, :); zeros(20,2)];
 
-% shift FM data to the left 2.5 seconds (i.e. 10 measurements) to properly align them, append zeros to the end so that their lengths will still match up (only test 8)
-FMraw = [FMraw(11:end, :); zeros(10,2)];
+% % shift FM data to the left 2.5 seconds (i.e. 10 measurements) to properly align them, append zeros to the end so that their lengths will still match up (only test 8)
+% FMraw = [FMraw(11:end, :); zeros(10,2)];
+
+% shift FM data to the left 0.8 seconds (i.e. 3 measurements) to properly align them, append zeros to the end so that their lengths will still match up (only test 9)
+FMraw = [FMraw(4:end, :); zeros(4,2)];
 
 %% Remove problematic points
 % remove bad transition points (where linear actuator or servo weren't set)
@@ -47,13 +50,17 @@ while j <= length(RESraw)
     end
 end
 
-% % Remove last 20 data points because we know they are messed up
+% % Remove last 20 data points because we know they are messed up (test 4,7)
 % RESraw(end-20:end,:) = [];
 % FMraw(end-20:end,:) = [];
 
-% Remove last 10 data points because we know they are messed up
-RESraw(end-10:end,:) = [];
-FMraw(end-10:end,:) = [];
+% % Remove last 10 data points because we know they are messed up (test 8)
+% RESraw(end-10:end,:) = [];
+% FMraw(end-10:end,:) = [];
+
+% Remove last 4 data points because we know they are messed up (test 9)
+RESraw(end-4:end,:) = [];
+FMraw(end-4:end,:) = [];
 
 %% Partition the data by pressure input
 
@@ -66,7 +73,7 @@ for i = 2:length(RESraw)
 end
 
 % take average pressure and force/moment at each step (call is "mean")
-buffer = 4; % doesn't average in points near transitions
+buffer = 8; % doesn't average in points near transitions
 for i = 1:length(RESsteps) - 1
     RESmean(i,:) = nanmean( RESraw( RESsteps(i,1)+buffer : RESsteps(i+1,1)-buffer, : ) );
     FMmean(i,:) = nanmean( FMraw( RESsteps(i,1)+buffer : RESsteps(i+1,1)-buffer, : ) );
@@ -179,11 +186,18 @@ FM1pred = FM1pred(2:end, :); FM2pred = FM2pred(2:end, :); FM3pred = FM3pred(2:en
 % FM4 = -1 * ( FM4raw - FM4raw(1,:) + [3.0678,   -0.0033]);
 % FM = [FM1; FM2; FM3; FM4];
 
-% Remove offset automatically (test 8)
-FM1 = -1 * ( FM1raw - FM1raw(1,:) + [7.8917,   -0.0116]);
-FM2 = -1 * ( FM2raw - FM2raw(1,:) + [4.2820   -0.0003]);
-FM3 = -1 * ( FM3raw - FM3raw(1,:) + [-1.2367   -0.0070]);
-FM4 = -1 * ( FM4raw - FM4raw(1,:) + [4.3577   -0.0094]);
+% % Remove offset automatically (test 8)
+% FM1 = -1 * ( FM1raw - FM1raw(1,:) + [7.8917,   -0.0116]);
+% FM2 = -1 * ( FM2raw - FM2raw(1,:) + [4.2820   -0.0003]);
+% FM3 = -1 * ( FM3raw - FM3raw(1,:) + [-1.2367   -0.0070]);
+% FM4 = -1 * ( FM4raw - FM4raw(1,:) + [4.3577   -0.0094]);
+% FM = [FM1; FM2; FM3; FM4];
+
+% Remove offset automatically (test 9)
+FM1 = -1 * ( FM1raw - FM1raw(1,:) + [0.2830,    0.0057] );
+FM2 = -1 * ( FM2raw - FM2raw(1,:) + [3.1437,    0.0092] );
+FM3 = -1 * ( FM3raw - FM3raw(1,:) + [-2.6889,   -0.0031] );
+FM4 = -1 * ( FM4raw - FM4raw(1,:) + [2.2392,   -0.0015] );
 FM = [FM1; FM2; FM3; FM4];
 
 % % Remove offset automatically

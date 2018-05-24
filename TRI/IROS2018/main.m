@@ -37,7 +37,7 @@ dlmwrite('testPoints.txt',testPoints_out, 'delimiter', '\t', 'newline', 'pc');
 
 %% Calculate Error between test data and measured data
 % [FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE, maxERR, percERR] = treatData('testData/testData_3.mat', testPoints, testPoints_out, params, testParams);
-[FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE, maxERR, percERR] = treatData_v2('testData/testData_8.mat', testParams, params);  % for test4 and above
+[FM1, FM2, FM3, FM4, FM1pred, FM2pred, FM3pred, FM4pred, RMSE, maxERR, percERR] = treatData_v2('testData/testData_9.mat', testParams, params);  % for test4 and above
 
 %% Calculate the force zonotope for each test configuration
 for i = 1:length(testParams.stest)
