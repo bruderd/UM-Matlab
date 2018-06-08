@@ -42,8 +42,11 @@ A = [D*Jq', -eye(6);...
 b = [-(Kp*error + fload);...
     (Kp*error + fload)]; % simple proportional control
 
-Aeq = [];
-beq = [];
+Aeq = [D*Jq', -eye(6)];
+beq = [-(Kp*error + fload)];
+
+% Aeq = [];
+% beq = [];
 
 
 %% New version hopefully works better

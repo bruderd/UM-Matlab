@@ -47,7 +47,7 @@ params.cmeff = [0,0,0]';   % location of the center of mass of end effector [m]
 
 %% USER DEFINED SPINE/BEAM PARAMETERS
 params.dbeam = 0.5e-3;    % beam diameter (m)
-params.Ebeam = 200e9;  % beam Young's modulus (Pa)
+params.Ebeam = 50e9; %200e9;  % beam Young's modulus (Pa)
 params.Ibeam = pi*params.dbeam^4 / 64;
 
 %% USER DEFINED TEST PARAMETERS
@@ -57,7 +57,7 @@ params.penalty = 1e-5;
 params.tol = [Inf, Inf, Inf, 1e-3, 1e-3, 1e-3];   % QP constraint tolerance
 
 % PID gains
-params.Kp = 1e-2*blkdiag( zeros(3,3), eye(3) );  % proportional gain
+params.Kp = 50e-2*blkdiag( zeros(3,3), eye(3) );  % proportional gain
 params.Ki = eye(6);  % integral gain
 params.Kd = zeros(6,6);  % derivative gain
 
