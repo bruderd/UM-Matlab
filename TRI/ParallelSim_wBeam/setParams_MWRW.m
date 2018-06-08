@@ -60,7 +60,7 @@ params.tol = [Inf, Inf, Inf, 1e-3, 1e-3, 1e-3];   % QP constraint tolerance
 
 % PID gains
 params.Kp = 1*blkdiag( zeros(3,3), [1e0, 0, 0; 0, 1e0, 0; 0, 0, 1] );  % proportional gain
-params.Ki = eye(6);  % integral gain
+params.Ki = 0 * 1e-3 * blkdiag( zeros(3,3), eye(3) );  % integral gain
 params.Kd = zeros(6,6);  % derivative gain
 
 % Initial conditions (could be made more generic in the future)

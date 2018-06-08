@@ -15,6 +15,9 @@ fixed_x0 = [1 1 1 0 0 0];
 fixed_xdot0 = [0 0 0 0 0 0];
 [x0_new,xdot0_new] = decic(@(t, x, xdot)vf(x,calc_u(t, params),xdot,params),0,x0,fixed_x0,xdot0,fixed_xdot0);
 
+global errI; % global error variable declaration (needed for the integral controller)
+errI = zeros(6,1);
+
 % Simulate system response
 [t, y] = ode15i(@(t, x, xdot) vf(x, calc_u_MWRW(x, t, params), xdot, params), tspan, x0_new, xdot0_new);
 

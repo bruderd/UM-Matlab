@@ -18,8 +18,7 @@ D = params.D;   % matrix describing the attachment points of actuators to end ef
 [Kp, Ki, Kd] = deal(params.Kp, params.Ki, params.Kd);   % PID gains
 
 % integral and derivative error
-global errI;    % global integral error variable
-errI = errI + error;
+errorI = e
 
 % q = x2q(x);
 q = euler2free_MWRW(x(4:6), params);    % edited so that q follows the correct convention
@@ -39,8 +38,8 @@ A = [D*Jq', -eye(6);...
     -D*Jq', -eye(6)];
 % b = [-(Kp*error.p + Ki*error.i + Kd*error.d + fload);...
 %     (K.p*error.p + K.i*error.i + K.d*error.d + fload)];
-b = [-(Kp*error + Ki*errI + fload);...
-    (Kp*error + Ki*errI + fload)]; % simple proportional control
+b = [-(Kp*error + fload);...
+    (Kp*error + fload)]; % simple proportional control
 
 Aeq = [D*Jq', -eye(6)];
 beq = [-(Kp*error + fload)];

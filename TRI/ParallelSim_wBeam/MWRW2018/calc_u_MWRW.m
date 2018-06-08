@@ -3,6 +3,8 @@ function [u, error] = calc_u_MWRW( xin, t, params )
 %   Also calculates the error, which will be used for PID terms
 %   Note: the input "xin" is the euler angles and their derivatives
 
+global errI; % global error variable for the ode solver to use
+
 % calculate full state
 xeul = xin(1:3);
 xcart = euler2cart(xeul, params);
@@ -12,7 +14,7 @@ x = [xcart; xeul];
 
 % Define the desired position
 if t <= 12
-    xeul_des = [pi/8, 0, 0]';
+    xeul_des = [0, 0, -pi/4]';
     xcart_des = euler2cart(xeul_des, params);
     xdes = [xcart_des; xeul_des];
 elseif t < 4
@@ -36,6 +38,21 @@ elseif t <= 12
     xcart_des = euler2cart(xeul_des, params);
     xdes = [xcart_des; xeul_des];
 end
+
+% % Set integral error to zero each time the reference changes (prevent
+% % integrator windup)
+% epsilon = 0.1;
+% if (t > 2) && (t < 2+epsilon)
+%     errI = zeros(6,1);
+% elseif (t > 4) && (t < 4+epsilon)
+%     errI = zeros(6,1);    
+% elseif (t > 6) && (t < 6+epsilon)
+%     errI = zeros(6,1); 
+% elseif (t > 8) && (t < 8+epsilon)
+%     errI = zeros(6,1); 
+% elseif (t > 10) && (t < 10+epsilon)
+%     errI = zeros(6,1); 
+% end
 
 
 %% Calculate the input pressure to reduce error
