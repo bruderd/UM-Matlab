@@ -16,6 +16,8 @@ params.R = [0.5e-2, 0.5e-2, 0.5e-2, 0.5e-2]';    % relaxed FREE radius (m)
 params.L = [params.Lspine, params.Lspine, params.Lspine, params.Lspine]'; % relaxed FREE lenght (m)
 params.kelast_s = 1e-2 * [-4e3, -4e3, -4e3, -4e3]';     % spring constants for the elastomer in extension
 params.kelast_w = 1e0 * [-4e-2, -4e-2, -4e-2, -4e-2]'; % spring constants for the elastomer in twist
+% params.kelast_s = -1e-1 * [1,1,1,1]';     % spring constants for the elastomer in extension
+% params.kelast_w = -1e-3 * [1,1,1,1]'; % spring constants for the elastomer in twist
 params.xattach = 1*[2e-2, -2e-2, -2e-2, 2e-2]';      % x-coordinate of attachment point of FREE
 params.yattach = 1*[2e-2, 2e-2, -2e-2, -2e-2]';      % y-coordinate of attachment point of FREE
 
@@ -47,17 +49,17 @@ params.cmeff = [0,0,0]';   % location of the center of mass of end effector [m]
 
 %% USER DEFINED SPINE/BEAM PARAMETERS
 params.dbeam = 0.5e-3;    % beam diameter (m)
-params.Ebeam = 200e9;  % beam Young's modulus (Pa)
+params.Ebeam = 200e6;  % beam Young's modulus (Pa)
 params.Ibeam = pi*params.dbeam^4 / 64;
 
 %% USER DEFINED TEST PARAMETERS
 
 % QP parameters
 params.penalty = 1e-5;
-params.tol = [1, 1, 1, 5e-3, 5e-3, 5e-3];   % QP constraint tolerance
+params.tol = [Inf, Inf, Inf, 1e-3, 1e-3, 1e-3];   % QP constraint tolerance
 
 % PID gains
-params.Kp = 1000*blkdiag( eye(3)*1, eye(3)*1e-3 );  % proportional gain
+params.Kp = blkdiag( zeros(3,3), [5e-2, 0, 0; 0, 2e-2, 0; 0, 0, 1] );  % proportional gain
 params.Ki = eye(6);  % integral gain
 params.Kd = zeros(6,6);  % derivative gain
 

@@ -12,7 +12,7 @@ x = [xcart; xeul];
 
 % Define the desired position
 if t <= 12
-    xeul_des = [0, 0, pi/8]';
+    xeul_des = [pi/8, 0, 0]';
     xcart_des = euler2cart(xeul_des, params);
     xdes = [xcart_des; xeul_des];
 elseif t < 4
@@ -50,7 +50,7 @@ fload = zeros(6,1); % no load for now, may add in weight of end effector later
 if exitflag < 0
     u = zeros(4,1);
 else
-    u = psol(1:4,:) * 1.7; % put in an extra gain
+    u = psol(1:4,:); % * 3; % put in an extra gain
 end
 
 

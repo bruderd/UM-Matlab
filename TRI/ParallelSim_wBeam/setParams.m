@@ -28,7 +28,7 @@ params.damp = 0.5*[1.3e0; 1.3e0; 1.25*8e-2];    % damping in each direction [dam
 
 %% USER DEFINED SPINE/BEAM PARAMETERS
 params.dbeam = 0.5e-3;    % beam diameter (m)
-params.Ebeam = 200e9;  % beam Young's modulus (Pa)
+params.Ebeam = 2000e9;  % beam Young's modulus (Pa)
 params.Ibeam = pi*params.dbeam^4 / 64;
 
 %% USER DEFINED TEST PARAMETERS

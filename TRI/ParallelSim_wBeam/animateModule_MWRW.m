@@ -8,7 +8,7 @@ function animateModule_MWRW( t, y, u, params )
 % t = 0:dt:T; % time vector
 % timetodelay = dt;
 
-filename = 'MWRWsim0.gif';
+filename = 'MWRWsim1.gif';
 
 fig = figure('Position', [1 41 1536 748.8000]); % make the figure bigger
 

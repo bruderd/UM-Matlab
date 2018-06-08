@@ -18,7 +18,7 @@ D = params.D;   % matrix describing the attachment points of actuators to end ef
 [Kp, Ki, Kd] = deal(params.Kp, params.Ki, params.Kd);   % PID gains
 
 % q = x2q(x);
-q = euler2free(x(4:6), params);
+q = euler2free_MWRW(x(4:6), params);    % edited so that q follows the correct convention
 Jq = calcJq(q, params);
 
 % calculate the elastomer force (set equal to zero, will be ignored)
@@ -26,12 +26,8 @@ felast = zeros(6,1);
 
 %% Put the tolerance value into the cost and optimize over it along with p, don't even minimize pressure
 
-% H = blkdiag( zeros(num,num), eye(6) );    % original, most basic version of quadratic cost
-% H = blkdiag( zeros(num,num), blkdiag( eye(4), zeros(2,2) ) );    % want to find solution that minimizes tolerance and satisfies model constraints
-% H = blkdiag( eye(num) * 1e-6, blkdiag( eye(4), zeros(2,2) ) * 1e3 );    % want to find solution that minimizes pressure and tolerance and satisfies model constraints
-% H = blkdiag( eye(num), zeros(6,6) );    % want to find solution that minimizes pressure and satisfies model constraints
+% H = blkdiag( eye(num), zeros(6,6) );    % want to find solution that minimizes pressure FREEs and satisfies model constraints
 H = blkdiag( zeros(num,num), eye(6) );    % want to find solution that minimizes pressure FREEs and satisfies model constraints
-% H = blkdiag( blkdiag( eye(2), [1.5e-2] ), zeros(6,6) );    % want to find solution that minimizes pressure of FREEs 1 and 2 and satisfies model constraints
 f = zeros(num + 6,1);
 
 % need more slack so will use inequality constraints with tolerance
