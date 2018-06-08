@@ -8,7 +8,7 @@ function animateModule( t, y, u, params )
 % t = 0:dt:T; % time vector
 % timetodelay = dt;
 
-filename = 'ModuleSim_TRIdemo_v3.gif';
+filename = 'ModuleSim_MWRWtest1.gif';
 
 fig = figure;
 

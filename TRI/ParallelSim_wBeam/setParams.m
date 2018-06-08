@@ -10,6 +10,7 @@ params.numFREEs = 4;    % total number of FREEs
 params.Lspine = 27.94e-2;  % length of central spine
 
 params.Gama = [0.75, -0.75, 0.75, -0.75]';        % relaxed fiber angle (rad)
+% params.Gama = deg2rad([42.9, -42.9, 42.9, -42.9])';        % relaxed fiber angle (rad)
 params.R = [0.5e-2, 0.5e-2, 0.5e-2, 0.5e-2]';    % relaxed FREE radius (m)
 params.L = [params.Lspine, params.Lspine, params.Lspine, params.Lspine]'; % relaxed FREE lenght (m)
 params.kelast_s = 1e-2 * [-4e3, -4e3, -4e3, -4e3]';     % spring constants for the elastomer in extension
@@ -60,7 +61,7 @@ params.steps4 = 20;
 
 %% USER DEFINED PLOTTING PARAMETERS 
 
-params.thickness = 0.01;    % thickness of the top and bottom blocks
+params.thickness = 0.02;    % thickness of the top and bottom blocks
 params.width = 0.04;        % width of the top and bottom blocks
 
 %% Dependent parameters (do not edit below this line)

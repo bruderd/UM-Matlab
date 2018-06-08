@@ -1,0 +1,59 @@
+function [u, error] = calc_u_MWRW( x, t, params )
+%Calculate the input to the system, which is a vector of pressures
+%   Also calculates the error, which will be used for PID terms
+%   Note
+
+% calculate full state
+xcart = euler2cart(xeul, params);
+x = [xcart; xeul];
+
+%% Set the desired position
+
+% current time step, k:
+k = int16( t * (params.frames/params.tfinal) );
+
+% Define the desired position
+if t < 2
+    xeul_des = [0, pi/8, 0]';
+    xcart_des = euler2cart(xeul_des, params);
+    xdes = [xcart_des; xeul_des];
+elseif t < 4
+    xeul_des = [pi/8, 0, 0]';
+    xcart_des = euler2cart(xeul_des, params);
+    xdes = [xcart_des; xeul_des];
+elseif t < 6
+    xeul_des = [-pi/8, -pi/8, 0]';
+    xcart_des = euler2cart(xeul_des, params);
+    xdes = [xcart_des; xeul_des];
+elseif t < 8
+    xeul_des = [0, pi/8, pi/4]';
+    xcart_des = euler2cart(xeul_des, params);
+    xdes = [xcart_des; xeul_des];
+elseif t < 10
+    xeul_des = [0, pi/8, -pi/4]';
+    xcart_des = euler2cart(xeul_des, params);
+    xdes = [xcart_des; xeul_des];
+elseif t <= 12
+    xeul_des = [0, pi/4, 0]';
+    xcart_des = euler2cart(xeul_des, params);
+    xdes = [xcart_des; xeul_des];
+end
+
+
+%% Calculate the input pressure to reduce error
+
+error = calcError(x, xdes, params);
+
+fload = zeros(6,1); % no load for now, may add in weight of end effector later
+[psol, exitflag] = calcPressure( x, error, params, fload);
+
+u = psol(1:4,:);
+
+% if infeasable set input equal to zero
+if exitflag < 0
+    u = zeros(4,1);
+end
+
+
+end
+

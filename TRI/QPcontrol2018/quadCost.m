@@ -14,8 +14,8 @@ if ~exist('penalty','var')
 end
 
 num = params.num;
-[C, D] = deal(params.C, params.D);
-[Kp, Ki, Kd] = deal(params.Kp, params.Ki, params.Kd);
+D = params.D;   % matrix describing the attachment points of actuators to end effector
+[Kp, Ki, Kd] = deal(params.Kp, params.Ki, params.Kd);   % PID gains
 
 q = x2q(x);
 Jq = calcJq(q, params);

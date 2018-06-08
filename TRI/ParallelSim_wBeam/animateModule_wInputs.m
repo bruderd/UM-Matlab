@@ -8,7 +8,7 @@ function animateModule_wInputs( t, y, u, params )
 % t = 0:dt:T; % time vector
 % timetodelay = dt;
 
-filename = 'ModuleSimulation_wInputs2.gif';
+filename = 'ModuleSimulation_wInputs3.gif';
 
 fig = figure;
 
