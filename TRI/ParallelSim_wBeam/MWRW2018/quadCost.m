@@ -19,7 +19,7 @@ D = params.D;   % matrix describing the attachment points of actuators to end ef
 
 % integral and derivative error
 global errI;    % global integral error variable
-errI = errI + error;
+
 
 % q = x2q(x);
 q = euler2free_MWRW(x(4:6), params);    % edited so that q follows the correct convention

@@ -1,4 +1,4 @@
-function drawModule_MWRW( xeul, params, t, u )
+function drawModule_MWRW( xeul, xeul_des, params, t, u )
 %Visualizes the end effector position in 3D. This does not create a figure
 %so is useful for animations that must iterative call a plot function.
 %   Detailed explanation goes here
@@ -21,7 +21,7 @@ R = R10(xeul);
 vertEff = verticesEff(xeul, xcart, params);
 
 % Get the coordinates of the vertices of the desired end effector position
-xeul_des = [0, pi/8, 0];    % dummy value for now
+% xeul_des = [0, pi/8, 0];    % dummy value for now
 xcart_des = euler2cart(xeul_des, params);
 vertDes = verticesEff(xeul_des, xcart_des, params);
 
@@ -90,9 +90,9 @@ col2 = [146,197,222]./290;
 col4 = [5,113,176]./256;
 alpha_des = 0.25;
 % The title is two lines to increase space between subplots
-title(['';'$t = $' num2str(t,'%.2f') ':  $P_1 = $' num2str(Pkpa(1),'%.0f') ', $P_2 = $' num2str(Pkpa(2),'%.0f') ', $P_3 = $' num2str(Pkpa(3),'%.0f') ', $P_4 = $' num2str(Pkpa(4),'%.0f') ' (kPa)'], 'Interpreter', 'LaTex')
-% title(['$t = $' num2str(t,'%.2f') ':  $P_1 = $' num2str(Pkpa(1),'%.0f') ', $P_2 = $' num2str(Pkpa(2),'%.0f') ', $P_3 = $' num2str(Pkpa(3),'%.0f') ', $P_4 = $' num2str(Pkpa(4),'%.0f') ' (kPa)'], 'Interpreter', 'LaTex')
-% title(['$t = $' num2str(t,'%.2f')], 'Interpreter', 'LaTex')
+% title(['';'$t = $' num2str(t,'%.2f') ':  $P_1 = $' num2str(Pkpa(1),'%.0f') ', $P_2 = $' num2str(Pkpa(2),'%.0f') ', $P_3 = $' num2str(Pkpa(3),'%.0f') ', $P_4 = $' num2str(Pkpa(4),'%.0f') ' (kPa)'], 'Interpreter', 'LaTex')
+%   title(['$t = $' num2str(t,'%.2f') ':  $P_1 = $' num2str(Pkpa(1),'%.0f') ', $P_2 = $' num2str(Pkpa(2),'%.0f') ', $P_3 = $' num2str(Pkpa(3),'%.0f') ', $P_4 = $' num2str(Pkpa(4),'%.0f') ' (kPa)'], 'Interpreter', 'LaTex')
+%   title(['$t = $' num2str(t,'%.2f')], 'Interpreter', 'LaTex')
 hold on
 patch(vertEff(1,1:4), vertEff(2,1:4), vertEff(3,1:4), color)
 patch(vertEff(1,5:8), vertEff(2,5:8), vertEff(3,5:8), color)
@@ -122,9 +122,9 @@ hold off
 set(gca,'zdir','reverse')
 % view(3)
 view(-35,-10)
-xlabel('x (m)')
-ylabel('y (m)')
-zlabel('z (m)')
+xlabel('x (m)', 'FontSize', 18)
+ylabel('y (m)', 'FontSize', 18)
+zlabel('z (m)', 'FontSize', 18)
 axis equal
 xlim([-L, L]*0.6)
 ylim([-L, L]*0.6)
@@ -132,14 +132,23 @@ zlim([-L, 5e-2])
 box on
 
 %% Plot the error
-error = linspace(1,12,100);    % fake error function
-k = int16( t * 100/12 );
+% error = linspace(1,12,100);    % fake error function
+% k = int16( t * 100/params.tfinal );
+global nerror;
+global k;
+global nt;
+
+nerror(k) = norm(xeul - xeul_des);
+nt(k) = t;
 subplot(2,2,2)
-plot(error(1:k), '.', 'MarkerSize', 14)
-title('Error', 'Interpreter', 'LaTex')
-xlim([0,100])
-ylim([0, 12])
-ylabel('Error (some units)')
+plot(nt(1:k), nerror(1:k), '.', 'MarkerSize', 14);
+title('\textbf{Error}', 'Interpreter', 'LaTex', 'FontSize', 20)
+xlim([0, params.tfinal])
+ylim([0, 0.8])
+ylabel('Oreintation Error (rad)', 'FontSize', 18)
+xlabel('Time (s)', 'FontSize', 18)
+
+k = k + 1;
 
 %% Plot the input pressure to each FREE
 fHand = subplot(2,2,4);
@@ -150,9 +159,13 @@ bar(1, Pkpa(1), 'parent', fHand, 'facecolor', col1);
 bar(2, Pkpa(2), 'parent', fHand, 'facecolor', col2);
 bar(3, Pkpa(3), 'parent', fHand, 'facecolor', col3);
 bar(4, Pkpa(4), 'parent', fHand, 'facecolor', col4);
-title(['$P_1 = $' num2str(Pkpa(1),'%.0f') ', $P_2 = $' num2str(Pkpa(2),'%.0f') ', $P_3 = $' num2str(Pkpa(3),'%.0f') ', $P_4 = $' num2str(Pkpa(4),'%.0f') ' (kPa)'], 'Interpreter', 'LaTex')
-ylim([0, 3.1e6*1e-3])
-ylabel('Input Pressure (kPa)')
+title({''; '\textbf{Control Input}'}, 'Interpreter', 'LaTex', 'FontSize', 20)
+% title(['$P_1 = $' num2str(Pkpa(1),'%.0f') ', $P_2 = $' num2str(Pkpa(2),'%.0f') ', $P_3 = $' num2str(Pkpa(3),'%.0f') ', $P_4 = $' num2str(Pkpa(4),'%.0f') ' (kPa)'], 'Interpreter', 'LaTex', 'FontSize', 18)
+% ylim([0, params.pmax(1)*(1e-3)])
+ylim([0, 1000])
+ylabel('Input Pressure (kPa)', 'FontSize', 18)
+xlabel('Actuator ID', 'FontSize', 18)
+xticks([1 2 3 4])
 
 
 end

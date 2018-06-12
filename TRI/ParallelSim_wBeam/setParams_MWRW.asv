@@ -59,8 +59,8 @@ params.penalty = 1e-5;
 params.tol = [Inf, Inf, Inf, 1e-3, 1e-3, 1e-3];   % QP constraint tolerance
 
 % PID gains
-params.Kp = blkdiag( zeros(3,3), [5e-2, 0, 0; 0, 2e-2, 0; 0, 0, 1] );  % proportional gain
-params.Ki = eye(6);  % integral gain
+params.Kp = *blkdiag( zeros(3,3), [1e0, 0, 0; 0, 1e0, 0; 0, 0, 1] );  % proportional gain
+params.Ki = 1e-1 * blkdiag( zeros(3,3), eye(3) );  % integral gain
 params.Kd = zeros(6,6);  % derivative gain
 
 % Initial conditions (could be made more generic in the future)
@@ -95,7 +95,8 @@ params.thickness = 0.02;    % thickness of the top and bottom blocks
 params.width = 0.04;        % width of the top and bottom blocks
 
 params.frames = 100;    % number of frames in animation over whole time
-params.tfinal = 12;     % duration of simulation (s)
+params.tfinal = 2;     % duration of simulation (s)
+params.Ts = 1e-2;       % sampling period
 
 %% Dependent parameters (do not edit below this line)
 
