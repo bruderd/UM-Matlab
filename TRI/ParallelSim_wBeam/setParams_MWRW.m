@@ -95,7 +95,7 @@ params.thickness = 0.02;    % thickness of the top and bottom blocks
 params.width = 0.04;        % width of the top and bottom blocks
 
 params.frames = 100;    % number of frames in animation over whole time
-params.tfinal = 6;     % duration of simulation (s)
+params.tfinal = 2;     % duration of simulation (s)
 params.Ts = 1e-2;       % sampling period
 
 %% Dependent parameters (do not edit below this line)

@@ -16,11 +16,11 @@ x = [xcart; xeul];
 
 % Define the desired position
 if t <= 2
-    xeul_des = [pi/8, 0, pi/6]';
+    xeul_des = [-pi/7, 0, pi/6]';
     xcart_des = euler2cart(xeul_des, params);
     xdes = [xcart_des; xeul_des];
 elseif t < 4
-    xeul_des = [pi/8, 0, 0]';
+    xeul_des = [0, 0, 0]';
     xcart_des = euler2cart(xeul_des, params);
     xdes = [xcart_des; xeul_des];
 elseif t < 6

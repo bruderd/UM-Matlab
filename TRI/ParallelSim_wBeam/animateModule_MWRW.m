@@ -16,7 +16,7 @@ k = 1;
 nerror = zeros(length(t));
 nt = zeros(length(t));
 
-filename = 'MWRW2018/demo/5.gif';
+filename = 'MWRW2018/demo/8.gif';
 
 fig = figure('Position', [1 41 1536 748.8000]); % make the figure bigger
 
