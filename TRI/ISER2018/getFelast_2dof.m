@@ -28,10 +28,13 @@ felast = struct;
 % fit polynomial to elestomer force: felast
 felast.x1 = MultiPolyRegress(PS.xsteps_nonan, y(:,1), 1);
 felast.x2 = MultiPolyRegress(PS.xsteps_nonan, y(:,2), 1);
-felast.x3 = MultiPolyRegress(PS.xsteps_nonan, y(:,3), 4, [0, 0, 4, 4, 0, 0], 'figure'); % I don't want elastomer force to be a function of x1, x2, x5, x6 since these are only nonzero due to sensor noise 
-felast.x4 = MultiPolyRegress(PS.xsteps_nonan, y(:,4), 4, [0, 0, 4, 4, 0, 0], 'figure'); % I don't want elastomer force to be a function of x1, x2, x5, x6 since these are only nonzero due to sensor noise 
+felast.x3 = MultiPolyRegress(PS.xsteps_nonan, y(:,3), 3, [0, 0, 3, 3, 0, 0], 'figure'); % I don't want elastomer force to be a function of x1, x2, x5, x6 since these are only nonzero due to sensor noise 
+felast.x4 = MultiPolyRegress(PS.xsteps_nonan, y(:,4), 3, [0, 0, 3, 3, 0, 0], 'figure'); % I don't want elastomer force to be a function of x1, x2, x5, x6 since these are only nonzero due to sensor noise 
 felast.x5 = MultiPolyRegress(PS.xsteps_nonan, y(:,5), 1);
 felast.x6 = MultiPolyRegress(PS.xsteps_nonan, y(:,6), 1);
+
+% NOTE: I chose 3rd order polynomial fits because it generated a predicted
+% feasable region that most closely resembles the measured data.
 
 % save the elastomer force within the params struct
 params.felast = felast;

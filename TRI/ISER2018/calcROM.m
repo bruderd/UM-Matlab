@@ -59,12 +59,17 @@ mymap = [1 1 1;
 
 figure
 h = pcolor(X,Y,Z);
+box on
 colormap(mymap);
 set(h, 'EdgeColor', 'none');
-title(['\Gamma: ', num2str(rad2deg(params.Gama(1))), ', ', num2str(rad2deg(params.Gama(2))), ', ', num2str(rad2deg(params.Gama(3)))])
-colorbar('Ticks', [0, 1], 'TickLabels', {'infeasable', 'feasable'})
+% title(['\Gamma: ', num2str(rad2deg(params.Gama(1))), ', ', num2str(rad2deg(params.Gama(2))), ', ', num2str(rad2deg(params.Gama(3)))])
+cb = colorbar('Ticks', [0, 1], 'TickLabels', {'infeasible', 'feasible'});
+set(cb,'position',[.63 .22 .075 .15])
 xlabel('\Delta l (m)')
 ylabel('\Delta \phi (rad)')
+grid on
+set(gca,'layer','top')
+
 
 end
 
