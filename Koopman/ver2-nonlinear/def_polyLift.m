@@ -13,7 +13,7 @@ N = factorial(n + maxDegree) / ( factorial(n) * factorial(maxDegree) );
 
 % matrix of exponents (N x n). Each row gives exponents for 1 monomial
 exponents = zeros(1,n);
-for i = 1:max_degree
+for i = 1:maxDegree
    exponents = [exponents; partitions(i, ones(1,n))]; 
 end
 
@@ -32,5 +32,6 @@ matlabFunction(p, 'File', 'polyLift', 'Vars', {x});
 params.polyBasis = p;    % symbolic vector of basis monomials, p(x)
 params.N = N;   % dimension of polyBasis
 params.psi = psi;   % monomial exponent index function
+params.x = x;   % symbolic state variable
 
 end

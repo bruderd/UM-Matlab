@@ -3,14 +3,26 @@
 %% 
 
 
-%% USER EDIT: Define nonlinear plant
+%% USER EDIT SECTION
+
+% define parameters
 params.struct
 
-params.n = 2;
-params.maxDegree = 4;
+params.n = 2;   % dimension of state space
+params.maxDegree = 4;   % maximum degree of monomial basis
+params = def_polyLift(params);  % creates the lifting function, polyLift
+
+params.Ts = 0.01;   % sampling period
+params.numTrials = 20;  % number of "experiments" to run from different initial conditions
+params.x0max = [1, 1]'; 
+params.tf = 10;
 
 
 % define dynamics
 x = sym('x', [params.n, 1]);
 
-vf = [
+vf = [x(2);...
+     -x(1)];
+ 
+matlabFunction(vf, 'File', 'vf_real', 'Vars', {x}); % create plant dynamics func.
+

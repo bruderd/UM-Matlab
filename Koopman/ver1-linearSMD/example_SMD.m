@@ -30,16 +30,6 @@ Ldata = get_Ldata(U, params);
 vecLdata = Ldata(:);
 
 vecstackL = zeros(params.N^2, params.N*params.n);
-% for j = 1:params.n
-%     for k = 1:params.N
-%         Lkj = get_Lkj(k,j,params);
-%         
-%         % convert all the Lkj's into vectors and stack them horizontally
-%         vecLkj = Lkj(:);
-%         vecstackL(:, (j-1)*params.N + k) = vecLkj;
-%     end
-% end
-
 for k = 1:params.N
     for j = 1:params.n
         Lkj = get_Lkj(k,j,params);

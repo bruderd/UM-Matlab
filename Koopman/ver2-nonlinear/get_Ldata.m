@@ -6,4 +6,3 @@ function Ldata = get_Ldata( U, params )
 Ldata = (1/params.Ts) * logm(U);
 
 end
-
