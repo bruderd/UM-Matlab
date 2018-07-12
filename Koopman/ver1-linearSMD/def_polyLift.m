@@ -1,4 +1,4 @@
-function [ p ] = def_polyLift( n, max_degree )
+function [ p, psi, N, xsym ] = def_polyLift( n, max_degree )
 %def_polyLift: Defines the lifting function that lifts state variable x to
 % space spanned by monomials with total degree less than or equal to
 % max_degree.
@@ -15,13 +15,19 @@ for i = 1:max_degree
    exponents = [exponents; partitions(i, ones(1,n))]; 
 end
 
-% create vector of orderd monomials
+% create vector of orderd monomials (column vector)
 for i = 1:N
-    p(i) = get_monomial(x, exponents(i,:));
+    p(i,1) = get_monomial(x, exponents(i,:));
 end
 
+% define matrix of exponents: columns=monomial term, rows=dimension of x
+psi = exponents';
+
 % create the lifting function: x -> p(x)
-matlabFunction(p, 'File', 'polyLift', 'Vars', );
+matlabFunction(p, 'File', 'polyLift', 'Vars', {x});
+
+% output the symbolic x variable
+xsym = x;
 
 end
 

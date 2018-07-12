@@ -1,0 +1,16 @@
+% main: Run the Koopman sysid process on a user defined nonlinear system
+
+%% 
+
+
+%% USER EDIT: Define nonlinear plant
+params.struct
+
+params.n = 2;
+params.maxDegree = 4;
+
+
+% define dynamics
+x = sym('x', [params.n, 1]);
+
+vf = [

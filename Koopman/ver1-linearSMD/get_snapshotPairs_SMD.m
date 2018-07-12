@@ -1,7 +1,9 @@
-function [ x, y ] = get_snapshotPairs_SMD(Ts, numTrials, x0max, tf, m, b, k)
+function [ x, y ] = get_snapshotPairs_SMD(params)
 %get_snapshotPairs_SMD: Generate a bunch of snapshot pairs for the
 %autonomous spring-mass-damper system (SMD)
 %   Detailed explanation goes here
+
+[Ts, numTrials, x0max, tf, m, b, k] = deal(params.Ts, params.numTrials, params.x0max, params.tf, params.m, params.b, params.k);
 
 % initialize output arrays
 x = []; y = [];
