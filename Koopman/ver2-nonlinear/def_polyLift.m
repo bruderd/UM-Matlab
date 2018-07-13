@@ -11,6 +11,9 @@ x = sym('x', [n, 1]);   % state variable x
 % Number of mononials, i.e. dimenstion of p(x)
 N = factorial(n + maxDegree) / ( factorial(n) * factorial(maxDegree) );
 
+% Number of monomials in basis set for observables to be mapped through Lkj
+N1 = factorial(n + params.m1) / ( factorial(n) * factorial(params.m1) );
+
 % matrix of exponents (N x n). Each row gives exponents for 1 monomial
 exponents = zeros(1,n);
 for i = 1:maxDegree
@@ -31,6 +34,7 @@ matlabFunction(p, 'File', 'polyLift', 'Vars', {x});
 % output variables  
 params.polyBasis = p;    % symbolic vector of basis monomials, p(x)
 params.N = N;   % dimension of polyBasis
+params.N1 = N1; % dimension of basis of observables to be mapped through Lkj
 params.psi = psi;   % monomial exponent index function
 params.x = x;   % symbolic state variable
 
