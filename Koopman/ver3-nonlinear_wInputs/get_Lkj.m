@@ -2,10 +2,10 @@ function [ Lkj ] = get_Lkj( k, j, params )
 %get_Lkj: Builds the operator L_j^k = p_k * \frac{\partial}{\partial x_j} 
 %   See Eq. 13 in Mauroy and Gonclaves, 2016
 
-[N, psi, n] = deal(params.N, params.psi, params.n);
+[N, psi, naug] = deal(params.N, params.psi, params.naug);
 
 % create basis vectors for R^n
-e = eye(n);
+e = eye(naug);
 
 
 Lkj = zeros(N, params.N1);

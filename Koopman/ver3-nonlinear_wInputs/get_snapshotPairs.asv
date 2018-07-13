@@ -13,11 +13,11 @@ for i = 1:numTrials
     x0 = (x0ub - x0lb)*rand + x0lb; % random initial state
     
     [t, v] = ode45(@(t,x) vf_real(x, get_u(t, params)), tspan, x0);   % simulate plant response input (defined below)
-    u = get_u(t, params);
+    [u] = get_u(t, params);
     
     tq = 0:Ts:tf;
     vq = interp1(t,v,tq);   % interpolate results to get samples at sampling interval Ts
-    uq = interp1(t,u,tq)';
+    uq = interp1(t,u,tq);
     
     % inject noise with standard deviation 0.01
     mean = 0;   % mean offset
@@ -35,4 +35,13 @@ for i = 1:numTrials
     y = [y; yk];
 end
 
+end
+
+%% input function wrt time (can change if desired)
+function u = get_u(t, params)
+
+    mean = (params.uub + params.ulb) / 2;
+    amplitude = params.uub - mean;
+    u = amplitude .* cos(t) + mean;
+    
 end
