@@ -24,13 +24,16 @@ if data_ext == '.csv'
     if strcmp(numericalDerivs, 'on')  % do this if numerical derivatives are req.
         M = csvread([data_path, data_file]);
         traw = M(:, 1);
+        traw = traw - traw(1);  % remove any offset in start time
         xraw = M(:, 2 : 1+(params.n/2));
         uraw = M(:, 2+(params.n/2) : 1+(params.n/2)+params.p);
+        [traw_uq, index] = unique(traw);    % filter out non-unique values
         
         % interpolate data so that it lines of with sampling times
         tq = ( 0:params.Ts:traw(end) )';
-        xq = interp1(traw,xraw,tq);   % interpolate results to get samples at sampling interval Ts
-        uq = interp1(traw,uraw,tq);
+        
+        xq = interp1(traw_uq, xraw(index,:), tq);   % interpolate results to get samples at sampling interval Ts
+        uq = interp1(traw_uq, uraw(index,:), tq);
         
         % calculate numerical derivative at each point
         xqdot = ( xq(2:end,:) - xq(1:end-1,:) ) / params.Ts;
@@ -43,6 +46,7 @@ if data_ext == '.csv'
     else
         M = csvread([data_path, data_file]);
         data.t = M(:, 1);
+        data.t = data.t - data.t(1);  % remove any offset in start time
         data.x = M(:, 2 : 1+params.n);
         data.u = M(:, 2+params.n : 1+params.n+params.p);
         
@@ -61,13 +65,16 @@ elseif data_ext == '.mat'
     
     raw = load([data_path, data_file]);
     traw = raw.t;
+    traw = traw - traw(1);  % remove any offset in start time
     xraw = raw.x;
     uraw = raw.u;
+    [traw_uq, index] = unique(traw);    % filter out non-unique values
+    
     if strcmp(numericalDerivs, 'on')  % do this if numerical derivatives are req.
         % interpolate data so that it lines of with sampling times
         tq = ( 0:params.Ts:traw(end) )';
-        xq = interp1(traw,xraw,tq);   % interpolate results to get samples at sampling interval Ts
-        uq = interp1(traw,uraw,tq);
+        xq = interp1(traw_uq, xraw(index,:), tq);   % interpolate results to get samples at sampling interval Ts
+        uq = interp1(traw_uq, uraw(index,:), tq);
         
         % calculate numerical derivative at each point
         xqdot = ( xq(2:end,:) - xq(1:end-1,:) ) / params.Ts;

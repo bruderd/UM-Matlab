@@ -13,6 +13,7 @@ for i = 1:length(x)
 end
 
 Pxinv = pinv(Px);
+disp(cond(Px)); % for RAM debug
 U = Pxinv * Py;
 
 end

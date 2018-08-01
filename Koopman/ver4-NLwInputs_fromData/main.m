@@ -8,17 +8,17 @@ clear all;
 % define parameters
 params = struct;  % DNE
 
-params.n = 2;   % dimension of state space
-params.p = 1;   % dimension of input
+params.n = 4;   % dimension of state space (including state derivatives)
+params.p = 3;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum degrees for monomial bases (NOTE: m1 = 1 )
-params.maxDegree = 3;   % maximum degree of vector field monomial basis
+params.maxDegree = 1;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mappee through Lkj (DNE)
 params = def_polyLift(params);  % creates the lifting function, polyLift
 
 % choose whether or not to take numerical derivatives of states ('on' or 'off')
-numericalDerivs = 'off';
+numericalDerivs = 'on';
 
 params.Ts = 0.2;   % sampling period
 
@@ -63,14 +63,15 @@ matlabFunction(vf2, 'File', 'vf_sysid', 'Vars', {params.x, params.u});
 
 %% Run simulatio of sysId'd system and compare results to real system (DNE)
 
-tspan = [0, data.t(end)];
+simlen = 500;   % simulate for first 500 time points of data
+tspan = [0, data.t(simlen)];    
 x0sim = data.x(1,:)'; % same initial state as data initial state
 [tsysid, xsysid] = ode45(@(t,x) vf_sysid(x, get_simInput(t, data, params)), tspan, x0sim);
 
 % plot the results
 figure
 subplot(2,1,1)
-plot(data.t, data.x)
+plot(data.t(1:simlen), data.x(1:simlen,:))
 title('Real system')
 subplot(2,1,2)
 plot(tsysid, xsysid)

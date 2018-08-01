@@ -28,12 +28,13 @@ if data_ext == '.csv'
         uraw = M(:, 2+(params.n/2) : 1+(params.n/2)+params.p);
         
         % interpolate data so that it lines of with sampling times
-        tq = 0:params.Ts:traw(end);
+        tq = ( 0:params.Ts:traw(end) )';
+        [traw_uq, index] = unique(traw)
         xq = interp1(traw,xraw,tq);   % interpolate results to get samples at sampling interval Ts
         uq = interp1(traw,uraw,tq);
         
         % calculate numerical derivative at each point
-        xqdot = ( xq(2:end,:) - xq(1:end-1) ) / params.Ts;
+        xqdot = ( xq(2:end,:) - xq(1:end-1,:) ) / params.Ts;
         xqdot = [xqdot; zeros(1,params.n/2)];
         
         % define output
@@ -47,7 +48,7 @@ if data_ext == '.csv'
         data.u = M(:, 2+params.n : 1+params.n+params.p);
         
         % interpolate data so that it lines of with sampling times
-        tq = 0:params.Ts:data.t(end);
+        tq = ( 0:params.Ts:data.t(end) )';
         xq = interp1(data.t,data.x,tq);   % interpolate results to get samples at sampling interval Ts
         uq = interp1(data.t,data.u,tq);
 
@@ -65,12 +66,12 @@ elseif data_ext == '.mat'
     uraw = raw.u;
     if strcmp(numericalDerivs, 'on')  % do this if numerical derivatives are req.
         % interpolate data so that it lines of with sampling times
-        tq = 0:params.Ts:traw(end);
+        tq = ( 0:params.Ts:traw(end) )';
         xq = interp1(traw,xraw,tq);   % interpolate results to get samples at sampling interval Ts
         uq = interp1(traw,uraw,tq);
         
         % calculate numerical derivative at each point
-        xqdot = ( xq(2:end,:) - xq(1:end-1) ) / params.Ts;
+        xqdot = ( xq(2:end,:) - xq(1:end-1,:) ) / params.Ts;
         xqdot = [xqdot; zeros(1,params.n/2)];
         
         % define output
@@ -79,7 +80,7 @@ elseif data_ext == '.mat'
         data.u = uq;
     else 
         % interpolate data so that it lines of with sampling times
-        tq = 0:params.Ts:traw(end);
+        tq = ( 0:params.Ts:traw(end) )';
         xq = interp1(traw,xraw,tq);   % interpolate results to get samples at sampling interval Ts
         uq = interp1(traw,uraw,tq);
 

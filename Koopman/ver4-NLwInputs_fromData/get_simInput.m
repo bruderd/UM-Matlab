@@ -5,7 +5,7 @@ function u = get_simInput( t, data, params )
 
 for j = 1 : length(data.u)-1
     if t >= data.t(j) && t <= data.t(j+1)
-        u = data.u(j);
+        u = data.u(j,:)';
         break
     end
 end
