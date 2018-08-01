@@ -21,19 +21,19 @@ data = struct;
 % Read in data file
 if data_ext == '.csv'
     
-    if numericalDerivs == 'on'  % do this if numerical derivatives are req.
+    if strcmp(numericalDerivs, 'on')  % do this if numerical derivatives are req.
         M = csvread([data_path, data_file]);
         traw = M(:, 1);
-        xraw = M(:, 2 : 2+(params.n/2));
-        uraw = M(:, 2+(params.n/2) : 2+(params.n/2)+params.p);
+        xraw = M(:, 2 : 1+(params.n/2));
+        uraw = M(:, 2+(params.n/2) : 1+(params.n/2)+params.p);
         
         % interpolate data so that it lines of with sampling times
-        tq = 0:params.Ts:traw(end);
+        tq = ( 0:params.Ts:traw(end) )';
         xq = interp1(traw,xraw,tq);   % interpolate results to get samples at sampling interval Ts
         uq = interp1(traw,uraw,tq);
         
         % calculate numerical derivative at each point
-        xqdot = ( xq(2:end,:) - xq(1:end-1) ) / params.Ts;
+        xqdot = ( xq(2:end,:) - xq(1:end-1,:) ) / params.Ts;
         xqdot = [xqdot; zeros(1,params.n/2)];
         
         % define output
@@ -43,13 +43,13 @@ if data_ext == '.csv'
     else
         M = csvread([data_path, data_file]);
         data.t = M(:, 1);
-        data.x = M(:, 2 : 2+params.n);
-        data.u = M(:, 2+params.n : 2+params.n+params.p);
+        data.x = M(:, 2 : 1+params.n);
+        data.u = M(:, 2+params.n : 1+params.n+params.p);
         
         % interpolate data so that it lines of with sampling times
-        tq = 0:params.Ts:traw(end);
-        xq = interp1(traw,xraw,tq);   % interpolate results to get samples at sampling interval Ts
-        uq = interp1(traw,uraw,tq);
+        tq = ( 0:params.Ts:data.t(end) )';
+        xq = interp1(data.t,data.x,tq);   % interpolate results to get samples at sampling interval Ts
+        uq = interp1(data.t,data.u,tq);
 
         % define output
         data.t = tq;
@@ -63,14 +63,14 @@ elseif data_ext == '.mat'
     traw = raw.t;
     xraw = raw.x;
     uraw = raw.u;
-    if numericalDerivs == 'on'  % do this if numerical derivatives are req.
+    if strcmp(numericalDerivs, 'on')  % do this if numerical derivatives are req.
         % interpolate data so that it lines of with sampling times
-        tq = 0:params.Ts:traw(end);
+        tq = ( 0:params.Ts:traw(end) )';
         xq = interp1(traw,xraw,tq);   % interpolate results to get samples at sampling interval Ts
         uq = interp1(traw,uraw,tq);
         
         % calculate numerical derivative at each point
-        xqdot = ( xq(2:end,:) - xq(1:end-1) ) / params.Ts;
+        xqdot = ( xq(2:end,:) - xq(1:end-1,:) ) / params.Ts;
         xqdot = [xqdot; zeros(1,params.n/2)];
         
         % define output
@@ -79,7 +79,7 @@ elseif data_ext == '.mat'
         data.u = uq;
     else 
         % interpolate data so that it lines of with sampling times
-        tq = 0:params.Ts:traw(end);
+        tq = ( 0:params.Ts:traw(end) )';
         xq = interp1(traw,xraw,tq);   % interpolate results to get samples at sampling interval Ts
         uq = interp1(traw,uraw,tq);
 
