@@ -10,7 +10,7 @@ params = struct;
 params.phi1                = pi;
 params.dtphi1              = 0;
 params.phi2                = pi;
-params.dtphi2              = 0.1;
+params.dtphi2              = 0;
 
 % physical parameters
 params.g                   = 9.81; 
@@ -21,9 +21,11 @@ params.l2                  = 1;
 
 % "measurement" parameters
 params.Ts                  = 1/30;
+params.mean                = 0;     % mean of noise 
+params.sigma               = 0.01;     % standard dev of noise
 
 % animation parameters
-params.duration            = 60;
+params.duration            = 1200;   % in seconds
 params.fps                 = 30;
 params.movie               = true;
 
@@ -32,7 +34,7 @@ params.movie               = true;
 x0 = [params.phi1; params.phi2; params.dtphi1; params.dtphi2];
 sol = ode45(@(t, x) double_pendulum_ODE(t, x, get_input(t,x,params), params),[0 params.duration], x0);
 tout = sol.x;
-usol = get_u(tout);       % get inputs corresponding to output points
+usol = get_input(tout);       % get inputs corresponding to output points
 
 %% Get state "measurements"
 
@@ -46,9 +48,7 @@ u = interp1(tout, usol, t);
 xobs = y(:,1:2);    % angular position only
 
 % inject noise to simulate measurement noise
-mean = 0;   % mean offset
-sigma = 0.01;   % standard deviation
-noise = sigma .* randn(size(xobs)) + mean;
+noise = params.sigma .* randn(size(xobs)) + params.mean;
 x = xobs + noise;
 
 % define output
@@ -72,7 +72,8 @@ end
 function u = get_input(t,x,params)
 %   will want to parametrize in terms of some params later...
 
-u = 4*sin( (1/(2*pi)) * t) .* sin( 3*t - 1.5*cos(t) );
+% u = 4*sin( (1/(2*pi)) * t) .* sin( 3*t - 1.5*cos(t) );
+u = 4*sin(0.1*t) + cos(t);
 
 end
 

@@ -1,19 +1,24 @@
-% main: Run the Koopman sysid process on a data collected from a real sys
+function main_doublePendulum
+% main_doublePendulum: Run the Koopman sysid process on data collected
+% from doublePendulum simulation
+%   loadData :      specifies whether data will be loaded from file or
+%                   generated fresh. Any value will prompt user to load
+%                   data.
 %
 %   DNE = "do not edit this line"
-clear all;
+clearvars -except dataFileName;
 
-%% USER EDIT SECTION
+%% USER EDIT SECTION: set parameter values
 
-% define parameters
 params = struct;  % DNE
 
+% Koopman Sysid parameters
 params.n = 4;   % dimension of state space (including state derivatives)
 params.p = 1;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum degrees for monomial bases (NOTE: m1 = 1)
-params.maxDegree = 2;   % maximum degree of vector field monomial basis
+params.maxDegree = 1;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 params = def_polyLift(params);  % creates the lifting function, polyLift
 
@@ -22,10 +27,24 @@ numericalDerivs = 'on';
 
 params.Ts = 1/30;   % sampling period
 
-params.simlen = 500;   % simulate for first 500 time points of data
+% animation parameters
+params.duration            = 60;
+params.fps                 = 30;
+params.movie               = true;
+
+% double pendulum parameters
+params.phi1                = pi;
+params.dtphi1              = 0.1;
+params.phi2                = pi;
+params.dtphi2              = 0.1;
+params.g                   = 9.81; 
+params.m1                  = 1; 
+params.m2                  = 1; 
+params.l1                  = 1; 
+params.l2                  = 1;
 
 
-%% Read in user data from csv
+%% Read in user data from csv, if non provided generate "measured data"
 
 % Option 2nd argument for whether numerical derivative should be taken
 data = get_data(params, numericalDerivs);
@@ -65,18 +84,35 @@ matlabFunction(vf2, 'File', 'vf_sysid', 'Vars', {params.x, params.u});
 
 %% Run simulatio of sysId'd system and compare results to real system (DNE)
 
-tspan = [0, data.t(params.simlen)];    
+tspan = [0, params.duration];    
 x0sim = data.x(1,:)'; % same initial state as data initial state
-sol_sysid = ode45(@(t,x) vf_sysid(x, get_simInput(t, data, params)), tspan, x0sim);
+sol_sysid = ode45(@(t,x) vf_sysid(x, get_input(t, x, params)), tspan, x0sim);
+sol_real = ode45(@(t,x) vf_doublePendulum(x, get_input(t, x, params), params), tspan, x0sim);
+
 [tsysid, xsysid] = deal(sol_sysid.x, sol_sysid.y);
+[treal, xreal] = deal(sol_real.x, sol_real.y);
 
 % plot the results
 figure
 subplot(2,1,1)
-plot(data.t(1:simlen), data.x(1:simlen,:))
+plot(treal, xreal)
 title('Real system')
 subplot(2,1,2)
 plot(tsysid, xsysid)
 title('Identified system')
 
+% animate the results
+animate_doublePendulum(sol_real, sol_sysid, params);
+
+end
+
+%% USER EDIT: Define input for the simulation
+
+function u = get_input(t,x,params)
+%   will want to parametrize in terms of some params later...
+
+% u = 4*sin( (1/(2*pi)) * t) .* sin( 3*t - 1.5*cos(t) );
+u = 0;
+
+end
 
