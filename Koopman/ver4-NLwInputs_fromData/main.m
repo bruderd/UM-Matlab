@@ -9,7 +9,7 @@ clear all;
 params = struct;  % DNE
 
 params.n = 4;   % dimension of state space (including state derivatives)
-params.p = 3;   % dimension of input
+params.p = 1;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum degrees for monomial bases (NOTE: m1 = 1 )
