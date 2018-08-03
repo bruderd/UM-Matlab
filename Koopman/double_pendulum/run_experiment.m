@@ -7,9 +7,9 @@ clearvars -except dataFileName;
 params = struct;
 
 % initial conditions
-params.phi1                = pi;
+params.phi1                = 0;
 params.dtphi1              = 0;
-params.phi2                = pi;
+params.phi2                = 0;
 params.dtphi2              = 0;
 
 % physical parameters
@@ -22,10 +22,10 @@ params.l2                  = 1;
 % "measurement" parameters
 params.Ts                  = 1/30;
 params.mean                = 0;     % mean of noise 
-params.sigma               = 0.01;     % standard dev of noise
+params.sigma               = 0;     % standard dev of noise
 
 % animation parameters
-params.duration            = 1200;   % in seconds
+params.duration            = 3600;   % in seconds
 params.fps                 = 30;
 params.movie               = true;
 
@@ -45,7 +45,7 @@ u = interp1(tout, usol, t);
 
 % define observed states (this may be different than simulation states, 
 %   e.g. could track only angular positions, or the xy position of end eff)
-xobs = y(:,1:2);    % angular position only
+xobs = y(:,1:4);    % full state
 
 % inject noise to simulate measurement noise
 noise = params.sigma .* randn(size(xobs)) + params.mean;
@@ -72,8 +72,10 @@ end
 function u = get_input(t,x,params)
 %   will want to parametrize in terms of some params later...
 
-% u = 4*sin( (1/(2*pi)) * t) .* sin( 3*t - 1.5*cos(t) );
-u = 4*sin(0.1*t) + cos(t);
+% u = 10*sin( (1/(2*pi)) * t) .* sin( 3*t - 1.5*cos(t) );
+u = 10*sin(0.1*t) + cos(t);
+% u = 20 * rand  - 10;
+
 
 end
 
