@@ -23,15 +23,15 @@ params.l2                  = 1;
 params.Ts                  = 1/30;
 params.mean                = 0;     % mean of noise 
 params.sigma               = 0;     % standard dev of noise
-params.duration            = 10;   % in seconds
+params.duration            = 5;   % in seconds
 
 %% simulate a bunch of trials with randomized initial conditions
 x = []; y = [];
 for i = 1:numTrials
 
     % randomize initial conditions
-    params.phi1     = 4*pi*rand - 2*pi;
-    params.phi2     = 4*pi*rand - 2*pi;
+    params.phi1     = pi*rand - pi/2;
+    params.phi2     = (2/3)*pi*rand - pi/3;
     params.dtphi1   = 0;
     params.dtphi2   = 0;
     

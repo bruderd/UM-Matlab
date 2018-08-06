@@ -21,7 +21,11 @@ params.naug = params.n + params.p; % dimension of augmented state (DNE)
 % select maximum degrees for monomial bases (NOTE: m1 = 1)
 params.maxDegree = 1;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
-params = def_polyLift(params);  % creates the lifting function, polyLift
+
+% define lifting function and basis
+% params = def_polyLift(params);  % creates polynomial lifting function, polyLift
+params.interval = [-50, 50];     % interval (in all states) upon which dynamics are defined
+params = def_sinLift(params);   % creates sinusoidal lifting function, sinLift
 
 % choose whether or not to take numerical derivatives of states ('on' or 'off')
 numericalDerivs = 'off';
@@ -29,14 +33,14 @@ numericalDerivs = 'off';
 params.Ts = 1/30;   % sampling period
 
 % animation parameters
-params.duration            = 20;
+params.duration            = 5;
 params.fps                 = 30;
 params.movie               = true;
 
 % double pendulum parameters
-params.phi1                = pi;
+params.phi1                = pi/2;
 params.dtphi1              = 0;
-params.phi2                = pi - 0.01;
+params.phi2                = pi/2;
 params.dtphi2              = 0;
 params.g                   = 9.81; 
 params.m1                  = 1; 
@@ -75,7 +79,8 @@ W = pinv(vecstackL) * vecLdata;
 w = reshape(W, [params.n, params.N]);
 
 % dynamics (gives symbolic expression in terms of state and input)
-vf2 = w * params.polyBasis; 
+% vf2 = w * params.polyBasis; 
+vf2 = w * params.sinBasis; 
 matlabFunction(vf2, 'File', 'vf_sysid', 'Vars', {params.x, params.u});
 
 %% Run simulatio of sysId'd system and compare results to real system (DNE)

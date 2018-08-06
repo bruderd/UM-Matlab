@@ -7,7 +7,7 @@ function U = get_Koopman( x,y, params )
 [n, p] = deal(params.n, params.p);
 
 Px = zeros(length(x), params.N);
-Py = zeros(length(x), params.N);
+Py = zeros(length(x), length(params.polyBasis));
 for i = 1:length(x)
 %     Px(i,:) = polyLift( x(i, 1:n)', x(i, n+1:n+p)' )';
 %     Py(i,:) = polyLift( y(i, 1:n)', y(i, n+1:n+p)' )';
@@ -16,7 +16,7 @@ for i = 1:length(x)
 end
 
 % Better condition Px
-c = 1e-3;
+c = 1e-5;
 % Px = Px + c*eye(size(Px));
 Pxinv = dinv(Px, c, params);
 % Pxinv = pinv(Px);
