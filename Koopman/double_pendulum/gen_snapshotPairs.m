@@ -1,4 +1,4 @@
-function snapshotPairs = gen_snapshotPairs( numTrials )
+function snapshotPairs = gen_snapshotPairs( numTrials, dataFileName )
 %gen_snapshoPairs: Runs a bunch of simulations with randomized intial
 %                  conditions and compiles a set of snapshot pairs.
 %   Detailed explanation goes here
@@ -23,7 +23,7 @@ params.l2                  = 1;
 params.Ts                  = 1/30;
 params.mean                = 0;     % mean of noise 
 params.sigma               = 0;     % standard dev of noise
-params.duration            = 5;   % in seconds
+params.duration            = 7;   % in seconds
 
 %% simulate a bunch of trials with randomized initial conditions
 x = []; y = [];
@@ -54,6 +54,10 @@ end
 snapshotPairs = struct;
 snapshotPairs.x = x;
 snapshotPairs.y = y;
+
+if exist('dataFileName', 'var')
+    save([dataFileName, '.mat'], 'snapshotPairs.x', 'snapshotPairs.y');
+end
 
 end
 

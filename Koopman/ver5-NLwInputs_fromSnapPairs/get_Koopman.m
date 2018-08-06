@@ -9,10 +9,10 @@ function U = get_Koopman( x,y, params )
 Px = zeros(length(x), params.N);
 Py = zeros(length(x), params.N);
 for i = 1:length(x)
-%     Px(i,:) = polyLift( x(i, 1:n)', x(i, n+1:n+p)' )';
-%     Py(i,:) = polyLift( y(i, 1:n)', y(i, n+1:n+p)' )';
-    Px(i,:) = sinLift( x(i, 1:n)', x(i, n+1:n+p)' )';
-    Py(i,:) = sinLift( y(i, 1:n)', y(i, n+1:n+p)' )';
+    Px(i,:) = polyLift( x(i, 1:n)', x(i, n+1:n+p)' )';
+    Py(i,:) = polyLift( y(i, 1:n)', y(i, n+1:n+p)' )';
+%     Px(i,:) = sinLift( x(i, 1:n)', x(i, n+1:n+p)' )';
+%     Py(i,:) = sinLift( y(i, 1:n)', y(i, n+1:n+p)' )';
 end
 
 % Better condition Px
