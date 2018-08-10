@@ -9,10 +9,10 @@
 
 params = struct;
 
-params.phi1                = pi;
+params.phi1                = pi/4;
 params.dtphi1              = 0;
-params.phi2                = pi;
-params.dtphi2              = 0.1;
+params.phi2                = -pi/3;
+params.dtphi2              = 0;
 params.g                   = 9.81; 
 params.m1                  = 1; 
 params.m2                  = 1; 

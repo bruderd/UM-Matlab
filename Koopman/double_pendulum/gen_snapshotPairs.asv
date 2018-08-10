@@ -23,18 +23,25 @@ params.l2                  = 1;
 params.Ts                  = 1/30;
 params.mean                = 0;     % mean of noise 
 params.sigma               = 0;     % standard dev of noise
-params.duration            = 7;   % in seconds
+params.duration            = 10;   % in seconds
 
 %% simulate a bunch of trials with randomized initial conditions
 x = []; y = [];
 for i = 1:numTrials
 
     % randomize initial conditions
-    params.phi1     = pi*rand - pi/2;
-    params.phi2     = (2/3)*pi*rand - pi/3;
+    params.phi1     = (pi/2)*rand - pi/4;
+    params.phi2     = (pi/2)*rand - pi/4;
     params.dtphi1   = 0;
     params.dtphi2   = 0;
     
+    % generate parameters for input sinusoid
+    for j = 1:10
+        params.amp = 10 * (j / 10);
+        params.freq = 10/(2*pi) * ;
+    end
+
+    % generate data from one simulation
     data = gen_data(params);
     
     xk = zeros(length(data.t), size(data.x,2) + size(data.u,2));
@@ -56,7 +63,7 @@ snapshotPairs.x = x;
 snapshotPairs.y = y;
 
 if exist('dataFileName', 'var')
-    save([dataFileName, '.mat'], 't', 'x', 'u');
+    save([dataFileName, '.mat'], 'snapshotPairs');
 end
 
 end

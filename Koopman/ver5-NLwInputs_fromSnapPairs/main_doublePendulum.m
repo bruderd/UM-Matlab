@@ -1,4 +1,3 @@
-function main_doublePendulum(snapshotPairs)
 % main_doublePendulum: Run the Koopman sysid process on data collected
 % from doublePendulum simulation
 %   snapshotPairs :     struct contianing fields "x" and "y" which are the
@@ -6,7 +5,7 @@ function main_doublePendulum(snapshotPairs)
 %
 %   DNE = "do not edit this line"
 
-% clearvars -except dataFileName;
+clearvars -except snapshotPairs;
 
 %% USER EDIT SECTION: set parameter values
 
@@ -19,7 +18,7 @@ params.p = 1;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum degrees for monomial bases (NOTE: m1 = 1)
-params.maxDegree = 2;   % maximum degree of vector field monomial basis
+params.maxDegree = 5;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
@@ -33,14 +32,14 @@ numericalDerivs = 'off';
 params.Ts = 1/30;   % sampling period
 
 % animation parameters
-params.duration            = 5;
+params.duration            = 10;
 params.fps                 = 30;
 params.movie               = true;
 
 % double pendulum parameters
-params.phi1                = pi/2;
+params.phi1                = pi/6; % (pi/2)*rand - pi/4;
 params.dtphi1              = 0;
-params.phi2                = pi/2;
+params.phi2                = -pi/4.5; % (pi/2)*rand - pi/4;
 params.dtphi2              = 0;
 params.g                   = 9.81; 
 params.m1                  = 1; 
@@ -88,26 +87,37 @@ waitbar(.67,progress,'Simulating dynamics...');
 
 tspan = [0, params.duration];    
 x0sim = [params.phi1; params.phi2; params.dtphi1; params.dtphi2]; % same initial state as data initial state
+x0sim_xy = theta2xy_doublePendulum(x0sim, params);  % initial condition in xy coordinates
+x0sim_x2y2 = [x0sim_xy(3:4); x0sim_xy(7:8)];    % intial condition in x2y2 coordinates 
 sol_sysid = ode45(@(t,x) vf_sysid(x, get_input(t, x, params)), tspan, x0sim);
 sol_real = ode45(@(t,x) vf_doublePendulum(x, get_input(t, x, params), params), tspan, x0sim);
 
 [tsysid, xsysid] = deal(sol_sysid.x, sol_sysid.y);
 [treal, xreal] = deal(sol_real.x, sol_real.y);
+[tkoop, xkoop] = koopmanSim(U, x0sim, params);
+sol_koop = struct;
+sol_koop.x = tkoop';
+sol_koop.y = xkoop';
 
 % plot the results
 figure
-subplot(2,1,1)
-plot(treal, xreal)
+subplot(3,1,1)
+plot(treal, xreal(1:2,:))
 title('Real system')
-subplot(2,1,2)
-plot(tsysid, xsysid)
+subplot(3,1,2)
+plot(tsysid, xsysid(1:2,:))
 title('Identified system')
+subplot(3,1,3)
+plot(tkoop, xkoop)
+title('System flowed with Koopman operator')
+
 
 % animate the results
 animate_doublePendulum(sol_real, sol_sysid, params);
+% animate_doublePendulum(sol_real, sol_koop, params);
 
 waitbar(1,progress,'Done.');
-end
+
 
 %% USER EDIT: Define input for the simulation
 
@@ -115,9 +125,11 @@ function u = get_input(t,x,params)
 %   will want to parametrize in terms of some params later...
 
 % u = 4*sin( (1/(2*pi)) * t) .* sin( 3*t - 1.5*cos(t) );
-% u = 3*(1 - exp(-0.1*t));
+% u = 4*(1 - exp(-t));
 u = 0;
 % u = 10*sin(0.1*t) + cos(t);
+% u = 10 * rand - 5;
+% u = 4 * sin(2*t);
 
 end
 

@@ -41,14 +41,10 @@ xobs = y(:,1:4);    % full state in theta coordinates
 noise = params.sigma .* randn(size(xobs)) + params.mean;
 x = xobs + noise;
 
-% moving average filter to reduce impact of noise
-x = movmean(x, 5);
-
 % use numerical derivatives for thetadot instead of measured ones (comment out this section for full state measurements)
 xdot = ( x(2:end, 1:2) - x(1:end-1,1:2) ) / params.Ts;
-xdot = [xdot; zeros(1,2)];
-xdot = movmean(xdot, 5);    % filter the numerical derivatives 
-x = [x(:, 1:2) , xdot(:,:)];
+xdot = [xdot; zeros(1,params.n/2)];
+x = [x(:, 1:2) , xdot]
 
 % define output
 data = struct;
