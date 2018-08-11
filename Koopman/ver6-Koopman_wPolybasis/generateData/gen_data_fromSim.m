@@ -53,6 +53,7 @@ snapshotPairs.y = y;
 %% Do one simulation to be used for validation (could make this a whole set)
 
 % randomize input and initial contidion
+params.inputType = 'exponential';
 params.amp = (params.ampRange(2) - params.ampRange(1)) .* rand + params.ampRange(1); 
 params.freq = (params.freqRange(2) - params.freqRange(1)) .* rand + params.freqRange(1); 
 params.x0 = (params.x0max - params.x0min) .* rand + params.x0min;
@@ -65,7 +66,7 @@ validation = run_sim(params);
 
 data.snapshotPairs = snapshotPairs;
 data.validation = validation;   % trial that can be used for model validation
-data.params = params;   % saves params so we can remember
+data.valparams = params;   % saves params used for validation so we can remember
 
 %% save datafile without overwriting previous files with same name
 % SaveWithNumber(['dataFiles', filesep, params.systemName, '.mat'], data);

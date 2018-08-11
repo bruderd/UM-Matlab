@@ -4,7 +4,7 @@ function out = get_input(t,x,params, flag)
 
 if strcmp(params.inputType, 'sinusoid')
     unew = params.amp * sin(2*pi*params.freq * t);  % sinusoidal input
-elseif strcmp(params.inputType, 'exponential')
+elseif strcomp(params.inputType, 'exponential')
     unew = params.amp*(1 - exp(-params.freq * t));  % exponential input
 else
     unew = params.amp;      % step input

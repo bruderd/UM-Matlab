@@ -44,6 +44,7 @@ data.t = t;     % time vector
 data.y = y;     % state "measurements"
 data.u = u;     % input
 data.x = x;     % actual state
+% data.params = params;   % parameter values for this simulation
 
 
 % remove folder conatining system dynamics to path

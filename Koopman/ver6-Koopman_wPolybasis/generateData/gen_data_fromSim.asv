@@ -56,6 +56,7 @@ snapshotPairs.y = y;
 params.amp = (params.ampRange(2) - params.ampRange(1)) .* rand + params.ampRange(1); 
 params.freq = (params.freqRange(2) - params.freqRange(1)) .* rand + params.freqRange(1); 
 params.x0 = (params.x0max - params.x0min) .* rand + params.x0min;
+valparams = params;     % saves the value of params for the validation simulation (if we wanted to we could save for every simulation)
 
 % generate data from one simulation
 validation = run_sim(params);

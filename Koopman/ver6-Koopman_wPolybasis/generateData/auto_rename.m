@@ -70,7 +70,7 @@ if isempty(strfind(appendage_str, '0'))
 end
 
 %make sure appendage doesn't contain period which would screw up the extension (replaces '.' with []
-appendage_str(strfind(appendage_str, '.')) = []
+appendage_str(strfind(appendage_str, '.')) = [];
 
 %Check for existence of file and tag on appendage if necessary
 tempname = NAME;
