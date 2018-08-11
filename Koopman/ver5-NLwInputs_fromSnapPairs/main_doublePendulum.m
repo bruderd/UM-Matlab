@@ -82,7 +82,7 @@ w = reshape(W, [params.n, params.N]);
 vf2 = w * params.polyBasis; 
 matlabFunction(vf2, 'File', 'vf_sysid', 'Vars', {params.x, params.u});
 
-%% Run simulatio of sysId'd system and compare results to real system (DNE)
+%% Run simulation of sysId'd system and compare results to real system (DNE)
 waitbar(.67,progress,'Simulating dynamics...');
 
 tspan = [0, params.duration];    
