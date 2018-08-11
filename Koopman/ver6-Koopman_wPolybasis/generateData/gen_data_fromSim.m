@@ -53,10 +53,10 @@ snapshotPairs.y = y;
 %% Do one simulation to be used for validation (could make this a whole set)
 
 % randomize input and initial contidion
-params.inputType = 'exponential';
 params.amp = (params.ampRange(2) - params.ampRange(1)) .* rand + params.ampRange(1); 
 params.freq = (params.freqRange(2) - params.freqRange(1)) .* rand + params.freqRange(1); 
 params.x0 = (params.x0max - params.x0min) .* rand + params.x0min;
+% params.inputType = 'exponential';
 
 % generate data from one simulation
 validation = run_sim(params);

@@ -14,20 +14,27 @@ x0sim = valparams.x0; % same initial state as validation data initial state
 
 terror = treal;
 xerror = abs( xreal - xsysid );
+xerrormax = max(max(xerror(:,1:valparams.n/2)));
+% xerrormin = min(min(xerror(:,1:valparams.n/2)));
 RMSE = sqrt( sum( (xreal - xsysid).^2 ) / length(terror) );
 
 
 %% plot the results
-figure
-subplot(3,1,1)
-plot(treal, xreal(:,1:2))
-title('Real system')
-subplot(3,1,2)
-plot(tsysid, xsysid(:,1:2))
-title('Identified system')
-subplot(3,1,3)
-plot(terror, xerror)
-title('Error')
+
+if valparams.ploton
+    figure
+    subplot(3,1,1)
+    plot(treal, xreal(:,1:valparams.n/2))
+    title('Real system')
+    subplot(3,1,2)
+    plot(tsysid, xsysid(:,1:valparams.n/2))
+    title('Identified system')
+    subplot(3,1,3)
+    hold on
+    plot(terror, xerror(:,1:valparams.n/2))
+    plot(terror, xerrormax * ones(size(terror)), '--')
+    title('Error')
+end
 
 
 % % animate the results

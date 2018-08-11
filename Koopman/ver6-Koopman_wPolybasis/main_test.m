@@ -1,4 +1,4 @@
-function [ koopman, error ] = main_test( getData )
+function [ koopman, error, data, data4sysid ] = main_test( getData )
 %main_test: A generic "main" function for development and testing
 %   Performs linear system identification of nonlinear systems using a
 %   lifting technique based on the Koopman operator projected onto a finite
@@ -17,6 +17,7 @@ function [ koopman, error ] = main_test( getData )
 
 %% Define system parameters (USER EDIT SECTION)
 params = struct;
+progress = waitbar(0,'Initializing parameters...');
 
 % Koopman Sysid parameters
 params.n = 4;   % dimension of state space (including state derivatives)
@@ -38,9 +39,10 @@ params.Ts = 1/30;   % sampling period
 % animation parameters
 params.fps                 = 30;
 params.movie               = true;
+params.ploton              = true;  % boolean to turn error plot on or off
 
 % parameters for generating data
-params.numTrials = 6;
+params.numTrials = 1000;
 params.observe = ones(1, params.n);    % row vector choosing which states to observe
 params.inputType = 'sinusoid';
 params.vf_real = @vf_doublePendulum;
@@ -52,7 +54,7 @@ params.x0min = [-pi/2, -pi/2, 0, 0];
 params.x0max = [pi/2, pi/2, 0, 0];
 params.mean                = 0;     % mean of noise 
 params.sigma               = 0.01;     % standard dev of noise
-params.duration            = 50;   % in seconds
+params.duration            = 5;   % in seconds
 params.systemName          = 'doublePendulum';  % name of current system
 
 % parameters that are specific to chosen system
@@ -67,6 +69,7 @@ params.l1                  = 1;
 params.l2                  = 1;
 
 %% Generate or load data from file
+waitbar(.33,progress,'Generating data...');
 
 addpath('generateData');
 
@@ -84,12 +87,29 @@ end
 rmpath('generateData')
 
 %% Use Koopman operator to perform sysid
+waitbar(.5,progress,'Performing Koopman based system identification...');
 
 koopman = koopmanSysid(data.snapshotPairs, params);
 
 %% error
+waitbar(0.75,progress,'Comparing to validation data set...');
 
 [error, xsysid] = koopmanValidation( data.validation, data.valparams );
 
+%% compare koopman results to those from sysid toolbox
+waitbar(0.85,progress,'Preparing data for Matlab SysId toolbox...');
+
+% convert data to a format matlabs sysid toolbox can use
+[zmerged, zval, zall] = prep_iddata(data);
+
+% save in struct for output
+data4sysid = struct;
+data4sysid.merged = zmerged;
+data4sysid.val = zval;
+data4sysid.all = zall;
+
+
+waitbar(1,progress,'Done.');
+close(progress);
 end
 
