@@ -34,6 +34,7 @@ if valparams.ploton
     plot(terror, xerror(:,1:valparams.n/2))
     plot(terror, xerrormax * ones(size(terror)), '--')
     title('Error')
+    hold off
 end
 
 

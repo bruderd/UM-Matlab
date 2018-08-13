@@ -34,11 +34,11 @@ params = def_polyLift(params);  % creates polynomial lifting function, polyLift
 % choose whether or not to take numerical derivatives of states ('on' or 'off')
 params.numericalDerivs = 'off';
 
-params.Ts = 1/30;   % sampling period
+params.Ts = 0.03;   % sampling period
 
-% animation parameters
-params.fps                 = 30;
-params.movie               = true;
+% % animation parameters
+% params.fps                 = 30;
+% params.movie               = true;
 params.ploton              = true;  % boolean to turn error plot on or off
 
 % parameters for generating data
@@ -94,7 +94,7 @@ koopman = koopmanSysid(data.snapshotPairs, params);
 %% error
 waitbar(0.75,progress,'Comparing to validation data set...');
 
-[error, xsysid] = koopmanValidation( data.validation, data.valparams );
+[error, xkoop] = koopmanValidation( data.validation, data.valparams );
 
 %% compare koopman results to those from sysid toolbox
 waitbar(0.85,progress,'Preparing data for Matlab SysId toolbox...');
@@ -107,7 +107,7 @@ data4sysid = struct;
 data4sysid.merged = zmerged;
 data4sysid.val = zval;
 data4sysid.all = zall;
-
+data4sysid.valkoop = iddata(xkoop, data.validation.u, data.valparams.Ts, 'Name', 'Koopman');
 
 waitbar(1,progress,'Done.');
 close(progress);

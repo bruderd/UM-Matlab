@@ -4,6 +4,7 @@ function data = gen_data_fromSim( params )
 
 % initialize output struct
 data = struct;
+alltrials = struct;
 
 %% simulate a bunch of trials with randomized initial conditions
 
@@ -12,6 +13,7 @@ ampRange = linspace(params.ampRange(1), params.ampRange(2), num);
 freqRange = linspace(params.freqRange(1), params.freqRange(2), num);
 trialCount = 1;        % trial counter
 
+alltrials.t = []
 x = []; y = [];
 for i = 1:num
     for k = 1:num
@@ -25,6 +27,12 @@ for i = 1:num
             
         % generate data from one simulation
         trialData = run_sim(params);
+        
+        % append this data to the "alltrials" field of data
+        alltrials.t = [alltrials.t; trialData.t];     % time vector
+        alltrials.y = [alltrials.y; trialData.y];     % state "measurements"
+        alltrials.u = [alltrials.u; trialData.u];     % input
+        alltrials.x = [alltrials.x; trialData.x];     % actual state
         
         xk = zeros(length(trialData.t), size(trialData.y,2) + size(trialData.u,2));
         yk = zeros(length(trialData.t), size(trialData.y,2) + size(trialData.u,2));
@@ -56,7 +64,7 @@ snapshotPairs.y = y;
 params.amp = (params.ampRange(2) - params.ampRange(1)) .* rand + params.ampRange(1); 
 params.freq = (params.freqRange(2) - params.freqRange(1)) .* rand + params.freqRange(1); 
 params.x0 = (params.x0max - params.x0min) .* rand + params.x0min;
-valparams = params;     % saves the value of params for the validation simulation (if we wanted to we could save for every simulation)
+% params.inputType = 'exponential';
 
 % generate data from one simulation
 validation = run_sim(params);
@@ -64,9 +72,10 @@ validation = run_sim(params);
 
 %% Define output
 
+data.alltrials = alltrials;     % saves data from all trials as a single timeseries
 data.snapshotPairs = snapshotPairs;
 data.validation = validation;   % trial that can be used for model validation
-data.params = params;   % saves params so we can remember
+data.valparams = params;   % saves params used for validation so we can remember
 
 %% save datafile without overwriting previous files with same name
 % SaveWithNumber(['dataFiles', filesep, params.systemName, '.mat'], data);

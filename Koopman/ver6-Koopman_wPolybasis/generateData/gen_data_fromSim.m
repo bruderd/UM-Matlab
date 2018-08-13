@@ -4,6 +4,7 @@ function data = gen_data_fromSim( params )
 
 % initialize output struct
 data = struct;
+alltrials = struct;
 
 %% simulate a bunch of trials with randomized initial conditions
 
@@ -12,6 +13,7 @@ ampRange = linspace(params.ampRange(1), params.ampRange(2), num);
 freqRange = linspace(params.freqRange(1), params.freqRange(2), num);
 trialCount = 1;        % trial counter
 
+alltrials.t = []; alltrials.y = []; alltrials.u = []; alltrials.x = [];
 x = []; y = [];
 for i = 1:num
     for k = 1:num
@@ -25,6 +27,12 @@ for i = 1:num
             
         % generate data from one simulation
         trialData = run_sim(params);
+        
+        % append this data to the "alltrials" field of data
+        alltrials.t = [alltrials.t; trialData.t];     % time vector
+        alltrials.y = [alltrials.y; trialData.y];     % state "measurements"
+        alltrials.u = [alltrials.u; trialData.u];     % input
+        alltrials.x = [alltrials.x; trialData.x];     % actual state
         
         xk = zeros(length(trialData.t), size(trialData.y,2) + size(trialData.u,2));
         yk = zeros(length(trialData.t), size(trialData.y,2) + size(trialData.u,2));
@@ -64,6 +72,7 @@ validation = run_sim(params);
 
 %% Define output
 
+data.alltrials = alltrials;     % saves data from all trials as a single timeseries
 data.snapshotPairs = snapshotPairs;
 data.validation = validation;   % trial that can be used for model validation
 data.valparams = params;   % saves params used for validation so we can remember
