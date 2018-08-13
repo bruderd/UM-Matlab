@@ -31,8 +31,8 @@ params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 % define lifting function and basis
 params = def_polyLift(params);  % creates polynomial lifting function, polyLift
 
-% choose whether or not to take numerical derivatives of states ('on' or 'off')
-params.numericalDerivs = 'off';
+% choose whether or not to take numerical derivatives of states (boolean)
+params.numericalDerivs = true;
 
 params.Ts = 0.03;   % sampling period
 
@@ -43,7 +43,7 @@ params.ploton              = true;  % boolean to turn error plot on or off
 
 % parameters for generating data
 params.numTrials = 1000;
-params.observe = ones(1, params.n);    % row vector choosing which states to observe
+params.observe = [1, 1, 0, 0];    % row vector choosing which states to observe
 params.inputType = 'sinusoid';
 params.vf_real = @vf_doublePendulum;
 params.ampRange = [-5, 5];       % amplitude range of sinusoidal inputs
@@ -55,18 +55,19 @@ params.x0max = [pi/2, pi/2, 0, 0];
 params.mean                = 0;     % mean of noise 
 params.sigma               = 0.01;     % standard dev of noise
 params.duration            = 5;   % in seconds
-params.systemName          = 'doublePendulum';  % name of current system
+params.systemName          = 'dP_wnumericalDerivs';  % name of current system
+params.filterWindow        = [10, 10];  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % parameters that are specific to chosen system
-params.phi1                = pi/6; % (pi/2)*rand - pi/4;
-params.dtphi1              = 0;
-params.phi2                = -pi/4.5; % (pi/2)*rand - pi/4;
-params.dtphi2              = 0;
 params.g                   = 9.81; 
 params.m1                  = 1; 
 params.m2                  = 1; 
 params.l1                  = 1; 
 params.l2                  = 1;
+% params.phi1                = pi/6; % (pi/2)*rand - pi/4;
+% params.dtphi1              = 0;
+% params.phi2                = -pi/4.5; % (pi/2)*rand - pi/4;
+% params.dtphi2              = 0;
 
 %% Generate or load data from file
 waitbar(.33,progress,'Generating data...');
@@ -108,6 +109,12 @@ data4sysid.merged = zmerged;
 data4sysid.val = zval;
 data4sysid.all = zall;
 data4sysid.valkoop = iddata(xkoop, data.validation.u, data.valparams.Ts, 'Name', 'Koopman');
+
+% show comparison of Koopman system verses ground truth
+if params.ploton
+   figure
+   compare(data4sysid.val, data4sysid.valkoop);
+end
 
 waitbar(1,progress,'Done.');
 close(progress);

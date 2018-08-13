@@ -29,14 +29,20 @@ yobs = x(:, logical(params.observe));
 noise = params.sigma .* randn(size(yobs)) + params.mean;
 y = yobs + noise;
 
-% % moving average filter to reduce impact of noise
-% x = movmean(x, 5);
-% 
-% % use numerical derivatives for thetadot instead of measured ones (comment out this section for full state measurements)
-% xdot = ( x(2:end, 1:2) - x(1:end-1,1:2) ) / params.Ts;
-% xdot = [xdot; zeros(1,2)];
-% xdot = movmean(xdot, 5);    % filter the numerical derivatives 
-% x = [x(:, 1:2) , xdot(:,:)];
+% if derivatives are not observed, estimate them by taking numerical derivs
+if params.numericalDerivs
+    % filter state measurements to lessen noise impact
+    yfilt = movmean(y, params.filterWindow(1));
+    
+    % take numerical derivatives between sampled points
+    numstates = params.n/2;
+    ydot = ( yfilt(2:end, :) - yfilt(1:end-1,:) ) / params.Ts;
+    ydot = [ydot; zeros(1,numstates)];  % pad end with zeros to make size consistent
+    
+    % filter numerical derivatives to lessen noise impact
+    ydotfilt = movmean(ydot, params.filterWindow(2));
+    y = [y, ydotfilt];
+end
 
 % define output
 data = struct;
