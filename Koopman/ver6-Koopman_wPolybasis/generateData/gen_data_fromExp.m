@@ -10,12 +10,15 @@ alltrials = struct;
 %% Read in data from all trials
 
 num = params.numTrials;
-trialCount = 1;        % trial counter
+trialCount = 0;        % trial counter
 
 alltrials.t = []; alltrials.y = []; alltrials.u = []; alltrials.x = [];
 x = []; y = [];
 for i = 1:num
+    trialCount = trialCount + 1;    % increment trial counter
+    
     % generate data from one simulation
+    disp(['Please select .mat file corresponding to trial number ', num2str(i), '...']);
     trialData = get_data(params);
     
     % append this data to the "alltrials" field of data
@@ -39,7 +42,6 @@ for i = 1:num
     trialID = ['trial', num2str(trialCount)];
     data.(trialID) = trialData;
     
-    trialCount = trialCount + 1;    % increment trial counter
 end
 
 % define snapshotPairs struct
@@ -49,6 +51,7 @@ snapshotPairs.y = y;
 
 %% Read in validation data set
 
+disp(['Please select .mat file corresponding to validation trial...']);
 validation = get_data(params);
 
 
