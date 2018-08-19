@@ -35,16 +35,20 @@ if data_ext == '.mat'
         
         % take numerical derivatives between sampled points
         numstates = params.n/2;
-        xdot = ( xfilt(2:end, :) - xfilt(1:end-1,:) ) / params.Ts;
-        xdot = [xdot; zeros(1,numstates)];  % pad end with zeros to make size consistent
+        xqdot = ( xfilt(2:end, :) - xfilt(1:end-1,:) ) / params.Ts;
+        ydot = [ydot; zeros(1,numstates)];  % pad end with zeros to make size consistent
         
         % filter numerical derivatives to lessen noise impact
-        xdotfilt = movmean(xdot, params.filterWindow(2));
-        x = [xfilt, xdotfilt];
+        ydotfilt = movmean(ydot, params.filterWindow(2));
+        y = [y, ydotfilt];
+
+        % calculate numerical derivative at each point
+        xqdot = ( xq(2:end,:) - xq(1:end-1,:) ) / params.Ts;
+        xqdot = [xqdot; zeros(1,params.n/2)];
         
         % define output
         trialData.t = tq;
-        trialData.x = x;
+        trialData.x = [xq, xqdot];
         trialData.u = uq;
         trialData.y = trialData.x;    % observed state == state since we have no other ground truth
     else 
@@ -52,13 +56,10 @@ if data_ext == '.mat'
         tq = ( 0:params.Ts:traw(end) )';
         xq = interp1(traw,xraw,tq);   % interpolate results to get samples at sampling interval Ts
         uq = interp1(traw,uraw,tq);
-        
-        % filter state measurements to lessen noise impact
-        xfilt = movmean(xq, params.filterWindow(1));
 
         % define output
         trialData.t = tq;
-        trialData.x = xfilt;
+        trialData.x = xq;
         trialData.u = uq;
         trialData.y = trialData.x;    % observed state == state since we have no other ground truth
     end

@@ -41,7 +41,7 @@ if params.numericalDerivs
     
     % filter numerical derivatives to lessen noise impact
     ydotfilt = movmean(ydot, params.filterWindow(2));
-    y = [y, ydotfilt];
+    y = [yfilt, ydotfilt];
 end
 
 % define output
