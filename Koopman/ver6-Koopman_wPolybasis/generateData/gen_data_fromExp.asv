@@ -54,7 +54,7 @@ snapshotPairs.y = y;
 for j = 1 : params.numVals
     
     % get validation data
-    disp(['Please select .mat file corresponding to validation trial ', num2str(j), '...']);
+    disp(['Please select .mat file corresponding to validation trial...']);
     valData = get_data(params);
     
     % save this trial data to the output struct
@@ -68,7 +68,7 @@ end
 
 data.alltrials = alltrials;     % saves data from all trials as a single timeseries
 data.snapshotPairs = snapshotPairs;
-data.validation = data.val1;   % a trial that can be used for model validation
+data.validation = validation;   % a trial that can be used for model validation
 data.valparams = params;   % saves params used for validation so we can remember
 
 %% save datafile without overwriting previous files with same name

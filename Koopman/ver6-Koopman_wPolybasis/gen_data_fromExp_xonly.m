@@ -1,4 +1,4 @@
-function data = gen_data_fromExp( params )
+function data = gen_data_fromExp_xonly( params )
 %genData_fromExp: Generate system data and snapshot pairs from experimental
 %data
 %   Detailed explanation goes here
@@ -19,7 +19,7 @@ for i = 1:num
     
     % generate data from one simulation
     disp(['Please select .mat file corresponding to trial number ', num2str(i), '...']);
-    trialData = get_data(params);
+    trialData = get_data_xonly(params);
     
     % append this data to the "alltrials" field of data
     alltrials.t = [alltrials.t; trialData.t];     % time vector
@@ -49,32 +49,22 @@ snapshotPairs = struct;
 snapshotPairs.x = x;
 snapshotPairs.y = y;
 
-%% Read in validation data set(s)
+%% Read in validation data set
 
-for j = 1 : params.numVals
-    
-    % get validation data
-    disp(['Please select .mat file corresponding to validation trial ', num2str(j), '...']);
-    valData = get_data(params);
-    
-    % save this trial data to the output struct
-    valID = ['val', num2str(j)];
-    data.(valID) = valData;   
-
-end
+disp(['Please select .mat file corresponding to validation trial...']);
+validation = get_data_xonly(params);
 
 
 %% Define output
 
 data.alltrials = alltrials;     % saves data from all trials as a single timeseries
 data.snapshotPairs = snapshotPairs;
-data.validation = data.val1;   % a trial that can be used for model validation
+data.validation = validation;   % trial that can be used for model validation
 data.valparams = params;   % saves params used for validation so we can remember
 
 %% save datafile without overwriting previous files with same name
 % SaveWithNumber(['dataFiles', filesep, params.systemName, '.mat'], data);
 [unique_fname, change_detect] = auto_rename(['dataFiles', filesep, params.systemName, '.mat'], '0');
 save(unique_fname, 'data');
-
 
 end

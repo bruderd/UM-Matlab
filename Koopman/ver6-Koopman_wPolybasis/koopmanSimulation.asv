@@ -4,10 +4,10 @@ function [error, xkoop] = koopmanSimulation( valdata, valparams, koopman )
 
 %% simulate the behavior of learned system
 
-% only want to simulate for about 30 seconds
-% i_30s = floor(30 / valparams.Ts);  % index of roughly 30 seconds in
-% tspan = valdata.t(1 : i_30s);
-tspan = valdata.t;
+% only want to simulate for about seconds
+i_30s = floor(30 / valparams.Ts);  % index of roughly 30 seconds in
+tspan = valdata.t(1 : i_30s);
+% tspan = valdata.t;
 
 x0sim = valdata.x(1,:)'; % same initial state as validation data initial state
 
@@ -22,15 +22,15 @@ for i = 2 : length(tspan)
 end
 
 % real system
-[treal, xreal] = deal(tspan, valdata.x);
+[treal, xreal] = deal(valdata.t, valdata.x);
 
 
 %% quantify the error between real behavior and simulated behavior
 
 terror = treal;
 xerror = abs( xreal - xkoop );
-xerrormax = max(max(xerror(:,1:ceil(valparams.n/2))));
-% xerrormin = min(min(xerror(:,1:ceil(valparams.n/2))));
+xerrormax = max(max(xerror(:,1:valparams.n/2)));
+% xerrormin = min(min(xerror(:,1:valparams.n/2)));
 RMSE = sqrt( sum( (xreal - xkoop).^2 ) / length(terror) );
 
 
@@ -39,14 +39,14 @@ RMSE = sqrt( sum( (xreal - xkoop).^2 ) / length(terror) );
 if valparams.ploton
     figure
     subplot(3,1,1)
-    plot(treal, xreal(:,1:ceil(valparams.n/2)))
+    plot(treal, xreal(:,1:valparams.n/2))
     title('Real system')
    subplot(3,1,2)
-    plot(tspan, xkoop(:,1:ceil(valparams.n/2)))
+    plot(tspan, xkoop(:,1:valparams.n/2))
     title('Koopman Transpose Sim')
     subplot(3,1,3)
     hold on
-    plot(terror, xerror(:,1:ceil(valparams.n/2)))
+    plot(terror, xerror(:,1:valparams.n/2))
     plot(terror, xerrormax * ones(size(terror)), '--')
     title('Error')
     hold off

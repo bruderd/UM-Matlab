@@ -1,5 +1,5 @@
 function [ sysid_data, val_data ] = partition_data
-%partition_data: Partitions a raw data file into sysid and validation
+%partition_data: Partitions a trimmed data file into sysid and validation
 %components
 
 % Prompt user to identify data file
