@@ -25,7 +25,10 @@ if data_ext == '.mat'
     [traw_uq, index] = unique(traw);    % filter out non-unique values
     
     if numericalDerivs    % do this if numerical derivatives are req.
-        % interpolate data so that it lines of with sampling times
+        % filter raw data to smooth it out a bit
+        xraw = movmean(xraw, 10);
+        
+        % interpolate data so that it lines up with sampling times
         tq = ( 0:params.Ts:traw(end) )';
         xq = interp1(traw_uq, xraw(index,:), tq);   % interpolate results to get samples at sampling interval Ts
         uq = interp1(traw_uq, uraw(index,:), tq);

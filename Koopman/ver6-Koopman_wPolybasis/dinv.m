@@ -3,7 +3,7 @@ function Ainv = dinv( A, damping, params )
 %   Damps A to make it better conditioned for inversion.
 %   damping :   the amount to damp the matrix (usually around 1e-3)
 
-[U,S,V] = svds(A, params.N-1);
+[U,S,V] = svds(A, params.N);
 
 for i = 1 : min(size(S,2), size(S,1))
    S(i,i) = max(abs(S(i,i)), damping);

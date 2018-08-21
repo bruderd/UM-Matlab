@@ -25,7 +25,7 @@ params.p = 3;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum degrees for monomial bases (NOTE: m1 = 1)
-params.maxDegree = 1;   % maximum degree of vector field monomial basis
+params.maxDegree = 2;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
@@ -34,7 +34,7 @@ params = def_polyLift(params);  % creates polynomial lifting function, polyLift
 % choose whether or not to take numerical derivatives of states (boolean)
 params.numericalDerivs = true;
 
-params.Ts = 0.05;   % sampling period
+params.Ts = 0.03;   % sampling period
 
 % % animation parameters
 % params.fps                 = 30;
@@ -42,7 +42,7 @@ params.Ts = 0.05;   % sampling period
 params.ploton              = true;  % boolean to turn error plot on or off
 
 % parameters for generating data
-params.numTrials = 1;
+params.numTrials = 5;
 params.observe = [1, 1, 1, 0, 0, 0];    % row vector choosing which states to observe
 params.inputType = 'sinusoid';
 params.vf_real = @vf_doublePendulum;
@@ -55,8 +55,8 @@ params.x0max = [pi/2, pi/2, 0, 0];
 params.mean                = 0;     % mean of noise 
 params.sigma               = 0.01;     % standard dev of noise
 params.duration            = 5;   % in seconds
-params.systemName          = 'flaccy4-maxDegree1';  % name of current system
-params.filterWindow        = [0.5/params.Ts, 0.75/params.Ts];  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
+params.systemName          = 'steps1x5_03Ts';  % name of current system
+params.filterWindow        = [0.2/params.Ts, 0.2/params.Ts];  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 
 %% Generate or load data from file
@@ -85,7 +85,8 @@ koopman = koopmanSysid(data.snapshotPairs, params);
 %% error
 waitbar(0.75,progress,'Comparing to validation data set...');
 
-[error, xkoop] = koopmanValidation( data.validation, data.valparams );
+[error, xkoop] = koopmanValidation( data.validation, params, koopman );
+% [error, xkoop] = koopmanSimulation( data.validation, params, koopman ); % only uses koopman transpose, no ODE
 
 %% compare koopman results to those from sysid toolbox
 waitbar(0.85,progress,'Preparing data for Matlab SysId toolbox...');

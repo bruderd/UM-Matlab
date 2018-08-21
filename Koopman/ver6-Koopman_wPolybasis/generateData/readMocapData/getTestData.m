@@ -48,7 +48,7 @@ TR.pmonitor = pressureData(:,10:12);       % in (Pa). ONLY VALID BECAUSE VALVES 
 % helpful plot for figuring out time offset
 figure
 hold on
-plot(endeff.t, endeff.x(:,1), 'k')  % x wrt time
+plot(endeff.t, endeff.x(:,1)*10, 'k')  % x wrt time
 plot(TR.t, TR.pcontrol(:,1))    % input to 3rd actuator wrt t
 title('Mocap and Pressure Data Together')
 legend('Mocap: PhaseSpace', 'Pressure: TR')

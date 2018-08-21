@@ -1,4 +1,4 @@
-function [error, xsysid] = koopmanValidation( valdata, valparams, koopman )
+function [error, xkoop] = koopmanSimulation( valdata, valparams, koopman )
 %koopmanValidation: Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -6,7 +6,6 @@ function [error, xsysid] = koopmanValidation( valdata, valparams, koopman )
 
 tspan = valdata.t;
 x0sim = valdata.x(1,:)'; % same initial state as validation data initial state
-[tsysid, xsysid] = ode45(@(t,x) vf_koopman(x, get_u(t, x, valdata, valparams)), tspan, x0sim);
 
 % simulated forward using the transpose of Koopman operator
 xselector = [zeros(valparams.n,1), eye(valparams.n), zeros(valparams.n, valparams.N - valparams.n - 1)]; % matrix to extract state from lifted state
@@ -25,31 +24,28 @@ end
 %% quantify the error between real behavior and simulated behavior
 
 terror = treal;
-xerror = abs( xreal - xsysid );
+xerror = abs( xreal - xkoop );
 xerrormax = max(max(xerror(:,1:valparams.n/2)));
 % xerrormin = min(min(xerror(:,1:valparams.n/2)));
-RMSE = sqrt( sum( (xreal - xsysid).^2 ) / length(terror) );
+RMSE = sqrt( sum( (xreal - xkoop).^2 ) / length(terror) );
 
 
 %% plot the results
 
 if valparams.ploton
     figure
-    subplot(4,1,1)
+    subplot(3,1,1)
     plot(treal, xreal(:,1:valparams.n/2))
     title('Real system')
-    subplot(4,1,2)
-    plot(tsysid, xsysid(:,1:valparams.n/2))
-    title('Identified system')
-    subplot(4,1,3)
+   subplot(3,1,2)
+    plot(tspan, xkoop(:,1:valparams.n/2))
+    title('Koopman Transpose Sim')
+    subplot(3,1,3)
     hold on
     plot(terror, xerror(:,1:valparams.n/2))
     plot(terror, xerrormax * ones(size(terror)), '--')
     title('Error')
     hold off
-    subplot(4,1,4)
-    plot(tspan, xkoop(:,1:valparams.n/2))
-    title('Koopman Transpose Sim')
 end
 
 
@@ -73,5 +69,3 @@ function u = get_u(t, x, valdata, valparams)
 u = interp1(valdata.t, valdata.u, t)';
 
 end
-
-

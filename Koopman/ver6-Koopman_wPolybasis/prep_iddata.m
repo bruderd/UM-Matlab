@@ -22,9 +22,9 @@ function [zmerged, zval, zall] = prep_iddata( data )
 zall = struct;
 
 % calculate the actual total numner of trials
-num = round(sqrt(data.valparams.numTrials));
-numTrials = num^2;
-
+% num = round(sqrt(data.valparams.numTrials));
+% numTrials = num^2;
+numTrials = data.valparams.numTrials;
 
 % initialize merged dataset
 zmerged = iddata(data.trial1.y, data.trial1.u, data.valparams.Ts);
