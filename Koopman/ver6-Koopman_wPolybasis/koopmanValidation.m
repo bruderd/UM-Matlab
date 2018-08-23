@@ -5,7 +5,7 @@ function [error, koopsim] = koopmanValidation( data, valparams, koopman )
 error = struct;     % error results comparing real and koopman system
 koopsim = struct;   % simulation results for koopman system
 
-for j = 1 : valparams.numVals - 1
+for j = 1 : valparams.numVals
     %% simulate the behavior of learned system
     
     % isolate the jth validation trial

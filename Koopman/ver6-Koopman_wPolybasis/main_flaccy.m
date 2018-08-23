@@ -25,7 +25,7 @@ params.p = 3;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum degrees for monomial bases (NOTE: m1 = 1)
-params.maxDegree = 4;   % maximum degree of vector field monomial basis
+params.maxDegree = 1;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
@@ -43,7 +43,7 @@ params.ploton              = true;  % boolean to turn error plot on or off
 
 % parameters for generating data
 params.numTrials = 6;   % numer of sysid trials
-params.numVals = 6;     % number of validation trials
+params.numVals = 1;     % number of validation trials
 params.observe = [1, 1, 1, 0, 0, 0];    % row vector choosing which states to observe
 params.inputType = 'sinusoid';
 params.vf_real = @vf_doublePendulum;
@@ -56,7 +56,7 @@ params.x0max = [pi/2, pi/2, 0, 0];
 params.mean                = 0;     % mean of noise 
 params.sigma               = 0.01;     % standard dev of noise
 params.duration            = 5;   % in seconds
-params.systemName          = 'val30s_x6_sysid30s_x6_steps+ramps_02Ts';  % name of current system
+params.systemName          = 'val30s_steps5_sysid30s_x6_steps+ramps_02Ts';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 
@@ -103,7 +103,7 @@ data4sysid.sysid_merged = zsysid_merged;
 data4sysid.val_merged = zval_merged;
 data4sysid.val = zval;
 data4sysid.sysid = zsysid;
-for k = 1:params.numVals - 1
+for k = 1:params.numVals
     valID = ['val', num2str(k)];
     zID = ['z', num2str(k)];
     data4sysid.valkoop.(zID) = iddata(koopsim.(valID).x, data.(valID).u, data.valparams.Ts, 'Name', 'Koopman');
@@ -111,7 +111,7 @@ end
 
 % show comparison of Koopman system verses ground truth
 if params.ploton
-    for k = 1: params.numVals - 1
+    for k = 1: params.numVals
         zID = ['z', num2str(k)];
         figure
         compare(data4sysid.val.(zID), data4sysid.valkoop.(zID));
