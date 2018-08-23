@@ -20,7 +20,7 @@ Ts = params.Ts;
 
 %% Split data into 10s validation steps
 
-numChops = 2;   % slices to chop data into get 10s trials
+numChops = 1;   % slices to chop data into get 10s trials
 
 for i = 1 : params.numVals
     valID = ['val', num2str(i)];
@@ -32,7 +32,7 @@ end
 
 S = load('MatlabSysid.mat');    % loads in models from Matlab sysid toobox
 matSystems = struct2cell(S);    % converts struct into indexable thing
-numSystems = size(matSystems,1) + 1; % number of systems to be compared
+numSystems = size(matSystems,1) + 2; % number of systems to be compared
 
 % % convert any polynomial models to state space models
 % for i = 1 : numSystems - 1
@@ -48,10 +48,10 @@ for j = 1 : params.numVals
         
         % simulate koopman system
         chopID = ['s', num2str(k)];
-        tval = t(i).(chopID);
-        xval = x(i).(chopID);
-        uval = u(i).(chopID);
-        x0sim = x(i).(chopID)(1,:)'; % same initial state as validation data initial state
+        tval = t(j).(chopID);
+        xval = x(j).(chopID);
+        uval = u(j).(chopID);
+        x0sim = x(j).(chopID)(1,:)'; % same initial state as validation data initial state
         [tkoop, xkoop] = ode45(@(t,x) vf_koopman(x, get_u(t, tval, uval)), tval, x0sim);
     
         % save results as iddata object
@@ -59,20 +59,27 @@ for j = 1 : params.numVals
         val.(valID) = iddata( xval, uval, Ts, 'Name', 'Actual');      % actual system
         koop.(valID) = iddata( xkoop, uval, Ts, 'Name', 'Koopman');   % koopman system
         
-        % simulate polynomial and state space systems
-        for i = 1 : numSystems - 1
-            if strcmp( class(matSystems{i}, 'idpoly') || 
-            opt = simOptions('InitialCondition', x0sim);
-            xmatsys = sim(matSystems{i}, uval, opt);
-            
-%             % shift result to make initial conditions line up
-%             xmatsys = xmatsys + ( x0sim' - xmatsys(1,:) );
-            
-            % save results as iddata object
-            sysID = matSystems{i}.name;
-            valID = ['z', num2str(valCount)];
-            matSys{i}.(valID) = iddata( xmatsys, uval, Ts, 'Name', sysID );   % koopman system
+        % simulate state space model using real IC
+        for i = 1 : numSystems - 2
+            if strcmp( class(matSystems{i}) , 'idss')
+                opt = simOptions('InitialCondition', 'z');
+                xss = sim(matSystems{i}, uval, opt);
+                
+%               % shift result to make initial conditions line up
+%               xmatsys = xmatsys + ( x0sim' - xmatsys(1,:) );
+                
+                % save results as iddata object
+                sysID = matSystems{i}.name;
+                stateSpace.(valID) = iddata( xss, uval, Ts, 'Name', sysID );   % state space system
+            end
         end
+        
+        % simulate neural network model using real IC
+        [xnnet ,~] = NLinout_NeuralNetworkFunction(uval', zeros(3,2));
+        
+        % save results as iddata object
+        nnet.(valID) = iddata( xnnet', uval, Ts, 'Name', 'NeuralNetwork' );   % neural network system
+        
     end
 end
 
@@ -91,26 +98,49 @@ for i = 1 : valCount
     x0 = val.(valID).y(1,:)';
     opt = compareOptions('InitialCondition', 'z');
 %     [yh, fit{i}, x0] = compare(val.(valID), koop.(valID), matSys{1}.(valID), matSys{2}.(valID), matSys{3}.(valID), matSys{4}.(valID));
-    [yh, fit{i}, x0] = compare(val.(valID), koop.(valID), matSystems{1}, matSystems{2}, matSystems{3}, matSystems{4}, opt);
+    [yh, fit{i}, x0] = compare(val.(valID), koop.(valID), nnet.(valID), stateSpace.(valID), matSystems{1}, matSystems{2}, matSystems{3}, opt);
 end
 
 % Compute average %FIT across all states and all trials for each system
 for i = 1 : numSystems
     for j = 1 : valCount
-        mean_states_fit(j,i) = sum( fit{j}{i}(:) ) / params.n;  % mean of error across all states in jth trial
+        states_fit(j,:) = fit{j}{i}(:)';    % NRMSE for all of the states 
+%         mean_states_fit(j,i) = sum( fit{j}{i}(:) ) / params.n;  % mean of error across all states in jth trial
     end
-    mean_fit(i) = sum( mean_states_fit(:,i) ) / valCount;   % mean of error across all states and trials
-    std_fit(i) = std( mean_states_fit(:,i) );   % standard deviation accross all states and trials
+    mean_states_fit(i,:) = mean( states_fit, 1 );
+    std_states_fit(i,:) = std( states_fit, 0, 1 );
+    
+    mean_fit(i) = mean( mean_states_fit(i,:) );
+    std_states_fit
+%     mean_fit(i) = sum( mean_states_fit(:,i) ) / valCount;   % mean of error across all states and trials
+%     std_fit(i) = std( mean_states_fit(:,i) );   % standard deviation accross all states and trials
 end
+
+% % Comput average %FIT across all trials for each state and each system
+% runningSum = zeros(params.n,1);
+% for i = 1 : numSystems
+%     for j = 1 : valCount
+%         
+%        runningSum = runningSum + fit{j}{i}(:); 
+%     end
+%     mean_allstates_fit(i,:) = runningSum / valCount;
+%     std_allstates_fit(i) = std( mean_states_fit(:,i) );
+%     runningSum = zeros(params.n,1);    % reset back to zero
+% end
+
 
 %% Plot the results
 
+% figure
+% bar([mean_states_fit(1:3,:); mean_states_fit(5:end,:)] );
+% errorbar(1:5, [mean_states_fit(1:3,:); mean_states_fit(5:end,:)], [std_states_fit(1:3,:); std_states_fit(5:end,:)]);
+
 figure
 hold on
-b = bar([mean_fit(1), mean_fit(3:end)], 'b');
-xticks(1:4);
+b = bar([mean_fit(1:3), mean_fit(5:end)], 'b');
+xticks(1:5);
 xtickangle(60);
-xticklabels( {'Koopman', matSystems{2}.name, matSystems{3}.name, matSystems{4}.name} );
+xticklabels( {'Koopman', 'Neural Network', 'State Space', matSystems{2}.name, matSystems{3}.name} );
 ylabel('Fit (%)');
 % eb = errorbar(1:numSystems, mean_fit, std_fit, '.');
 hold off
