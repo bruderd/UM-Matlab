@@ -25,7 +25,7 @@ params.p = 3;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum degrees for monomial bases (NOTE: m1 = 1)
-params.maxDegree = 1;   % maximum degree of vector field monomial basis
+params.maxDegree = 3;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
@@ -43,7 +43,7 @@ params.ploton              = true;  % boolean to turn error plot on or off
 
 % parameters for generating data
 params.numTrials = 6;   % numer of sysid trials
-params.numVals = 1;     % number of validation trials
+params.numVals = 4;     % number of validation trials
 params.observe = [1, 1, 1, 0, 0, 0];    % row vector choosing which states to observe
 params.inputType = 'sinusoid';
 params.vf_real = @vf_doublePendulum;
@@ -56,7 +56,7 @@ params.x0max = [pi/2, pi/2, 0, 0];
 params.mean                = 0;     % mean of noise 
 params.sigma               = 0.01;     % standard dev of noise
 params.duration            = 5;   % in seconds
-params.systemName          = 'val30s_steps5_sysid30s_x6_steps+ramps_02Ts';  % name of current system
+params.systemName          = 'val60s_steps23+ramps12_sysid60s_x6_02Ts';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 
