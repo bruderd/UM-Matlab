@@ -20,7 +20,7 @@ Ts = params.Ts;
 
 %% Split data into 10s validation steps
 
-numChops = 1;   % slices to chop data into get 10s trials
+numChops = 3;   % slices to chop data into get 10s trials
 
 for i = 1 : params.numVals
     valID = ['val', num2str(i)];
@@ -75,7 +75,7 @@ for j = 1 : params.numVals
         end
         
         % simulate neural network model using real IC
-        [xnnet ,~] = NLinout_NeuralNetworkFunction(uval', zeros(3,2));
+        [xnnet ,~] = NLinout_NeuralNetworkFunction_v6(uval', zeros(3,2));
         
         % save results as iddata object
         nnet.(valID) = iddata( xnnet', uval, Ts, 'Name', 'NeuralNetwork' );   % neural network system
@@ -83,58 +83,135 @@ for j = 1 : params.numVals
     end
 end
 
-%% Simulate Neural Network model over all validation sets
-
-% STILL NEED TO DO THIS PART
-
 
 %% Compare performance of all systems
 
 % load('MatlabSysid.mat');    % loads in models from Matlab sysid toobox
 fit = cell(valCount, 1);
+yh = cell(valCount, 1);
 for i = 1 : valCount
 %     sysID = matSystems{i}.name;
     valID = ['z', num2str(i)];  % trial identifier
     x0 = val.(valID).y(1,:)';
     opt = compareOptions('InitialCondition', 'z');
 %     [yh, fit{i}, x0] = compare(val.(valID), koop.(valID), matSys{1}.(valID), matSys{2}.(valID), matSys{3}.(valID), matSys{4}.(valID));
-    [yh, fit{i}, x0] = compare(val.(valID), koop.(valID), nnet.(valID), stateSpace.(valID), matSystems{1}, matSystems{2}, matSystems{3}, opt);
+    [yh{i}, fit{i}, x0] = compare(val.(valID), koop.(valID), nnet.(valID), stateSpace.(valID), matSystems{1}, matSystems{2}, matSystems{3}, opt);
 end
 
-% Compute average %FIT across all states and all trials for each system
+% Compute average FIT across all states and all trials for each system
 for i = 1 : numSystems
     for j = 1 : valCount
-        states_fit(j,:) = fit{j}{i}(:)';    % NRMSE for all of the states 
+        states_fit(j,:,i) = fit{j}{i}(:)';    % NRMSE for all of the states 
 %         mean_states_fit(j,i) = sum( fit{j}{i}(:) ) / params.n;  % mean of error across all states in jth trial
     end
-    mean_states_fit(i,:) = mean( states_fit, 1 );
-    std_states_fit(i,:) = std( states_fit, 0, 1 );
+    mean_states_fit(i,:) = mean( states_fit(:,:,i), 1 );
+    std_states_fit(i,:) = std( states_fit(:,:,i), 0, 1 );
     
-    mean_fit(i) = mean2( states_fit );
-    std_fit(i) = std2( states_fit );
+    mean_fit(i) = mean2( states_fit(:,:,i) );
+    std_fit(i) = std2( states_fit(:,:,i) );
 %     mean_fit(i) = sum( mean_states_fit(:,i) ) / valCount;   % mean of error across all states and trials
 %     std_fit(i) = std( mean_states_fit(:,i) );   % standard deviation accross all states and trials
 end
 
 
+% Compute NRMSE (Not 1-NRMSE like matlab does) for each trial
+for i = 1 : numSystems
+    for j = 1 : valCount
+        valID = ['z', num2str(j)];  % trial identifier
+        states_NRMSE(j,:,i) = sqrt( sum( ( yh{j}{i}.y  - val.(valID).y ).^2 ) / size(val.(valID).y, 1) ) ./ ( max(data.alltrials.x, [], 1) - min(data.alltrials.x, [], 1) ); % NRMSE (normalized by max value of each state)
+%         states_NRMSE(j,:,i) = sqrt( sum( ( yh{j}{i}.y  - val.(valID).y ).^2 ) ./ size(val.(valID).y, 1) ) ./ abs( mean( val.(valID).y, 1 ) ); % NRMSE (normalized by absolute value of trial mean), bad becasuse divides by almost zero!!
+    end
+    mean_states_NRMSE(i,:) = mean( states_NRMSE(:,:,i), 1 );
+    std_states_NRMSE(i,:) = std( states_NRMSE(:,:,i), 0, 1 );
+    
+    mean_NRMSE(i) = mean2( states_NRMSE(:,:,i) );
+    std_NRMSE(i) = std2( states_NRMSE(:,:,i) );
+end
+
+% Compute RMSE (in meters) for each trial
+for i = 1 : numSystems
+    for j = 1 : valCount
+        valID = ['z', num2str(j)];  % trial identifier
+%         states_RMSE(j,:,i) = -100*( ( fit{j}{i}(:)' ./ 100 ) - 1 ) * norm( val.(valID).y - mean( val.(valID).y, 1 ) ) ./size(val.(valID).y, 1);    % RMSE for all of the states (BAD)
+        states_RMSE(j,:,i) = sqrt( sum( ( yh{j}{i}.y  - val.(valID).y ).^2 ) ./ size(val.(valID).y, 1) );  % RMSE for all of the states 
+    end
+    mean_states_RMSE(i,:) = mean( states_RMSE(:,:,i), 1 );
+    std_states_RMSE(i,:) = std( states_RMSE(:,:,i), 0, 1 );
+    
+    mean_RMSE(i) = mean2( states_RMSE(:,:,i) );
+    std_RMSE(i) = std2( states_RMSE(:,:,i) );
+end
+
 %% Plot the results
 
-% figure
-% bar([mean_states_fit(1:3,:); mean_states_fit(5:end,:)] );
-% errorbar(1:5, [mean_states_fit(1:3,:); mean_states_fit(5:end,:)], [std_states_fit(1:3,:); std_states_fit(5:end,:)]);
 
+% bar chart showing average fit across all states and all trials
 figure
 hold on
 b = bar([mean_fit(1:3), mean_fit(5:end)], 'b');
 xticks(1:5);
 xtickangle(60);
 xticklabels( {'Koopman', 'Neural Network', 'State Space', matSystems{2}.name, matSystems{3}.name} );
-ylabel('Fit (%)');
+ylabel('1 - NRMSE (%)');
 eb = errorbar(1:numSystems-1, [mean_fit(1:3), mean_fit(5:end)], [std_fit(1:3), std_fit(5:end)], '.', 'CapSize', 14, 'LineWidth', 2, 'Color', 'k');
 hold off
 
+% bar chart showing average NRMSE across all states and all trials
+figure
+hold on
+b = bar([mean_NRMSE(1:3), mean_NRMSE(5:end)], 'b');
+xticks(1:5);
+xtickangle(60);
+xticklabels( {'Koopman', 'Neural Network', 'State Space', matSystems{2}.name, matSystems{3}.name} );
+ylabel('NRMSE (%)');
+eb = errorbar(1:numSystems-1, [mean_NRMSE(1:3), mean_NRMSE(5:end)], [std_NRMSE(1:3), std_NRMSE(5:end)], '.', 'CapSize', 14, 'LineWidth', 2, 'Color', 'k');
+hold off
+
+% bar chart showing average RMSE across all states and all trials
+figure
+hold on
+b = bar([mean_RMSE(1:3), mean_RMSE(5:end)], 'b');
+xticks(1:5);
+xtickangle(60);
+xticklabels( {'Koopman', 'Neural Network', 'State Space', matSystems{2}.name, matSystems{3}.name} );
+ylabel('RMSE (m)');
+eb = errorbar(1:numSystems-1, [mean_RMSE(1:3), mean_RMSE(5:end)], [std_RMSE(1:3), std_RMSE(5:end)], '.', 'CapSize', 14, 'LineWidth', 2, 'Color', 'k');
+hold off
+
+% bar chart showing average fit across all trials
+figure
+hold on
+b2 = bar([mean(states_fit(:,:,1),1); mean(states_fit(:,:,2),1); mean(states_fit(:,:,3),1); mean(states_fit(:,:,5),1); mean(states_fit(:,:,6),1)]);
+xticks(1:5);
+xtickangle(60);
+xticklabels( {'Koopman', 'Neural Network', 'State Space', matSystems{2}.name, matSystems{3}.name} );
+ylabel('1 - NRMSE (%)');
+% eb2 = errorbar(1:numSystems-1, [mean_fit(1:3), mean_fit(5:end)], [std_fit(1:3), std_fit(5:end)], '.', 'CapSize', 14, 'LineWidth', 2, 'Color', 'k');
+hold off
 
 
+% bar chart showing average NRMSE across all trials
+figure
+hold on
+b4 = bar([mean(states_NRMSE(:,:,1),1); mean(states_NRMSE(:,:,2),1); mean(states_NRMSE(:,:,3),1); mean(states_NRMSE(:,:,5),1); mean(states_NRMSE(:,:,6),1)]);
+xticks(1:5);
+xtickangle(60);
+xticklabels( {'Koopman', 'Neural Network', 'State Space', matSystems{2}.name, matSystems{3}.name} );
+ylabel('NRMSE (%)');
+% plot([0, 6], [1, 1], 'k--')
+% eb4 = errorbar(1:numSystems-1, [mean_fit(1:3), mean_fit(5:end)], [std_fit(1:3), std_fit(5:end)], '.', 'CapSize', 14, 'LineWidth', 2, 'Color', 'k');
+hold off
+
+% bar chart showing average RMSE across all trials
+figure
+hold on
+b5 = bar([mean(states_RMSE(:,:,1),1); mean(states_RMSE(:,:,2),1); mean(states_RMSE(:,:,3),1); mean(states_RMSE(:,:,5),1); mean(states_RMSE(:,:,6),1)]);
+xticks(1:5);
+xtickangle(60);
+xticklabels( {'Koopman', 'Neural Network', 'State Space', matSystems{2}.name, matSystems{3}.name} );
+ylabel('RMSE (m)');
+% eb4 = errorbar(1:numSystems-1, [mean_fit(1:3), mean_fit(5:end)], [std_fit(1:3), std_fit(5:end)], '.', 'CapSize', 14, 'LineWidth', 2, 'Color', 'k');
+hold off
 
 end
 
