@@ -142,7 +142,32 @@ for i = 1 : numSystems
     std_RMSE(i) = std2( states_RMSE(:,:,i) );
 end
 
+% Compute total RMSE and NRMSE across all trials!
+states_squerror = zeros(numSystems, params.n);
+bigN = 0;
+for i = 1 : numSystems
+    for j = 1 : valCount
+        valID = ['z', num2str(j)];  % trial identifier
+        states_squerror(i,:) = states_squerror(i,:) + sum( ( yh{j}{i}.y  - val.(valID).y ).^2 ) ;  % adding the square error from all trials
+        bigN = bigN + size(val.(valID).y, 1) ;  % total number of data points for all trials
+    end
+end
+states_RMSE_alltrials = sqrt( states_squerror ./ bigN );
+states_NRMSE_alltrials = states_RMSE_alltrials ./ ( max(data.alltrials.x, [], 1) - min(data.alltrials.x, [], 1) );
+mean_RMSE_alltrials = mean(states_RMSE_alltrials, 2);
+mean_NRMSE_alltrials = mean(states_NRMSE_alltrials, 2);
+std_RMSE_alltrials = std(states_RMSE_alltrials, [], 2);
+std_NRMSE_alltrials = std(states_NRMSE_alltrials, [], 2);
+
+
 %% Plot the results
+
+% Define custom colors:
+cb(1,:) = [69,117,180]/255;
+cb(2,:) = [145,191,219]/255;
+cb(3,:) = [254,224,144]/255;
+cb(4,:) = [252,141,89]/255;
+cb(5,:) = [215,48,39]/255;
 
 
 % bar chart showing average fit across all states and all trials
@@ -165,6 +190,19 @@ xtickangle(60);
 xticklabels( {'Koopman', 'Neural Network', 'State Space', matSystems{2}.name, matSystems{3}.name} );
 ylabel('NRMSE (%)');
 eb = errorbar(1:numSystems-1, [mean_NRMSE(1:3), mean_NRMSE(5:end)], [std_NRMSE(1:3), std_NRMSE(5:end)], '.', 'CapSize', 14, 'LineWidth', 2, 'Color', 'k');
+hold off
+
+% bar chart showing TOTAL NRMSE across all states and all trials
+figure
+hold on
+for i = 1 : numSystems
+    b = bar(i, mean_NRMSE_alltrials(i), 'FaceColor', cb(i,:));
+end
+xticks(1:5);
+xtickangle(60);
+xticklabels( {'Koopman', 'Neural Network', 'State Space', matSystems{2}.name, matSystems{3}.name} );
+ylabel('NRMSE(alltrials) (%)');
+eb = errorbar(1:numSystems-1, [mean_NRMSE_alltrials(1:3)', mean_NRMSE_alltrials(5:end)'], [std_NRMSE_alltrials(1:3)', std_NRMSE_alltrials(5:end)'], '.', 'CapSize', 14, 'LineWidth', 2, 'Color', 'k');
 hold off
 
 % bar chart showing average RMSE across all states and all trials
