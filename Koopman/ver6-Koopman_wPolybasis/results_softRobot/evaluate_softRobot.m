@@ -195,14 +195,19 @@ hold off
 % bar chart showing TOTAL NRMSE across all states and all trials
 figure
 hold on
-for i = 1 : numSystems
-    b = bar(i, mean_NRMSE_alltrials(i), 'FaceColor', cb(i,:));
+for i = 1 : 3
+    bar(i, mean_NRMSE_alltrials(i) * 100, 'FaceColor', cb(i,:));
+end
+for i = 5 : numSystems
+    bar(i-1, mean_NRMSE_alltrials(i) * 100, 'FaceColor', cb(i-1,:));
 end
 xticks(1:5);
 xtickangle(60);
-xticklabels( {'Koopman', 'Neural Network', 'State Space', matSystems{2}.name, matSystems{3}.name} );
-ylabel('NRMSE(alltrials) (%)');
-eb = errorbar(1:numSystems-1, [mean_NRMSE_alltrials(1:3)', mean_NRMSE_alltrials(5:end)'], [std_NRMSE_alltrials(1:3)', std_NRMSE_alltrials(5:end)'], '.', 'CapSize', 14, 'LineWidth', 2, 'Color', 'k');
+xticklabels( {'Koopman', 'Neural Network', 'State Space', 'Hammerstein-Wiener', matSystems{3}.name} );
+ylabel('NRMSE (%)');
+ylim([0 10]);
+eb = errorbar(1:numSystems-1, [mean_NRMSE_alltrials(1:3)' * 100, mean_NRMSE_alltrials(5:end)' * 100], [std_NRMSE_alltrials(1:3)' * 100, std_NRMSE_alltrials(5:end)' * 100], '.', 'CapSize', 14, 'LineWidth', 1.5, 'Color', 'k');
+box on
 hold off
 
 % bar chart showing average RMSE across all states and all trials
