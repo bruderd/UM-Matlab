@@ -20,6 +20,7 @@ for j = 1 : valparams.numVals
     
     x0sim = valdata.x(1,:)'; % same initial state as validation data initial state
     [tsysid, xsysid] = ode45(@(t,x) vf_koopman(x, get_u(t, x, valdata, valparams)), tspan, x0sim);
+%     [tsysid, xsysid] = deal(treal, xreal);  % JUST A PLACEHOLDER. USE THIS IF WANT TO AVOID INTEGRATION ERROR
     
     % simulated forward using the transpose of Koopman operator (Note: this may be a scaled version of U)
     xselector = [zeros(valparams.n,1), eye(valparams.n), zeros(valparams.n, valparams.N - valparams.n - 1)]; % matrix to extract state from lifted state
@@ -47,6 +48,7 @@ for j = 1 : valparams.numVals
     
     terror = treal;
     xerror = abs( xreal - xsysid );
+%     xerror = abs( xreal - xkoop );
     xerrormax = max(max(xerror(:,1:ceil(valparams.n/2))));
     % xerrormin = min(min(xerror(:,1:ceil(valparams.n/2))));
     RMSE = sqrt( sum( (xreal - xsysid).^2 ) / length(terror) );

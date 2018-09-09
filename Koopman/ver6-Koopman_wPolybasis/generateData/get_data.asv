@@ -21,7 +21,7 @@ if data_ext == '.mat'
     traw = raw.t;
     
 %   % STRETCH OUT TIME
-    traw = 12 * traw;    
+    traw = 3 * traw;    
     
     traw = traw - traw(1);  % remove any offset in start time
     xraw = raw.x;
@@ -34,14 +34,14 @@ if data_ext == '.mat'
         
         % interpolate data so that it lines up with sampling times
         tq = ( 0:params.Ts:traw(end) )';
-        xq = interp1(traw_uq, xraw(index,:), tq, 'spline');   % interpolate results to get samples at sampling interval Ts
-        uq = interp1(traw_uq, uraw(index,:), tq, 'spline');
+        xq = interp1(traw_uq, xraw(index,:), tq);   % interpolate results to get samples at sampling interval Ts
+        uq = interp1(traw_uq, uraw(index,:), tq);
         
         % filter state measurements to lessen noise impact
         xfilt = movmean(xq, params.filterWindow(1));
         
-%    %     % ISOLATE x coordinate
-%         xfilt = xfilt(:,1);
+   %     % ISOLATE x coordinate
+        xfilt = xfilt(:,1);
         
         % take numerical derivatives between sampled points
         numstates = params.n/2;
@@ -52,7 +52,7 @@ if data_ext == '.mat'
         xdotfilt = movmean(xdot, params.filterWindow(2));
         x = [xfilt, xdotfilt];
         
- %       % SCALE DATA (REMOVE THIS LATER!!)
+        % SCALE DATA (REMOVE THIS LATER!!)
         [x, uq] = scale_data(x, uq);
         
         % define output
@@ -62,20 +62,23 @@ if data_ext == '.mat'
         trialData.y = trialData.x;    % observed state == state since we have no other ground truth
     else 
         % filter raw data to smooth it out a bit
-        xraw = movmean(xraw, 50);     
+        xraw = movmean(xraw, 50);
+        
+%       % STRETCH OUT TIME
+        traw = 3 * traw;        
         
         % interpolate data so that it lines of with sampling times
         tq = ( 0:params.Ts:traw(end) )';
-        xq = interp1(traw,xraw,tq, 'spline');   % interpolate results to get samples at sampling interval Ts
-        uq = interp1(traw,uraw,tq, 'spline');
+        xq = interp1(traw,xraw,tq);   % interpolate results to get samples at sampling interval Ts
+        uq = interp1(traw,uraw,tq);
         
         % filter state measurements to lessen noise impact
         xfilt = movmean(xq, params.filterWindow(1));
         
    %     % SCALE DATA (REMOVE THIS LATER!!)
         [xfilt, uq] = scale_data(xfilt, uq);
-%    %     % ISOLATE x coordinate
-%         xfilt = xfilt(:,1);
+   %     % ISOLATE x coordinate
+        xfilt = xfilt(:,1);
 
         % define output
         trialData.t = tq;

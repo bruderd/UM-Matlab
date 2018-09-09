@@ -6,8 +6,8 @@ function out = koopmanSysid( snapshotPairs, params )
 
 %% Simulate and find Koopman operator from "measurements" (DNE)
 
-% [x,y] = deal(snapshotPairs.x, snapshotPairs.y);
-[x,y, scaleup] = scale_snapshotPairs( snapshotPairs , params );    % scale the snapshot pairs to help with model fitting
+[x,y] = deal(snapshotPairs.x, snapshotPairs.y);
+% [x,y, L_scale, R_scale] = scale_snapshotPairs( snapshotPairs , params );    % scale the snapshot pairs to help with model fitting
 U = get_Koopman(x,y, params);
 
 %% Calculate the infiniesimal generator as funtion of coeffients, and from data (DNE)
@@ -32,10 +32,9 @@ W = pinv(vecstackL) * vecLdata;
 
 % matrix of coefficents of monomials
 w = reshape(W, [params.n, params.N]);
-w = scaleup * w;    % scale the coefficients back up so that they can explain dynamics of real model
+% w = L_scale * w * R_scale;    % scale the coefficients back up so that they can explain dynamics of real model
 
 % dynamics (gives symbolic expression in terms of state and input)
-% vf2 = w * params.polyBasis; 
 vf2 = w * params.polyBasis; 
 matlabFunction(vf2, 'File', 'vf_koopman', 'Vars', {params.x, params.u});
 

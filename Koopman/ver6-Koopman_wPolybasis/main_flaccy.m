@@ -25,7 +25,7 @@ params.p = 3;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum degrees for monomial bases (NOTE: m1 = 1)
-params.maxDegree = 3;   % maximum degree of vector field monomial basis
+params.maxDegree = 2;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
@@ -34,7 +34,7 @@ params = def_polyLift(params);  % creates polynomial lifting function, polyLift
 % choose whether or not to take numerical derivatives of states (boolean)
 params.numericalDerivs = true;
 
-params.Ts = 0.02;   % sampling period
+params.Ts = 0.1;   % sampling period
 
 % % animation parameters
 % params.fps                 = 30;
@@ -56,7 +56,7 @@ params.x0max = [pi/2, pi/2, 0, 0];
 params.mean                = 0;     % mean of noise 
 params.sigma               = 0.01;     % standard dev of noise
 params.duration            = 5;   % in seconds
-params.systemName          = 'val60s_steps23+ramps12_sysid60s_x6_02Ts';  % name of current system
+params.systemName          = 'val60s_steps23+ramps12_sysid60s_x6_10Ts';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 

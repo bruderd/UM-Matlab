@@ -20,19 +20,19 @@ params = struct;
 progress = waitbar(0,'Initializing parameters...');
 
 % Koopman Sysid parameters
-params.n = 6;   % dimension of state space (including state derivatives)
+params.n = 3;   % dimension of state space (including state derivatives)
 params.p = 1;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum degrees for monomial bases (NOTE: m1 = 1)
-params.maxDegree = 3;   % maximum degree of vector field monomial basis
+params.maxDegree = 2;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
 params = def_polyLift(params);  % creates polynomial lifting function, polyLift
 
 % choose whether or not to take numerical derivatives of states (boolean)
-params.numericalDerivs = true;
+params.numericalDerivs = false;
 
 params.Ts = 0.02;   % sampling period
 
@@ -42,22 +42,11 @@ params.Ts = 0.02;   % sampling period
 params.ploton              = true;  % boolean to turn error plot on or off
 
 % parameters for generating data
-params.numTrials = 1;   % numer of sysid trials
-params.numVals = 1;     % number of validation trials
-params.observe = [1, 1, 1, 0, 0, 0];    % row vector choosing which states to observe
-params.inputType = 'sinusoid';
-params.vf_real = @vf_doublePendulum;
-params.ampRange = [-5, 5];       % amplitude range of sinusoidal inputs
-params.freqRange = [0, 10];     % frequency range of sinusoidal inputs
-params.amp = [];
-params.freq = [];
-params.x0min = [-pi/2, -pi/2, 0, 0];
-params.x0max = [pi/2, pi/2, 0, 0];
-params.mean                = 0;     % mean of noise 
-params.sigma               = 0.01;     % standard dev of noise
+params.numTrials = 6;   % numer of sysid trials
+params.numVals = 6;     % number of validation trials
 params.duration            = 5;   % in seconds
-params.systemName          = 'snake_val30s_6s_sysid30s_6s_02Ts_100pre100postfilt';  % name of current system
-params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
+params.systemName          = 'snakeXYZ_val30s_all_sysid30s_all_02Ts_20sfilt_xScaled_tScaled12';  % name of current system
+params.filterWindow        = floor( [12/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 
 %% Generate or load data from file
