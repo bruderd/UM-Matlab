@@ -6,18 +6,22 @@ error = struct;     % error results comparing real and koopman system
 koopsim = struct;   % simulation results for koopman system
 
 for j = 1 : valparams.numVals
-    %% simulate the behavior of learned system
-    
+    %% real system
+     
     % isolate the jth validation trial
     valID = ['val', num2str(j)];
     valdata = data.(valID);
-    
+ 
     tspan = valdata.t;
+    [treal, xreal] = deal(tspan, valdata.x(1:length(tspan) , :));
+    
+    
+    %% simulate the behavior of learned system
     
     x0sim = valdata.x(1,:)'; % same initial state as validation data initial state
     [tsysid, xsysid] = ode45(@(t,x) vf_koopman(x, get_u(t, x, valdata, valparams)), tspan, x0sim);
     
-    % simulated forward using the transpose of Koopman operator
+    % simulated forward using the transpose of Koopman operator (Note: this may be a scaled version of U)
     xselector = [zeros(valparams.n,1), eye(valparams.n), zeros(valparams.n, valparams.N - valparams.n - 1)]; % matrix to extract state from lifted state
     xkoop = zeros(length(tspan), valparams.n);
     xkoop(1,:) = x0sim';
@@ -27,8 +31,16 @@ for j = 1 : valparams.numVals
         xkoop(i,:) = xnext';
     end
     
-    % real system
-    [treal, xreal] = deal(tspan, valdata.x(1:length(tspan) , :));
+%     % FOR DEBUGGING: simulated forward using the transpose of Koopman operator, acting on real data points
+%     xselector = [zeros(valparams.n,1), eye(valparams.n), zeros(valparams.n, valparams.N - valparams.n - 1)]; % matrix to extract state from lifted state
+%     xkoop = zeros(length(tspan), valparams.n);
+%     xkoop(1,:) = x0sim';
+%     for i = 2 : length(tspan)
+%         ti = tspan(i);
+%         xnext = xselector * koopman.U' * polyLift( xreal(i-1,:)' , get_u(ti, 0, valdata, valparams) );
+%         xkoop(i,:) = xnext';
+%     end
+    
     
     
     %% quantify the error between real behavior and simulated behavior

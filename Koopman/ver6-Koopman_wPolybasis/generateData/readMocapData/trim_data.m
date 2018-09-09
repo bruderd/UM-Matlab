@@ -14,7 +14,7 @@ rawdata = load([data_path, data_file]);
 
 
 % find index of first data point past tstart
-for i_tstart = 1:length(rawdata.t)
+for i_tstart = 2:length(rawdata.t)  % first point can be shitty so skip it
     if rawdata.t(i_tstart) >= tstart
         break;
     end

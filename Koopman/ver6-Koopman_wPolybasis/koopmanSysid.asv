@@ -32,7 +32,7 @@ W = pinv(vecstackL) * vecLdata;
 
 % matrix of coefficents of monomials
 w = reshape(W, [params.n, params.N]);
-w = scaleup * w;    % scale the coefficients back up so that they can explain dynamics of real model
+% w = scaleup * w;    % scale the coefficients back up so that they can explain dynamics of real model
 
 % dynamics (gives symbolic expression in terms of state and input)
 % vf2 = w * params.polyBasis; 

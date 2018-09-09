@@ -24,8 +24,8 @@ effcent = nanmean(nanmean(mocap.effxyz(1:60,:,:),3),1);
 % end effector origin and coordinate axes expressed in mocap coordinates
 origine = effcent;
 ze = (effcent - topcent) / norm(effcent - topcent);
-lede = nanmean(mocap.topxyz(1:20,:,1));    % pick one of the top LEDs, i.e. the "first" one
-xedir = (lede - topcent); % vector pointing from center to one of the LEDs, will point roughly along x-axis
+lede = nanmean(mocap.effxyz(1:20,:,1));    % pick one of the LEDs, i.e. the "first" one
+xedir = (lede - effcent); % vector pointing from center to one of the LEDs, will point roughly along x-axis
 ye = cross(ze,xedir) / norm( cross(ze,xedir) );
 xe = cross(ye,ze) / norm( cross(ye,ze) );
 
@@ -50,13 +50,14 @@ end
 %% calculate the state vector for the end effector at each frame
 
 % postition of end effector, as average location of leds
-pos = nanmean(endeff.LEDxyz,3);
-% total = zeros(mocap.frames, 3);
-% for i = 1 : size(endeff.LEDxyz, 3)
-%    total = total + endeff.LEDxyz(:,:,i);
-%    pos = total / i ;   
-% end
+pos = nanmean(nanmean(endeff.LEDxyz(1:60,:,:),3),1);
+total = zeros(mocap.frames, 3);
+for i = 1 : size(endeff.LEDxyz, 3)
+   total = total + endeff.LEDxyz(:,:,i);
+   pos = total / i ;   
+end
 
+% pos = nanmean(endeff.LEDxyz, 3);
 
 %% This section determines the orientation of the end effector which we are ignoring for the moment
 % xyzcheck = struct;    % this is unused, not sure what it was intended for

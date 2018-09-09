@@ -48,8 +48,9 @@ TR.pmonitor = pressureData(:,10:12);       % in (Pa). ONLY VALID BECAUSE VALVES 
 % helpful plot for figuring out time offset
 figure
 hold on
-plot(endeff.t, endeff.x(:,1)*10, 'k')  % x wrt time
-plot(TR.t, TR.pcontrol(:,1))    % input to 3rd actuator wrt t
+plot(endeff.t, endeff.x(:,3)*10, 'k')  % z wrt time
+plot(PS.t, PS.x(:,3)*10)    % z wrt time with all the NaNs filled in (interpolated)
+plot(TR.t, TR.pcontrol(:,2))    % input to 2nd actuator wrt t
 title('Mocap and Pressure Data Together')
 legend('Mocap: PhaseSpace', 'Pressure: TR')
 hold off
@@ -106,7 +107,7 @@ t = PS.t;
 x = PS.x;
 u = TR.u;
 
-% save the file using the system name that was set in params
+% save the file using the system name
 [unique_fname, change_detect] = auto_rename(['rawdataFiles', filesep, testname, '.mat'], '0');
 save(unique_fname, 't', 'x', 'u');
 

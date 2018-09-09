@@ -1,4 +1,4 @@
-function [ koopman, error, data, data4sysid ] = main_flaccy( getData )
+function [ koopman, error, data, data4sysid ] = main_snake( getData )
 %main_test: A generic "main" function for development and testing
 %   Performs linear system identification of nonlinear systems using a
 %   lifting technique based on the Koopman operator projected onto a finite
@@ -21,7 +21,7 @@ progress = waitbar(0,'Initializing parameters...');
 
 % Koopman Sysid parameters
 params.n = 6;   % dimension of state space (including state derivatives)
-params.p = 3;   % dimension of input
+params.p = 1;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum degrees for monomial bases (NOTE: m1 = 1)
@@ -42,8 +42,8 @@ params.Ts = 0.02;   % sampling period
 params.ploton              = true;  % boolean to turn error plot on or off
 
 % parameters for generating data
-params.numTrials = 8;   % numer of sysid trials
-params.numVals = 8;     % number of validation trials
+params.numTrials = 1;   % numer of sysid trials
+params.numVals = 1;     % number of validation trials
 params.observe = [1, 1, 1, 0, 0, 0];    % row vector choosing which states to observe
 params.inputType = 'sinusoid';
 params.vf_real = @vf_doublePendulum;
@@ -56,7 +56,7 @@ params.x0max = [pi/2, pi/2, 0, 0];
 params.mean                = 0;     % mean of noise 
 params.sigma               = 0.01;     % standard dev of noise
 params.duration            = 5;   % in seconds
-params.systemName          = 'val30s_x8_sysid30s_x8_02Ts';  % name of current system
+params.systemName          = 'snake_val30s_6s_sysid30s_6s_02Ts_100pre100postfilt';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 

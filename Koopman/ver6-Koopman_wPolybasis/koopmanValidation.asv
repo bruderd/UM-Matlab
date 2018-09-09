@@ -6,6 +6,10 @@ error = struct;     % error results comparing real and koopman system
 koopsim = struct;   % simulation results for koopman system
 
 for j = 1 : valparams.numVals
+     %% real system
+    [treal, xreal] = deal(tspan, valdata.x(1:length(tspan) , :));
+    
+    
     %% simulate the behavior of learned system
     
     % isolate the jth validation trial
@@ -27,8 +31,16 @@ for j = 1 : valparams.numVals
         xkoop(i,:) = xnext';
     end
     
-    % real system
-    [treal, xreal] = deal(tspan, valdata.x(1:length(tspan) , :));
+    % simulated forward using the transpose of Koopman operator
+    xselector = [zeros(valparams.n,1), eye(valparams.n), zeros(valparams.n, valparams.N - valparams.n - 1)]; % matrix to extract state from lifted state
+    xkoop = zeros(length(tspan), valparams.n);
+    xkoop(1,:) = x0sim';
+    for i = 2 : length(tspan)
+        ti = tspan(i);
+        xnext = xselector * koopman.U' * polyLift( xkoop(i-1,:)' , get_u(ti, 0, valdata, valparams) );
+        xkoop(i,:) = xnext';
+    end
+    
     
     
     %% quantify the error between real behavior and simulated behavior
@@ -45,7 +57,7 @@ for j = 1 : valparams.numVals
     error.(valID).RMSE = RMSE;
     
     koopsim.(valID).t = tsysid;
-    koopsim.(valID).x = 
+    koopsim.(valID).x = xsysid;
     
     
     %% plot the results
@@ -74,14 +86,6 @@ for j = 1 : valparams.numVals
     % animate_doublePendulum(sol_real, sol_sysid, valparams);
 
 end
-
-
-%% Define outputs
-
-error = struct;
-error.terror = terror;
-error.xerror = xerror;
-error.RMSE = RMSE;
 
 
 end
