@@ -33,6 +33,7 @@ x = rawdata.x(i_tstart : i_tend , :);
 u = rawdata.u(i_tstart : i_tend , :);
 
 % save trimmed data files
+% val_fname = ['trimdataFiles', filesep, data_name, '_200s.mat'];
 val_fname = ['trimdataFiles', filesep, data_name, '_trim.mat'];
 save(val_fname, 't', 'x', 'u');
 
