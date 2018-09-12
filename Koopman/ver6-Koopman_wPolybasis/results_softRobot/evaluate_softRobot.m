@@ -20,7 +20,7 @@ Ts = params.Ts;
 
 %% Split data into 10s validation steps
 
-numChops = 3;   % slices to chop data into get 10s trials
+numChops = 1;   % slices to chop data into get 10s trials
 
 for i = 1 : params.numVals
     valID = ['val', num2str(i)];
@@ -56,6 +56,7 @@ for j = 1 : params.numVals
     
         % save results as iddata object
         valID = ['z', num2str(valCount)];
+        time.(valID) = tval;   % save the time vector for this trial
         val.(valID) = iddata( xval, uval, Ts, 'Name', 'Actual');      % actual system
         koop.(valID) = iddata( xkoop, uval, Ts, 'Name', 'Koopman');   % koopman system
         
@@ -255,6 +256,55 @@ xticklabels( {'Koopman', 'Neural Network', 'State Space', matSystems{2}.name, ma
 ylabel('RMSE (m)');
 % eb4 = errorbar(1:numSystems-1, [mean_fit(1:3), mean_fit(5:end)], [std_fit(1:3), std_fit(5:end)], '.', 'CapSize', 14, 'LineWidth', 2, 'Color', 'k');
 hold off
+
+
+%% Plot XYZ trajectories of all the systems for each validation trial
+
+for i = 1 : valCount
+    valID = ['z', num2str(i)];  % trial identifier
+    
+    figure;
+    subplot(3,1,1)
+        hold on
+        plot(time.(valID), val.(valID).y(:,1) * 100, ':k', 'LineWidth', 2);
+        plot(time.(valID), yh{i}{1}.y(:,1) * 100, 'Color', cb(1,:), 'LineWidth', 2);
+%         plot(time.(valID), yh{i}{2}.y(:,1) * 100, 'Color', cb(2,:), 'LineWidth', 3);
+%         plot(time.(valID), yh{i}{3}.y(:,1) * 100, 'Color', cb(3,:), 'LineWidth', 3);
+%         plot(time.(valID), yh{i}{5}.y(:,1) * 100, 'Color', cb(4,:), 'LineWidth', 3);
+%         plot(time.(valID), yh{i}{6}.y(:,1) * 100, 'Color', cb(5,:), 'LineWidth', 3);
+%         ylabel('$x_1$ (cm)', 'Interpreter', 'Latex')
+        ylabel('x_1')
+        xticklabels([])
+        hold off
+        box on
+    subplot(3,1,2)
+        hold on
+        plot(time.(valID), val.(valID).y(:,2) * 100, ':k', 'LineWidth', 2);
+        plot(time.(valID), yh{i}{1}.y(:,2) * 100, 'Color', cb(1,:), 'LineWidth', 2);
+%         plot(time.(valID), yh{i}{2}.y(:,2) * 100, 'Color', cb(2,:), 'LineWidth', 3);
+%         plot(time.(valID), yh{i}{3}.y(:,2) * 100, 'Color', cb(3,:), 'LineWidth', 3);
+%         plot(time.(valID), yh{i}{5}.y(:,2) * 100, 'Color', cb(4,:), 'LineWidth', 3);
+%         plot(time.(valID), yh{i}{6}.y(:,2) * 100, 'Color', cb(5,:), 'LineWidth', 3);
+%         ylabel('$x_2$ (cm)', 'Interpreter', 'Latex')
+        ylabel('x_2')
+        xticklabels([])
+        hold off
+        box on
+    subplot(3,1,3)
+        hold on
+        plot(time.(valID), val.(valID).y(:,3) * 100, ':k', 'LineWidth', 2);
+        plot(time.(valID), yh{i}{1}.y(:,3) * 100, 'Color', cb(1,:), 'LineWidth', 2);
+%         plot(time.(valID), yh{i}{2}.y(:,3) * 100, 'Color', cb(2,:), 'LineWidth', 3);
+%         plot(time.(valID), yh{i}{3}.y(:,3) * 100, 'Color', cb(3,:), 'LineWidth', 3);
+%         plot(time.(valID), yh{i}{5}.y(:,3) * 100, 'Color', cb(4,:), 'LineWidth', 3);
+%         plot(time.(valID), yh{i}{6}.y(:,3) * 100, 'Color', cb(5,:), 'LineWidth', 3);
+%         ylabel('$x_3$ (cm)', 'Interpreter', 'Latex')
+        ylabel('x_3')
+        xlabel('Time (s)')
+        hold off
+        box on
+        legend({'Real System', 'Koopman Model'}, 'Location', 'NorthEast')
+end
 
 end
 

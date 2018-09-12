@@ -21,7 +21,7 @@ if data_ext == '.mat'
     traw = raw.t;
     
 %   % STRETCH OUT TIME
-    traw = 12 * traw;    
+%     traw = 12 * traw;    
     
     traw = traw - traw(1);  % remove any offset in start time
     xraw = raw.x;
