@@ -20,7 +20,7 @@ Ts = params.Ts;
 
 %% Split data into 10s validation steps
 
-numChops = 1;   % slices to chop data into get 10s trials
+numChops = 3;   % slices to chop data into get 10s trials
 
 for i = 1 : params.numVals
     valID = ['val', num2str(i)];
@@ -161,6 +161,7 @@ std_RMSE_alltrials = std(states_RMSE_alltrials, [], 2);
 std_NRMSE_alltrials = std(states_NRMSE_alltrials, [], 2);
 
 
+
 %% Plot the results
 
 % Define custom colors:
@@ -203,8 +204,8 @@ for i = 5 : numSystems
     bar(i-1, mean_NRMSE_alltrials(i) * 100, 'FaceColor', cb(i-1,:));
 end
 xticks(1:5);
-xtickangle(60);
-xticklabels( {'Koopman', 'Neural Network', 'State Space', 'Hammerstein-Wiener', matSystems{3}.name} );
+xtickangle(45);
+xticklabels( {'Koopman', 'Neural Network', 'State Space', 'Ham.-Wiener', matSystems{3}.name} );
 ylabel('NRMSE (%)');
 ylim([0 10]);
 eb = errorbar(1:numSystems-1, [mean_NRMSE_alltrials(1:3)' * 100, mean_NRMSE_alltrials(5:end)' * 100], [std_NRMSE_alltrials(1:3)' * 100, std_NRMSE_alltrials(5:end)' * 100], '.', 'CapSize', 14, 'LineWidth', 1.5, 'Color', 'k');
@@ -272,8 +273,7 @@ for i = 1 : valCount
 %         plot(time.(valID), yh{i}{3}.y(:,1) * 100, 'Color', cb(3,:), 'LineWidth', 3);
 %         plot(time.(valID), yh{i}{5}.y(:,1) * 100, 'Color', cb(4,:), 'LineWidth', 3);
 %         plot(time.(valID), yh{i}{6}.y(:,1) * 100, 'Color', cb(5,:), 'LineWidth', 3);
-%         ylabel('$x_1$ (cm)', 'Interpreter', 'Latex')
-        ylabel('x_1')
+        ylabel('x_1 (cm)')
         xticklabels([])
         hold off
         box on
@@ -285,8 +285,7 @@ for i = 1 : valCount
 %         plot(time.(valID), yh{i}{3}.y(:,2) * 100, 'Color', cb(3,:), 'LineWidth', 3);
 %         plot(time.(valID), yh{i}{5}.y(:,2) * 100, 'Color', cb(4,:), 'LineWidth', 3);
 %         plot(time.(valID), yh{i}{6}.y(:,2) * 100, 'Color', cb(5,:), 'LineWidth', 3);
-%         ylabel('$x_2$ (cm)', 'Interpreter', 'Latex')
-        ylabel('x_2')
+        ylabel('x_2 (cm)')
         xticklabels([])
         hold off
         box on
@@ -298,8 +297,7 @@ for i = 1 : valCount
 %         plot(time.(valID), yh{i}{3}.y(:,3) * 100, 'Color', cb(3,:), 'LineWidth', 3);
 %         plot(time.(valID), yh{i}{5}.y(:,3) * 100, 'Color', cb(4,:), 'LineWidth', 3);
 %         plot(time.(valID), yh{i}{6}.y(:,3) * 100, 'Color', cb(5,:), 'LineWidth', 3);
-%         ylabel('$x_3$ (cm)', 'Interpreter', 'Latex')
-        ylabel('x_3')
+        ylabel('x_3 (cm)')
         xlabel('Time (s)')
         hold off
         box on
