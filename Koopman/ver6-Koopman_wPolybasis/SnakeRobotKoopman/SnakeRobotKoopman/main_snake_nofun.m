@@ -22,6 +22,8 @@ basis = 'fourier';      % (fourier or poly)
 params = struct;
 progress = waitbar(0,'Initializing parameters...');
 
+params.basis = basis;
+
 % Koopman Sysid parameters
 params.n = 3;   % dimension of state space (including state derivatives)
 params.p = 1;   % dimension of input
@@ -52,6 +54,7 @@ params.ploton              = true;  % boolean to turn error plot on or off
 params.numTrials = 6;   % numer of sysid trials
 params.numVals = 6;     % number of validation trials
 params.K = 10000;        % numer of snapshotPairs to take
+
 params.duration            = 5;   % in seconds
 params.systemName          = '_fourier_allSnakeData';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
