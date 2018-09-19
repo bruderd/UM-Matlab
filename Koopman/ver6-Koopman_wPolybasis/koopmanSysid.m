@@ -10,6 +10,7 @@ function out = koopmanSysid( snapshotPairs, params )
 % [x,y, L_scale, R_scale] = scale_snapshotPairs( snapshotPairs , params );    % scale the snapshot pairs to help with model fitting
 U = get_Koopman(x,y, params);
 
+
 %% Calculate the infiniesimal generator as funtion of coeffients, and from data (DNE)
 Ldata = get_Ldata(U, params);   % infinitesimal generator from data
 Ldata_hat = Ldata(:, 1:params.N1);  % N x N1 version of Ldata (projection onto the polyBasis)

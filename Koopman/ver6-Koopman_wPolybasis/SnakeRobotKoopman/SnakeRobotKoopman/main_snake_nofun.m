@@ -15,7 +15,7 @@
 %       koopmanSysid function for more details.
 
 %% Former input 
-getData = 'file';       % (exp, file, or sim)
+getData = 'exp';       % (exp, file, or sim)
 basis = 'fourier';      % (fourier or poly)
 
 %% Define system parameters (USER EDIT SECTION)
@@ -52,11 +52,11 @@ params.ploton              = true;  % boolean to turn error plot on or off
 
 % parameters for generating data
 params.numTrials = 6;   % numer of sysid trials
-params.numVals = 6;     % number of validation trials
-params.K = 10000;        % numer of snapshotPairs to take
+params.numVals = 1;     % number of validation trials
+params.K = 30000;        % numer of snapshotPairs to take
 
 params.duration            = 5;   % in seconds
-params.systemName          = '_fourier_allSnakeData';  % name of current system
+params.systemName          = 'CG_20s_allsnakedata_30000pts';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 
@@ -85,12 +85,12 @@ waitbar(.5,progress,'Performing Koopman based system identification...');
 % take random subset of snapshot pairs
 some_snapshotPairs = get_randsnapshotPairs(params.K, data.snapshotPairs);
 
-% koopman = koopmanSysid(data.snapshotPairs, params);
-if strcmp(basis, 'fourier')
-    koopman = koopmanSysid_fourier(some_snapshotPairs, params);  % creates fourier lifting function, fourierLift;
-elseif strcmp(basis, 'poly')
-    koopman = koopmanSysid(some_snapshotPairs, params);  % creates polynomial lifting function, polyLift
-end
+koopman = koopmanSysid_CG(some_snapshotPairs, params);
+% if strcmp(basis, 'fourier')
+%     koopman = koopmanSysid_fourier(some_snapshotPairs, params);  % creates fourier lifting function, fourierLift;
+% elseif strcmp(basis, 'poly')
+%     koopman = koopmanSysid(some_snapshotPairs, params);  % creates polynomial lifting function, polyLift
+% end
 
 
 %% error

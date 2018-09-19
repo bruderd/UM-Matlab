@@ -6,7 +6,9 @@ some_snapshotPairs = struct;
 
 totalPairs = length(snapshotPairs.x);
 
-index = randi(totalPairs, num, 1);
+s = RandStream('mlfg6331_64'); 
+index = datasample(s , 1:totalPairs , num , 'Replace' , false);
+% index = randi(totalPairs, num, 1);
 
 some_snapshotPairs.x = snapshotPairs.x(index,:);
 some_snapshotPairs.y = snapshotPairs.y(index,:);

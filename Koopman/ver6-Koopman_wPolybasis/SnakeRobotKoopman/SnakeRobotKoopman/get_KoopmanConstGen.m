@@ -8,10 +8,10 @@ function U = get_KoopmanConstGen( x,y, params )
 Px = zeros(length(x), params.N);
 Py = zeros(length(x), params.N);
 for i = 1:length(x)
-    if strcmp(basis, 'fourier')
+    if strcmp(params.basis, 'fourier')
         Px(i,:) = fourierLift( x(i, 1:n)', x(i, n+1:n+p)' )';
         Py(i,:) = fourierLift( y(i, 1:n)', y(i, n+1:n+p)' )';
-    elseif strcmp(basis, 'poly')
+    elseif strcmp(params.basis, 'poly')
         Px(i,:) = polyLift( x(i, 1:n)', x(i, n+1:n+p)' )';
         Py(i,:) = polyLift( y(i, 1:n)', y(i, n+1:n+p)' )';
     end
@@ -23,7 +23,7 @@ N = size(Px,2);
 %% Solve for inital Koopman Operator wish subset of data points
 
 % Build Apx sparsely with 10% of snapshotPairs
-Ktithe = floor(K/10);   % roughly 10% of total snapshotPairs 
+Ktithe = min( floor(K/10) , 100 );   % roughly 10% of total snapshotPairs, at most 100 
 row = zeros(Ktithe*N^2,1);
 col = zeros(Ktithe*N^2,1);
 val = zeros(Ktithe*N^2,1);
@@ -32,30 +32,65 @@ for i = 1 : Ktithe*N
     col(1+(i-1)*N : i*N) = mod(i-1,N) * N +1 : mod(i-1,N) * N + N;
     val((1+(i-1)*N : i*N)) = Px( ceil( i/N ) , : );
 end
-Apx = sparse(row, col, val, K*N, N*N);
-bpy = reshape(Py', [K*N,1]);
+Apx = sparse(row, col, val, Ktithe*N, N*N);
+bpy = reshape(Py(1:Ktithe,:)', [Ktithe*N,1]);
 
-% Call function that solves LP problem (EDIT HERE!!!)
-% (Call Ram's function, something like this)
-Uvec = robustKoopmanLP(sparse( Apx ), ( bpy ) );
+% Call function that solves LP problem
+[Uvec, epsilon] = robustKoopmanLP_withCG(Apx, bpy, params);
+U = reshape(Uvec, [N,N]);
 
 %% Check which points the solution holds for, and repeat process as necessary
 
 optimal = false;
-Kcurrent = Ktithe;
+satConst = zeros(K,1);      % logical array that stores which constraints are satisfied
 while ~optimal
+    unsatisfied = [];       % stores the indices of all the unsatisfied constraints
+    count = 0;
+    
+    % check if constraints are satisfied
     for i = 1:K
-        if ~any(find(satisfied == i))   % only check points that weren't part of the optimization problem
-            
-            % check if the constraints are satisfied for this point
-            
+        if satConst(i,1) == 0         %~any(find(satisfied == i))   % only check points that weren't part of the last optimization problem
+            satConst(i,1) = all( Px(i,:) * U - Py(i,:) <= epsilon' );        %check if the constraints are satisfied for this point
+            if satConst(i,1) == 0
+                unsatisfied = [unsatisfied, i];     % store index of the unsatisfactory point
+                count = count + 1;
+            end
+        end
+        % ensures we add at most 100 new points to our optimization problem
+        if count > 100
+            break;
         end
     end
+    
+    % check if all the constraints are satisfied
+    if all(satConst)
+        optimal = true;
+        break;
+    end
+    
+    % Construct new A and b matrices
+    Kunsat = length(unsatisfied);   % number of points where constraints unsatisfied
+    row = zeros(Kunsat*N^2,1);
+    col = zeros(Kunsat*N^2,1);
+    val = zeros(Kunsat*N^2,1);
+    for i = 1 : Kunsat
+        for j = 1 : N
+            index = N*(i-1) + j;
+            row(1+(index-1)*N : index*N) = index;
+            col(1+(index-1)*N : index*N) = mod(index-1,N) * N + 1 : mod(index-1,N) * N + N;
+            val((1+(index-1)*N : index*N)) = Px( unsatisfied(i) , : );
+        end
+    end
+    Apx_add = sparse(row, col, val, Kunsat*N, N*N);
+    bpy_add = reshape( Py(unsatisfied,:)' , [Kunsat*N,1]);
+    Apx = [Apx; Apx_add];
+    bpy = [bpy; bpy_add];
+    
+    % Call function to solve LP
+    [Uvec, epsilon] = robustKoopmanLP_withCG(Apx, bpy, params);
+    U = reshape(Uvec, [N,N]); 
+    
 end
-
-%% Reshape the Koopman operator as a vector
-U = reshape(Uvec, [N,N]);
-
 
 
 end
