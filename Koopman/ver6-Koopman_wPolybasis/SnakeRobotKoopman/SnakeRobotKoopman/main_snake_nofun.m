@@ -15,7 +15,7 @@
 %       koopmanSysid function for more details.
 
 %% Former input 
-getData = 'exp';       % (exp, file, or sim)
+getData = 'file';       % (exp, file, or sim)
 basis = 'fourier';      % (fourier or poly)
 
 %% Define system parameters (USER EDIT SECTION)
@@ -56,7 +56,7 @@ params.numVals = 1;     % number of validation trials
 params.K = 30000;        % numer of snapshotPairs to take
 
 params.duration            = 5;   % in seconds
-params.systemName          = 'CG_20s_allsnakedata_30000pts';  % name of current system
+params.systemName          = 'CG_val3s_allsnakedata_30000pts';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 
