@@ -8,8 +8,8 @@ function out = koopmanSysid_fourier( snapshotPairs, params )
 
 [x,y] = deal(snapshotPairs.x, snapshotPairs.y);
 % [x,y, L_scale, R_scale] = scale_snapshotPairs( snapshotPairs , params );    % scale the snapshot pairs to help with model fitting
-% U = get_Koopman_fourier(x,y, params);
-U = get_KoopmanRobust_fourier( x, y, params );
+U = get_Koopman_fourier(x,y, params);
+% U = get_KoopmanRobust_fourier( x, y, params );
 
 %% Calculate the infiniesimal generator as funtion of coeffients, and from data (DNE)
 Ldata = get_Ldata(U, params);   % infinitesimal generator from data

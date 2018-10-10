@@ -26,13 +26,13 @@ for j = 1 : valparams.numVals
     
     % simulated forward using the transpose of Koopman operator (Note: this may be a scaled version of U)
     xselector = [zeros(valparams.n,1), eye(valparams.n), zeros(valparams.n, valparams.N - valparams.n - 1)]; % matrix to extract state from lifted state
-    xkoop = zeros(length(tspan), valparams.n);
-%     xkoop(1,:) = x0sim';
-%     for i = 2 : length(tspan)
-%         ti = tspan(i);
-%         xnext = xselector * koopman.U' * fourierLift( xkoop(i-1,:)' , get_u(ti, 0, valdata, valparams) );
-%         xkoop(i,:) = xnext';
-%     end
+%     xkoop = zeros(length(tspan), valparams.n);
+    xkoop(1,:) = x0sim';
+    for i = 2 : length(tspan)
+        ti = tspan(i);
+        xnext = xselector * koopman.U' * fourierLift( xkoop(i-1,:)' , get_u(ti, 0, valdata, valparams) );
+        xkoop(i,:) = xnext';
+    end
 %     
 %     % FOR DEBUGGING: simulated forward using the transpose of Koopman operator, acting on real data points
 %     xselector = [zeros(valparams.n,1), eye(valparams.n), zeros(valparams.n, valparams.N - valparams.n - 1)]; % matrix to extract state from lifted state
