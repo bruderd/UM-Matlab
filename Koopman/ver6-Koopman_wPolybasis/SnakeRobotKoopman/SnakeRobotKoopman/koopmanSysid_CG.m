@@ -8,7 +8,7 @@ function out = koopmanSysid_CG( snapshotPairs, params )
 
 [x,y] = deal(snapshotPairs.x, snapshotPairs.y);
 % [x,y, L_scale, R_scale] = scale_snapshotPairs( snapshotPairs , params );    % scale the snapshot pairs to help with model fitting
-U = get_KoopmanConstGen( x,y, params );
+[U, epsilon] = get_KoopmanConstGen( x,y, params );
 % U = get_Koopman_fourier(x,y, params);
 
 %% Calculate the infiniesimal generator as funtion of coeffients, and from data (DNE)
@@ -23,7 +23,12 @@ w = calc_W(Ldata,snapshotPairs.x,params);
 % w = L_scale * w * R_scale;    % scale the coefficients back up so that they can explain dynamics of real model
 
 % dynamics (gives symbolic expression in terms of state and input)
-vf2 = w * params.fourierBasis; 
+if strcmp(params.basis, 'fourier')
+    vf2 = w * params.fourierBasis;
+elseif strcmp(params.basis, 'poly')
+    vf2 = w * params.polyBasis;
+end
+
 matlabFunction(vf2, 'File', 'vf_koopman', 'Vars', {params.x, params.u});
 
 
@@ -32,5 +37,6 @@ out.U       = U;            % koopman operator
 out.Ldata   = Ldata;        % inf. generator from data
 out.w       = w;            % matrix of coefficients of polybasis
 out.vf      = @vf_koopman;  % function handle for dynamics of sysid'd sys.
+out.epsilon = epsilon;      % residual error for each basis function
 
 end

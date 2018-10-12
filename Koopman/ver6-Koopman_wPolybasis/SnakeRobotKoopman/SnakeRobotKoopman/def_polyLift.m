@@ -33,8 +33,14 @@ psi = exponents';
 % create the lifting function: x -> p(x)
 matlabFunction(polyBasis, 'File', 'polyLift', 'Vars', {x, u});
 
-% output variables  
+%% define derivative of lifted state with respect to x
+
+dlift = jacobian(polyBasis,x);
+matlabFunction(dlift, 'File', 'jacobianLift', 'Vars', {x,u});
+
+%% output variables  
 params.polyBasis = polyBasis;    % symbolic vector of basis monomials, p(x)
+params.jacobianBasis = dlift;
 params.N = N;   % dimension of polyBasis
 params.N1 = N1; % dimension of basis of observables to be mapped through Lkj
 params.psi = psi;   % monomial exponent index function

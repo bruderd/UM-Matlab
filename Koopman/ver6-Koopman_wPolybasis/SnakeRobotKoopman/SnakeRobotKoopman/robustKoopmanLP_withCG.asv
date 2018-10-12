@@ -34,7 +34,7 @@ H = M' * A' * A * M;
 f = -M' * A' * b;
 
 % L1 regularization enforced as constraint
-t = (1/params.N)*params.N^2; % tunable parameter
+t = (1/1)*params.N^2; % tunable parameter
 Aq = [ -eye(2*params.N^2) ; ones(1 , 2*params.N^2) ];
 bq = [ zeros(2*params.N^2 , 1) ; t ];
 
@@ -49,7 +49,7 @@ xout = M * x;
 
 Uvec = xout(1:nx);
 
-epsilon = 10.05e-2;
+epsilon = 2e-2;
 % epsilon = xout( (nx + 1):(nx + params.N) );
 
 end

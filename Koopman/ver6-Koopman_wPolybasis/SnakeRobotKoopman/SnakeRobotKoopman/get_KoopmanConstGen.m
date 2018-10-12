@@ -1,4 +1,4 @@
-function U = get_KoopmanConstGen( x,y, params )
+function [U, epsilon] = get_KoopmanConstGen( x,y, params )
 %get_KoopmanConstGen: Find the best possible koopman operator given
 %snapshot pairs using constraint generation to deal with large data sets.
 %   Detailed explanation goes here
@@ -23,7 +23,7 @@ N = size(Px,2);
 %% Solve for inital Koopman Operator wish subset of data points
 
 % Build Apx sparsely with 10% of snapshotPairs
-Ktithe = min( floor(K/10) , 200 );   % roughly 10% of total snapshotPairs, at most 200 
+Ktithe = max( floor(K/10) , 5000 );   % roughly 10% of total snapshotPairs, at most 200 
 row = zeros(Ktithe*N^2,1);
 col = zeros(Ktithe*N^2,1);
 val = zeros(Ktithe*N^2,1);
