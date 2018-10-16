@@ -1,4 +1,5 @@
-%main_snake_nofun
+function [ koopman, error, data, data4sysid ] = main_snake_funoft(t , matcontents)
+%main_snake_funoft
 %main_test: A generic "main" function for development and testing
 %   Performs linear system identification of nonlinear systems using a
 %   lifting technique based on the Koopman operator projected onto a finite
@@ -15,7 +16,7 @@
 %       koopmanSysid function for more details.
 
 %% Former input 
-getData = 'exp';       % (exp, file, or sim)
+getData = 'file';       % (exp, file, or sim)
 basis = 'poly';      % (fourier or poly)
 
 %% Define system parameters (USER EDIT SECTION)
@@ -30,7 +31,7 @@ params.p = 1;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum degrees for monomial bases (NOTE: m1 = 1)
-params.maxDegree = 1;   % maximum degree of vector field monomial basis
+params.maxDegree = 3;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
@@ -41,7 +42,7 @@ elseif strcmp(basis, 'poly')
 end
 
 % Another Koopman fitting parameter to penalize model complexity
-params.t = (1/params.N) * params.N^2; % penalty on model complexity
+params.t = t * params.N; % penalty on model complexity
 
 % choose whether or not to take numerical derivatives of states (boolean)
 params.numericalDerivs = false;
@@ -51,7 +52,7 @@ params.Ts = 0.02;   % sampling period
 % % animation parameters
 % params.fps                 = 30;
 % params.movie               = true;
-params.ploton              = true;  % boolean to turn error plot on or off
+params.ploton              = false;  % boolean to turn error plot on or off
 
 % parameters for generating data
 params.numTrials = 6;   % numer of sysid trials
@@ -75,8 +76,8 @@ elseif strcmp(getData, 'exp')
     data = gen_data_fromExp( params );
 elseif strcmp(getData, 'file')
     % Prompt user to identify data file
-    [data_file,data_path] = uigetfile;
-    matcontents = load([data_path, data_file]); % must be a .mat file
+%     [data_file,data_path] = uigetfile;
+%     matcontents = load([data_path, data_file]); % must be a .mat file
     data = matcontents.data;
 end
 
@@ -126,7 +127,7 @@ for k = 1:params.numVals
 end
 
 % show comparison of Koopman system verses ground truth
-if params.ploton
+if params.ploton || true
     for k = 1: params.numVals
         zID = ['z', num2str(k)];
         figure
