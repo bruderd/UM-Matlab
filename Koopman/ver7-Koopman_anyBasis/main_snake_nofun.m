@@ -1,5 +1,5 @@
-%main_snake_nofun
-%main_test: A generic "main" function for development and testing
+%main_sysid
+%main_sysid: A generic "main" function for learning model from data
 %   Performs linear system identification of nonlinear systems using a
 %   lifting technique based on the Koopman operator projected onto a finite
 %   monomial basis.
@@ -15,22 +15,22 @@
 %       koopmanSysid function for more details.
 
 %% Former input 
-getData = 'file';       % (exp, file, or sim)
-basis = 'sin';      % (fourier or poly or sin)
+getData = 'exp';       % (exp, file, or sim)
+basis = 'poly';      % (fourier or poly)
 
 %% Define system parameters (USER EDIT SECTION)
 params = struct;
 progress = waitbar(0,'Initializing parameters...');
 
-params.basis = basis;
+params.basis = fourier;
 
 % Koopman Sysid parameters
-params.n = 1;   % dimension of state space (including state derivatives)
+params.n = 3;   % dimension of state space (including state derivatives)
 params.p = 1;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum degrees for monomial bases (NOTE: m1 = 1)
-params.maxDegree = 4;   % maximum degree of vector field monomial basis
+params.maxDegree = 1;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
@@ -38,32 +38,23 @@ if strcmp(basis, 'fourier')
     params = def_fourierLift(params);  % creates fourier lifting function, fourierLift;
 elseif strcmp(basis, 'poly')
     params = def_polyLift(params);  % creates polynomial lifting function, polyLift
-elseif strcmp(basis, 'sin')
-    params = def_sinLift(params);  % creates sine lifting function, sinLift;
 end
 
 % Another Koopman fitting parameter to penalize model complexity
-params.t = (100/params.N) * params.N^2; % penalty on model complexity
+params.t = (1/params.N) * params.N^2; % penalty on model complexity
 
-% choose whether or not to take numerical derivatives of states (boolean)
-params.numericalDerivs = false;
+% parameters for reading in data
+params.numTrials        = 6;        % numer of sysid trials
+params.numVals          = 1;        % number of validation trials
+params.Ts               = 0.02;     % sampling period
+params.K                = 5000;     % numer of snapshotPairs to take
+params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 
-params.Ts = 0.02;   % sampling period
-
-% % animation parameters
-% params.fps                 = 30;
-% params.movie               = true;
-params.ploton              = true;  % boolean to turn error plot on or off
-
-% parameters for generating data
-params.numTrials = 1;   % numer of sysid trials
-params.numVals = 1;     % number of validation trials
-params.K = 5000;        % numer of snapshotPairs to take
-
-params.duration            = 5;   % in seconds
 params.systemName          = 'snake_5000pts_scale1_fourierBasis_allData';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
+% output parameters
+params.ploton              = true;  % boolean to turn error plot on or off
 
 %% Generate or load data from file
 waitbar(.33,progress,'Generating data...');
@@ -106,8 +97,6 @@ if strcmp(basis, 'fourier')
     [error, koopsim] = koopmanValidation_fourier( data, params, koopman );
 elseif strcmp(basis, 'poly')
     [error, koopsim] = koopmanValidation( data, params, koopman );
-elseif strcmp(basis, 'sin')
-    [error, koopsim] = koopmanValidation_fourier( data, params, koopman );
 end
 
 

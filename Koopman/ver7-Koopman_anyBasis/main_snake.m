@@ -1,4 +1,4 @@
-%main_snake_nofun
+function [ koopman, error, data, data4sysid ] = main_snake( getData )
 %main_test: A generic "main" function for development and testing
 %   Performs linear system identification of nonlinear systems using a
 %   lifting technique based on the Koopman operator projected onto a finite
@@ -14,18 +14,13 @@
 %       operator and other values related to the koopman sysid. See the
 %       koopmanSysid function for more details.
 
-%% Former input 
-getData = 'file';       % (exp, file, or sim)
-basis = 'sin';      % (fourier or poly or sin)
 
 %% Define system parameters (USER EDIT SECTION)
 params = struct;
 progress = waitbar(0,'Initializing parameters...');
 
-params.basis = basis;
-
 % Koopman Sysid parameters
-params.n = 1;   % dimension of state space (including state derivatives)
+params.n = 3;   % dimension of state space (including state derivatives)
 params.p = 1;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
@@ -34,16 +29,7 @@ params.maxDegree = 4;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
-if strcmp(basis, 'fourier')
-    params = def_fourierLift(params);  % creates fourier lifting function, fourierLift;
-elseif strcmp(basis, 'poly')
-    params = def_polyLift(params);  % creates polynomial lifting function, polyLift
-elseif strcmp(basis, 'sin')
-    params = def_sinLift(params);  % creates sine lifting function, sinLift;
-end
-
-% Another Koopman fitting parameter to penalize model complexity
-params.t = (100/params.N) * params.N^2; % penalty on model complexity
+params = def_polyLift(params);  % creates polynomial lifting function, polyLift
 
 % choose whether or not to take numerical derivatives of states (boolean)
 params.numericalDerivs = false;
@@ -56,12 +42,10 @@ params.Ts = 0.02;   % sampling period
 params.ploton              = true;  % boolean to turn error plot on or off
 
 % parameters for generating data
-params.numTrials = 1;   % numer of sysid trials
-params.numVals = 1;     % number of validation trials
-params.K = 5000;        % numer of snapshotPairs to take
-
+params.numTrials = 6;   % numer of sysid trials
+params.numVals = 6;     % number of validation trials
 params.duration            = 5;   % in seconds
-params.systemName          = 'snake_5000pts_scale1_fourierBasis_allData';  % name of current system
+params.systemName          = 'Ram2';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 
@@ -88,27 +72,17 @@ rmpath('generateData')
 waitbar(.5,progress,'Performing Koopman based system identification...');
 
 % take random subset of snapshot pairs
-some_snapshotPairs = get_randsnapshotPairs(params.K, data.snapshotPairs);
+some_snapshotPairs = get_randsnapshotPairs(10000, data.snapshotPairs);
 
-koopman = koopmanSysid_CG(some_snapshotPairs, params);
-% if strcmp(basis, 'fourier')
-%     koopman = koopmanSysid_fourier(some_snapshotPairs, params);  % creates fourier lifting function, fourierLift;
-% elseif strcmp(basis, 'poly')
-%     koopman = koopmanSysid(some_snapshotPairs, params);  % creates polynomial lifting function, polyLift
-% end
+% koopman = koopmanSysid(data.snapshotPairs, params);
+koopman = koopmanSysid(some_snapshotPairs, params);
 
 
 %% error
 waitbar(0.75,progress,'Comparing to validation data set...');
 
 % [error, xkoop] = koopmanSimulation( data.validation, params, koopman ); % only uses koopman transpose, no ODE
-if strcmp(basis, 'fourier')
-    [error, koopsim] = koopmanValidation_fourier( data, params, koopman );
-elseif strcmp(basis, 'poly')
-    [error, koopsim] = koopmanValidation( data, params, koopman );
-elseif strcmp(basis, 'sin')
-    [error, koopsim] = koopmanValidation_fourier( data, params, koopman );
-end
+[error, koopsim] = koopmanValidation( data, params, koopman );
 
 
 %% compare koopman results to those from sysid toolbox
@@ -140,3 +114,4 @@ end
 
 waitbar(1,progress,'Done.');
 close(progress);
+end
