@@ -18,11 +18,11 @@
 %% Define system parameters (USER EDIT SECTION)
 params = struct;
 
-params.getData = 'file';            % ('exp, 'file', or 'sim')
+params.getData = 'exp';            % ('exp, 'file', or 'sim')
 params.basis = 'poly';   % ('fourier' or 'poly')
 
 % Koopman Sysid parameters
-params.n = 3;   % dimension of state space (including state derivatives)
+params.n = 1;   % dimension of state space (including state derivatives)
 params.p = 1;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
@@ -48,7 +48,7 @@ params.percSat  = 0.9;  % percentage of snapshot pairs that must satisfy accurac
 params.numTrials        = 6;        % numer of sysid trials
 params.numVals          = 1;        % number of validation trials
 params.Ts               = 0.02;     % sampling period
-params.K                = 5000;     % numer of snapshotPairs to take
+params.K                = 2;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 
 params.systemName          = 'snake_5000pts_scale1_fourierBasis_allData';  % name of current system
