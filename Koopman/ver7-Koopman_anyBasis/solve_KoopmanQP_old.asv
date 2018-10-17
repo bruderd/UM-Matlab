@@ -37,8 +37,8 @@ M = sparse( [eye(params.N^2) , -eye(params.N^2)] );
 % ATb = reshape(PyTPy, [params.N^2 , 1]);
 
 % L2 error as cost function
-AtA = A' * A;
-Atb = A' * b;
+AtA = round( A' * A, 5);
+Atb = round( A' * b , 5;
 H = M' * AtA * M;
 f = -M' * Atb;
 

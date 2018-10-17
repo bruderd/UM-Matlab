@@ -18,8 +18,8 @@
 %% Define system parameters (USER EDIT SECTION)
 params = struct;
 
-params.getData = 'exp';            % ('exp, 'file', or 'sim')
-params.basis = 'fourier';   % ('fourier' or 'poly')
+params.getData = 'file';            % ('exp, 'file', or 'sim')
+params.basisID = 'fourier';   % ('fourier' or 'poly' or 'fourier_sparser')
 
 % Koopman Sysid parameters
 params.n = 3;   % dimension of state space (including state derivatives)
@@ -32,31 +32,33 @@ params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
 disp('Defining basis of observables...')
-if strcmp(basis, 'fourier')
+if strcmp(params.basisID, 'fourier')
     params = def_fourierLift(params);  % creates fourier lifting function, fourierLift;
-elseif strcmp(basis, 'poly')
+elseif strcmp(params.basisID, 'poly')
     params = def_polyLift(params);  % creates polynomial lifting function, polyLift
+elseif strcmp(params.basisID, 'fourier_sparser')
+    params = def_fourierLift_sparser(params);
 end
 disp('Done.')
 
 % Koopman sysid tuning parameters
-params.t        = (1/params.N) * params.N^2; % penalty on model complexity
-params.epsilon  = 1e-2; % model accuracy tolerance (larger value = less accurate)
-params.percSat  = 0.9;  % percentage of snapshot pairs that must satisfy accuracy tolerance
+params.t        = 2 * params.N; % penalty on model complexity
+params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
+params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
 % parameters for reading in data
-params.numTrials        = 6;        % numer of sysid trials
+params.numTrials        = 1;        % numer of sysid trials
 params.numVals          = 1;        % number of validation trials
 params.Ts               = 0.02;     % sampling period
 params.K                = 5000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 
-params.systemName          = 'snake_5000pts_scale1_fourierBasis_allData';  % name of current system
+params.systemName          = 'sinTest_2pts_scale1_polyBasis_debug';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % output parameters
-params.validateon;         = true;  % boolean to decide whether to validate the model
-params.ploton              = true;  % boolean to turn validation/error plot on or off
+params.validateon          = true;  % boolean to decide whether to validate the model
+params.ploton              = true;  % boolean to turn validation/error/compare plot on or off
 params.compareon           = true;  % boolean to decide whether to convert to iddata and compare to validation data with Matlab compare function
 
 %% Get training data
@@ -66,9 +68,15 @@ params.compareon           = true;  % boolean to decide whether to convert to id
 koopman = koopmanSysid(some_snapshotPairs, params);
 
 %% Simulate the results and compare to validation trial(s)
-% [error, xkoop] = koopmanSimulation( data.validation, params, koopman ); % only uses koopman transpose, no ODE
-if strcmp(basis, 'fourier')
-    [error, koopsim] = koopmanValidation_fourier( data, params, koopman );
-elseif strcmp(basis, 'poly')
+if params.validateon
+    disp('Comparing to validation data set...');
     [error, koopsim] = koopmanValidation( data, params, koopman );
+    disp('Done.')
+end
+
+%% Convert to iddata and compare to validation data
+if params.compareon
+    disp('Converting to iddata format...');
+    data4sysid = get_data4sysid( data , koopsim , params );
+    disp('Done.')
 end

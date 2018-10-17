@@ -19,7 +19,7 @@
 params = struct;
 
 params.getData = 'file';            % ('exp, 'file', or 'sim')
-params.basisID = 'fourier_sparser';   % ('fourier' or 'poly' or 'fourier_sparser')
+params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser')
 
 % Koopman Sysid parameters
 params.n = 3;   % dimension of state space (including state derivatives)
@@ -42,7 +42,7 @@ end
 disp('Done.')
 
 % Koopman sysid tuning parameters
-params.t        = 1 * params.N; % penalty on model complexity
+params.t        = 1.8 * params.N; % penalty on model complexity
 params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
@@ -53,7 +53,7 @@ params.Ts               = 0.02;     % sampling period
 params.K                = 5000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 
-params.systemName          = 'snake_5000pts_scale1_polyBasis_3s';  % name of current system
+params.systemName          = 'sinTest_2pts_scale1_polyBasis_debug';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % output parameters

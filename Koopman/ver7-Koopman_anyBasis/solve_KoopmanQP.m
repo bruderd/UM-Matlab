@@ -32,9 +32,9 @@ nx = params.N^2;
 M = sparse( [eye(params.N^2) , -eye(params.N^2)] );
 
 PxTPx = Px' * Px;
-PyTPy = Py' * Py;
+PxTPy = Px' * Py;
 ATA = sparse( kron(eye(params.N) , PxTPx) );  % repeat blocks diagonally N times
-ATb = reshape(PyTPy, [params.N^2 , 1]);
+ATb = reshape(PxTPy, [params.N^2 , 1]);
 
 % L2 error as cost function
 H = M' * ATA * M;

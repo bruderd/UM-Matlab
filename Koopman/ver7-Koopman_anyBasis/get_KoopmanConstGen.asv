@@ -21,20 +21,20 @@ N = size(Px,2);
 % Ktithe = min( floor(K/2) , 1000 );   % roughly 50% of total snapshotPairs, at most 1000 
 Ktithe = K; % use all of the points
 
-% % COMMENTED OUT BECAUSE IT BUILDS A HUGE MATRIX
-% row = zeros(Ktithe*N^2,1);
-% col = zeros(Ktithe*N^2,1);
-% val = zeros(Ktithe*N^2,1);
-% for i = 1 : Ktithe*N
-%     row(1+(i-1)*N : i*N) = i;
-%     col(1+(i-1)*N : i*N) = mod(i-1,N) * N +1 : mod(i-1,N) * N + N;
-%     val((1+(i-1)*N : i*N)) = Px( ceil( i/N ) , : );
-% end
-% Apx = sparse(row, col, val, Ktithe*N, N*N);
-% bpy = reshape(Py(1:Ktithe,:)', [Ktithe*N,1]);
+row = zeros(Ktithe*N^2,1);
+col = zeros(Ktithe*N^2,1);
+val = zeros(Ktithe*N^2,1);
+for i = 1 : Ktithe*N
+    row(1+(i-1)*N : i*N) = i;
+    col(1+(i-1)*N : i*N) = mod(i-1,N) * N +1 : mod(i-1,N) * N + N;
+    val((1+(i-1)*N : i*N)) = Px( ceil( i/N ) , : );
+end
+Apx = sparse(row, col, val, Ktithe*N, N*N);
+bpy = reshape(Py(1:Ktithe,:)', [Ktithe*N,1]);
 
 % Call function that solves QP problem
 Uvec = solve_KoopmanQP(Px, Py, params);
+% Uvec = solve_KoopmanQP_old(Apx, bpy, params);
 
 U = reshape(Uvec, [N,N]);
 
