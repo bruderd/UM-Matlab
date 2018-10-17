@@ -39,8 +39,10 @@ elseif strcmp(basis, 'poly')
 end
 disp('Done.')
 
-% Another Koopman fitting parameter to penalize model complexity
-params.t = (1/params.N) * params.N^2; % penalty on model complexity
+% Koopman sysid tuning parameters
+params.t        = (1/params.N) * params.N^2; % penalty on model complexity
+params.epsilon  = 1e-2; % model accuracy tolerance (larger value = less accurate)
+params.percSat  = 0.9;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
 % parameters for reading in data
 params.numTrials        = 6;        % numer of sysid trials
@@ -55,12 +57,13 @@ params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking n
 % output parameters
 params.compareon           = true;  % boolean to decide whether to compare model simulation to validation data
 params.ploton              = true;  % boolean to turn error plot on or off
+params.iddataon            = false; % boolean to convert simulation results to iddata format
 
 %% Get training data
 [data, some_snapshotPairs] = get_trainingData(params);
 
 %% Learn the approximate Koopman operator and corresponding NL system
-koopman = koopmanSysid_CG(some_snapshotPairs, params);
+koopman = koopmanSysid(some_snapshotPairs, params);
 
 %% Simulate the results and compare to validation trial(s)
 

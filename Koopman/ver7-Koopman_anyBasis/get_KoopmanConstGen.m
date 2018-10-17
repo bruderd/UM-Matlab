@@ -23,7 +23,7 @@ N = size(Px,2);
 %% Solve for inital Koopman Operator wish subset of data points
 
 % Build Apx sparsely with 10% of snapshotPairs
-Ktithe = max( floor(K/10) , 5000 );   % roughly 10% of total snapshotPairs, at most 200 
+Ktithe = min( floor(K/2) , 1000 );   % roughly 50% of total snapshotPairs, at most 1000 
 row = zeros(Ktithe*N^2,1);
 col = zeros(Ktithe*N^2,1);
 val = zeros(Ktithe*N^2,1);
@@ -35,8 +35,8 @@ end
 Apx = sparse(row, col, val, Ktithe*N, N*N);
 bpy = reshape(Py(1:Ktithe,:)', [Ktithe*N,1]);
 
-% Call function that solves LP problem
-[Uvec, epsilon] = robustKoopmanLP_withCG(Apx, bpy, params);
+% Call function that solves QP problem
+[Uvec, epsilon] = solve_KoopmanQP(Apx, bpy, params);
 U = reshape(Uvec, [N,N]);
 
 %% Check which points the solution holds for, and repeat process as necessary
@@ -50,14 +50,14 @@ while ~optimal
     % check if constraints are satisfied
     for i = 1:K
         if satConst(i,1) == 0         %~any(find(satisfied == i))   % only check points that weren't part of the last optimization problem
-            satConst(i,1) = all( Px(i,:) * U - Py(i,:) <= epsilon' + 1e-6);        %check if the constraints are satisfied for this point
+            satConst(i,1) = all( Px(i,:) * U - Py(i,:) <= params.epsilon');        %check if the constraints are satisfied for this point
             if satConst(i,1) == 0
                 unsatisfied = [unsatisfied, i];     % store index of the unsatisfactory point
                 count = count + 1;
             end
         end
-        % ensures we add at most 200 new points to our optimization problem
-        if count > 200
+        % ensures we add at most 1000 new points to our optimization problem
+        if count > 1000
             break;
         end
     end
@@ -89,8 +89,8 @@ while ~optimal
     Apx = [Apx; Apx_add];
     bpy = [bpy; bpy_add];
     
-    % Call function to solve LP
-    [Uvec, epsilon] = robustKoopmanLP_withCG(Apx, bpy, params);
+    % Call function to solve QP
+    [Uvec, epsilon] = solve_KoopmanQP(Apx, bpy, params);
     U = reshape(Uvec, [N,N]); 
     
 end

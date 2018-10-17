@@ -18,9 +18,6 @@
 %% Define system parameters (USER EDIT SECTION)
 params = struct;
 
-% Create progress bar
-params.progress = waitbar(0,'Initializing parameters...');
-
 params.getData = 'exp';            % ('exp, 'file', or 'sim')
 params.basis = 'fourier';   % ('fourier' or 'poly')
 
@@ -34,14 +31,18 @@ params.maxDegree = 1;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
+disp('Defining basis of observables...')
 if strcmp(basis, 'fourier')
     params = def_fourierLift(params);  % creates fourier lifting function, fourierLift;
 elseif strcmp(basis, 'poly')
     params = def_polyLift(params);  % creates polynomial lifting function, polyLift
 end
+disp('Done.')
 
-% Another Koopman fitting parameter to penalize model complexity
-params.t = (1/params.N) * params.N^2; % penalty on model complexity
+% Koopman sysid tuning parameters
+params.t        = (1/params.N) * params.N^2; % penalty on model complexity
+params.epsilon  = 1e-2; % model accuracy tolerance (larger value = less accurate)
+params.percSat  = 0.9;  % percentage of snapshot pa must satisfy accuracy tolerance
 
 % parameters for reading in data
 params.numTrials        = 6;        % numer of sysid trials
@@ -57,9 +58,11 @@ params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking n
 params.compareon           = true;  % boolean to decide whether to compare model simulation to validation data
 params.ploton              = true;  % boolean to turn error plot on or off
 
-%% Get data, either from data file or raw 
+%% Get training data
+[data, some_snapshotPairs] = get_trainingData(params);
 
 %% Learn the approximate Koopman operator and corresponding NL system
+koopman = koopmanSysid(some_snapshotPairs, params);
 
-%% Simulate the results and compare to 
+%% Simulate the results and compare to validation trial(s)
 
