@@ -18,7 +18,7 @@
 %% Define system parameters (USER EDIT SECTION)
 params = struct;
 
-params.getData = 'exp';            % ('exp, 'file', or 'sim')
+params.getData = 'file';            % ('exp, 'file', or 'sim')
 params.basis = 'poly';   % ('fourier' or 'poly')
 
 % Koopman Sysid parameters

@@ -18,7 +18,7 @@ N = size(Px,2);
 %% Solve for inital Koopman Operator wish subset of data points
 
 % Build Apx sparsely with 10% of snapshotPairs
-Ktithe = min( floor(K/2) , 1000 );   % roughly 50% of total snapshotPairs, at most 1000 
+Ktithe = min( floor(K) , 1000 );   % roughly 50% of total snapshotPairs, at most 1000 
 row = zeros(Ktithe*N^2,1);
 col = zeros(Ktithe*N^2,1);
 val = zeros(Ktithe*N^2,1);
@@ -31,7 +31,8 @@ Apx = sparse(row, col, val, Ktithe*N, N*N);
 bpy = reshape(Py(1:Ktithe,:)', [Ktithe*N,1]);
 
 % Call function that solves QP problem
-Uvec = solve_KoopmanQP(Apx, bpy, params);
+Uvec = solve_KoopmanQP(Px, Py, params);
+% Uvec = solve_KoopmanQP(Apx, bpy, params);
 U = reshape(Uvec, [N,N]);
 
 %% Check which points the solution holds for, and repeat process as necessary
