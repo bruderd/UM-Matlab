@@ -1,4 +1,4 @@
-function [ Uvec , epsilon ] = solve_KoopmanQP( A , b , params )
+function Uvec = solve_KoopmanQP( A , b , params )
 %solve_KoopmanQP: Summary of this function goes here
 %   Detailed explanation goes here
 

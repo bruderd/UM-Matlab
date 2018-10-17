@@ -9,7 +9,7 @@ function out = koopmanSysid( snapshotPairs, params )
 [x,y] = deal(snapshotPairs.x, snapshotPairs.y);
 % [x,y, L_scale, R_scale] = scale_snapshotPairs( snapshotPairs , params );    % scale the snapshot pairs to help with model fitting
 disp('Finding Koopman operator approximation...');
-[U, epsilon] = get_KoopmanConstGen( x,y, params );
+U = get_KoopmanConstGen( x,y, params );
 disp('Done');
 
 %% Calculate the infiniesimal generator as funtion of coeffients, and from data (DNE)
@@ -35,6 +35,5 @@ out.U       = U;            % koopman operator
 out.Ldata   = Ldata;        % inf. generator from data
 out.w       = w;            % matrix of coefficients of polybasis
 out.vf      = @vf_koopman;  % function handle for dynamics of sysid'd sys.
-out.epsilon = epsilon;      % residual error for each basis function
 
 end

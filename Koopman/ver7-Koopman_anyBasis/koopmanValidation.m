@@ -21,7 +21,6 @@ for j = 1 : valparams.numVals
     
     x0sim = valdata.x(1,:)'; % same initial state as validation data initial state
     [tsysid, xsysid] = ode45(@(t,x) vf_koopman(x, get_u(t, x, valdata, valparams)), tspan, x0sim);
-%     [tsysid, xsysid] = ode45(@(t,x) vf_koopman(x, get_u(t, x, valdata, valparams)), tspan, x0sim);
 %     [tsysid, xsysid] = deal(treal, xreal);  % JUST A PLACEHOLDER. USE THIS IF WANT TO AVOID INTEGRATION ERROR
     
     % simulated forward using the transpose of Koopman operator (Note: this may be a scaled version of U)
@@ -30,7 +29,7 @@ for j = 1 : valparams.numVals
     xkoop(1,:) = x0sim';
     for i = 2 : length(tspan)
         ti = tspan(i);
-        xnext = xselector * koopman.U' * polyLift( xkoop(i-1,:)' , get_u(ti, 0, valdata, valparams) );
+        xnext = xselector * koopman.U' * stateLift( xkoop(i-1,:)' , get_u(ti, 0, valdata, valparams) );
         xkoop(i,:) = xnext';
     end
     
@@ -40,7 +39,7 @@ for j = 1 : valparams.numVals
 %     xkoop(1,:) = x0sim';
 %     for i = 2 : length(tspan)
 %         ti = tspan(i);
-%         xnext = xselector * koopman.U' * polyLift( xreal(i-1,:)' , get_u(ti, 0, valdata, valparams) );
+%         xnext = xselector * koopman.U' * stateLift( xreal(i-1,:)' , get_u(ti, 0, valdata, valparams) );
 %         xkoop(i,:) = xnext';
 %     end
     
@@ -84,13 +83,8 @@ for j = 1 : valparams.numVals
         plot(tspan, xkoop(:,1:ceil(valparams.n)))
         title('Koopman Transpose Sim')
     end
-    
-    
-    % % animate the results
-    % animate_doublePendulum(sol_real, sol_sysid, valparams);
 
 end
-
 
 end
 

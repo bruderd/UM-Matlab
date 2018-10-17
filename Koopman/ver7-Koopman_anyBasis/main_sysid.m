@@ -18,8 +18,8 @@
 %% Define system parameters (USER EDIT SECTION)
 params = struct;
 
-params.getData = 'exp';            % ('exp, 'file', or 'sim')
-params.basis = 'fourier';   % ('fourier' or 'poly')
+params.getData = 'file';            % ('exp, 'file', or 'sim')
+params.basis = 'poly';   % ('fourier' or 'poly')
 
 % Koopman Sysid parameters
 params.n = 3;   % dimension of state space (including state derivatives)
@@ -32,9 +32,9 @@ params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
 disp('Defining basis of observables...')
-if strcmp(basis, 'fourier')
+if strcmp(params.basis, 'fourier')
     params = def_fourierLift(params);  % creates fourier lifting function, fourierLift;
-elseif strcmp(basis, 'poly')
+elseif strcmp(params.basis, 'poly')
     params = def_polyLift(params);  % creates polynomial lifting function, polyLift
 end
 disp('Done.')
@@ -55,9 +55,9 @@ params.systemName          = 'snake_5000pts_scale1_fourierBasis_allData';  % nam
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % output parameters
-params.compareon           = true;  % boolean to decide whether to compare model simulation to validation data
-params.ploton              = true;  % boolean to turn error plot on or off
-params.iddataon            = false; % boolean to convert simulation results to iddata format
+params.validateon          = true;  % boolean to decide whether to validate the model
+params.ploton              = true;  % boolean to turn validation/error/compare plot on or off
+params.compareon           = true;  % boolean to decide whether to convert to iddata and compare to validation data with Matlab compare function
 
 %% Get training data
 [data, some_snapshotPairs] = get_trainingData(params);
@@ -66,4 +66,15 @@ params.iddataon            = false; % boolean to convert simulation results to i
 koopman = koopmanSysid(some_snapshotPairs, params);
 
 %% Simulate the results and compare to validation trial(s)
+if params.validateon
+    disp('Comparing to validation data set...');
+    [error, koopsim] = koopmanValidation( data, params, koopman );
+    disp('Done.')
+end
 
+%% Convert to iddata and compare to validation data
+if params.compareon
+    disp('Converting to iddata format...');
+    data4sysid = get_data4sysid( data , koopsim , params );
+    disp('Done.')
+end

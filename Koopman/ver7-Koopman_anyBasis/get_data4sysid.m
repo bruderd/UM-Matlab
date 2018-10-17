@@ -1,23 +1,7 @@
-
-
-%% Use Koopman operator to perform sysid
-waitbar(.5,progress,'Performing Koopman based system identification...');
-
-
-
-%% error
-waitbar(0.75,progress,'Comparing to validation data set...');
-
-% [error, xkoop] = koopmanSimulation( data.validation, params, koopman ); % only uses koopman transpose, no ODE
-if strcmp(basis, 'fourier')
-    [error, koopsim] = koopmanValidation_fourier( data, params, koopman );
-elseif strcmp(basis, 'poly')
-    [error, koopsim] = koopmanValidation( data, params, koopman );
-end
-
-
-%% compare koopman results to those from sysid toolbox
-waitbar(0.85,progress,'Preparing data for Matlab SysId toolbox...');
+function [ data4sysid ] = get_data4sysid( data , koopsim, params )
+%get_data4sysid: Converts trial, validation, and simulation data to iddata
+%format so that it can be compared to outputs of systems from matlab sysid
+%toolbox
 
 % convert data to a format matlabs sysid toolbox can use
 [zsysid_merged, zval_merged, zsysid, zval] = prep_iddata(data);
@@ -43,5 +27,5 @@ if params.ploton
     end
 end
 
-waitbar(1,progress,'Done.');
-close(progress);
+end
+

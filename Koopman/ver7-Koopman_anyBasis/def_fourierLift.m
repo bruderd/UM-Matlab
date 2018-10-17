@@ -29,7 +29,7 @@ for i = 2 : naug
 end
 
 % create the lifting function: x -> p(x)
-matlabFunction(fourierBasis, 'File', 'fourierLift', 'Vars', {x, u});
+matlabFunction(fourierBasis, 'File', 'stateLift', 'Vars', {x, u});
 
 %% define derivative of lifted state with respect to x
 

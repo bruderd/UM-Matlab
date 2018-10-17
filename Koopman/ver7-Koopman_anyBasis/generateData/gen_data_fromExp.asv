@@ -9,26 +9,20 @@ alltrials = struct;
 
 %% Read in data from all trials
 
+num = params.numTrials;
 trialCount = 0;        % trial counter
 
 % Load in sysid data trials
 disp('Please select all .mat files corresponding to sysid trials:');
-[sysid_file,sysid_path] = uigetfile('MultiSelect','on');
+[data_file,data_path] = uigetfile('MultiSelect','on');
 
 alltrials.t = []; alltrials.y = []; alltrials.u = []; alltrials.x = [];
 x = []; y = [];
-for i = 1 : length(sysid_file)
+for i = 1 : length(data_file)
     trialCount = trialCount + 1;    % increment trial counter
     
-    % handle single file exception
-    if ~iscell(sysid_file)
-        file = sysid_file;
-    else
-        file = sysid_file{i};
-    end
-    
-    % generate data from the ith sysid trial
-    trialData = get_data(file, sysid_path, params);
+    % generate data from the ith s
+    trialData = get_data(data_file{i}, data_path, params);
     
     % append this data to the "alltrials" field of data
     alltrials.t = [alltrials.t; trialData.t];     % time vector
@@ -67,15 +61,8 @@ disp('Please select all .mat files corresponding to validation trials:');
 
 for j = 1 : length(val_file)
     
-    % handle single file exception
-    if ~iscell(val_file)
-        file = val_file;
-    else
-        file = val_file{j};
-    end
-    
     % generate data from the jth validation trial
-    valData = get_data(file, val_path, params);
+    valData = get_data(val_file{j}, val_path, params);
     
     % save this trial data to the output struct
     valID = ['val', num2str(j)];

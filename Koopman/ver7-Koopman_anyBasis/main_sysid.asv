@@ -42,7 +42,7 @@ disp('Done.')
 % Koopman sysid tuning parameters
 params.t        = (1/params.N) * params.N^2; % penalty on model complexity
 params.epsilon  = 1e-2; % model accuracy tolerance (larger value = less accurate)
-params.percSat  = 0.9;  % percentage of snapshot pa must satisfy accuracy tolerance
+params.percSat  = 0.9;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
 % parameters for reading in data
 params.numTrials        = 6;        % numer of sysid trials
@@ -55,8 +55,9 @@ params.systemName          = 'snake_5000pts_scale1_fourierBasis_allData';  % nam
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % output parameters
-params.compareon           = true;  % boolean to decide whether to compare model simulation to validation data
-params.ploton              = true;  % boolean to turn error plot on or off
+params.validateon;         = true;  % boolean to decide whether to validate the model
+params.ploton              = true;  % boolean to turn validation/error plot on or off
+params.compareon           = true;  % boolean to decide whether to convert to iddata and compare to validation data with Matlab compare function
 
 %% Get training data
 [data, some_snapshotPairs] = get_trainingData(params);
@@ -65,4 +66,9 @@ params.ploton              = true;  % boolean to turn error plot on or off
 koopman = koopmanSysid(some_snapshotPairs, params);
 
 %% Simulate the results and compare to validation trial(s)
-
+% [error, xkoop] = koopmanSimulation( data.validation, params, koopman ); % only uses koopman transpose, no ODE
+if strcmp(basis, 'fourier')
+    [error, koopsim] = koopmanValidation_fourier( data, params, koopman );
+elseif strcmp(basis, 'poly')
+    [error, koopsim] = koopmanValidation( data, params, koopman );
+end

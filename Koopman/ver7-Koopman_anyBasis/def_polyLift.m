@@ -31,7 +31,7 @@ end
 psi = exponents';
 
 % create the lifting function: x -> p(x)
-matlabFunction(polyBasis, 'File', 'polyLift', 'Vars', {x, u});
+matlabFunction(polyBasis, 'File', 'stateLift', 'Vars', {x, u});
 
 %% define derivative of lifted state with respect to x
 

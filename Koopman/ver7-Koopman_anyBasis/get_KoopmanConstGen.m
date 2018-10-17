@@ -1,4 +1,4 @@
-function [U, epsilon] = get_KoopmanConstGen( x,y, params )
+function U = get_KoopmanConstGen( x,y, params )
 %get_KoopmanConstGen: Find the best possible koopman operator given
 %snapshot pairs using constraint generation to deal with large data sets.
 %   Detailed explanation goes here
@@ -8,13 +8,8 @@ function [U, epsilon] = get_KoopmanConstGen( x,y, params )
 Px = zeros(length(x), params.N);
 Py = zeros(length(x), params.N);
 for i = 1:length(x)
-    if strcmp(params.basis, 'fourier')
-        Px(i,:) = fourierLift( x(i, 1:n)', x(i, n+1:n+p)' )';
-        Py(i,:) = fourierLift( y(i, 1:n)', y(i, n+1:n+p)' )';
-    elseif strcmp(params.basis, 'poly')
-        Px(i,:) = polyLift( x(i, 1:n)', x(i, n+1:n+p)' )';
-        Py(i,:) = polyLift( y(i, 1:n)', y(i, n+1:n+p)' )';
-    end
+    Px(i,:) = stateLift( x(i, 1:n)', x(i, n+1:n+p)' )';
+    Py(i,:) = stateLift( y(i, 1:n)', y(i, n+1:n+p)' )';
 end
 
 K = size(Px,1);
@@ -36,7 +31,7 @@ Apx = sparse(row, col, val, Ktithe*N, N*N);
 bpy = reshape(Py(1:Ktithe,:)', [Ktithe*N,1]);
 
 % Call function that solves QP problem
-[Uvec, epsilon] = solve_KoopmanQP(Apx, bpy, params);
+Uvec = solve_KoopmanQP(Apx, bpy, params);
 U = reshape(Uvec, [N,N]);
 
 %% Check which points the solution holds for, and repeat process as necessary
@@ -64,7 +59,7 @@ while ~optimal
     
     % print progress and check if all (most) of the constraints are satisfied
     progress = 100 * sum(satConst)/K;
-    disp(['Epsilon = ', num2str(mean(epsilon))]);     % print the average value of epsilon
+    disp(['Epsilon = ', num2str(mean(params.epsilon))]);     % print the average value of epsilon
     disp([num2str(progress), '% of constraints satisfied']);    % print percentage of constraints satisfied
     if (sum(satConst) > 0.9*K)
         optimal = true;
@@ -90,7 +85,7 @@ while ~optimal
     bpy = [bpy; bpy_add];
     
     % Call function to solve QP
-    [Uvec, epsilon] = solve_KoopmanQP(Apx, bpy, params);
+    Uvec = solve_KoopmanQP(Apx, bpy, params);
     U = reshape(Uvec, [N,N]); 
     
 end
