@@ -1,4 +1,4 @@
-function Uvec = solve_KoopmanQP( Px, Py , params )
+function Uvec = solve_KoopmanQP_old( A, b , params )
 %solve_KoopmanQP: Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -31,14 +31,14 @@ nx = params.N^2;
 
 M = sparse( [eye(params.N^2) , -eye(params.N^2)] );
 
-PxTPx = Px' * Px;
-PyTPy = Py' * Py;
-ATA = sparse( kron(eye(params.N) , PxTPx) );  % repeat blocks diagonally N times
-ATb = reshape(PyTPy, [params.N^2 , 1]);
+% PxTPx = Px' * Px;
+% PyTPy = Py' * Py;
+% ATA = sparse( kron(eye(params.N) , PxTPx) );  % repeat blocks diagonally N times
+% ATb = reshape(PyTPy, [params.N^2 , 1]);
 
 % L2 error as cost function
-H = M' * ATA * M;
-f = -M' * ATb;
+H = M' * A' * A * M;
+f = -M' * A' * b;
 
 % L1 regularization enforced as constraint
 t = params.t;
@@ -58,4 +58,3 @@ xout = M * x;
 Uvec = xout(1:nx);
 
 end
-
