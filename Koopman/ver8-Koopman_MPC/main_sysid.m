@@ -19,7 +19,7 @@
 params = struct;
 
 params.getData = 'file';            % ('exp, 'file', or 'sim')
-params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser')
+params.basisID = 'fourier_sparser';   % ('fourier' or 'poly' or 'fourier_sparser')
 
 % Koopman Sysid parameters
 params.n = 3;   % dimension of state space (including state derivatives)
@@ -27,7 +27,7 @@ params.p = 1;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum "degree" for basis elements (NOTE: m1 = 1)
-params.maxDegree = 3;   % maximum degree of vector field monomial basis
+params.maxDegree = 1;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
@@ -42,18 +42,18 @@ end
 disp('Done.')
 
 % Koopman sysid tuning parameters
-params.t        = 1.8 * params.N; % penalty on model complexity
+params.t        = 7 * params.N; % penalty on model complexity
 params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
 % parameters for reading in data
-params.numTrials        = 4;        % numer of sysid trials
-params.numVals          = 4;        % number of validation trials
+params.numTrials        = 1;        % numer of sysid trials
+params.numVals          = 1;        % number of validation trials
 params.Ts               = 0.02;     % sampling period
 params.K                = 5000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 
-params.systemName          = 'snake_5000pts_scale1_polyBasis_3sData';  % name of current system
+params.systemName          = 'MPCbasisTest_snake_3s';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % output parameters
@@ -65,12 +65,14 @@ params.compareon           = true;  % boolean to decide whether to convert to id
 [data, some_snapshotPairs] = get_trainingData(params);
 
 %% Learn the approximate Koopman operator and corresponding NL system
-koopman = koopmanSysid(some_snapshotPairs, params);
+U               = get_KoopmanConstGen( some_snapshotPairs, params );
+% statespaceSys   = sysid_statespaceSys( U, some_snapshotPairs, params );
+liftedSys       = sysid_liftedSys( U, params );
 
 %% Simulate the results and compare to validation trial(s)
 if params.validateon
     disp('Comparing to validation data set...');
-    [error, koopsim] = koopmanValidation( data, params, koopman );
+    [error, koopsim] = koopmanValidation( data, params, statespaceSys );
     disp('Done.')
 end
 

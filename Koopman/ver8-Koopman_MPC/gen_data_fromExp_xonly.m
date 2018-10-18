@@ -1,4 +1,4 @@
-function data = gen_data_fromExp( params )
+function data = gen_data_fromExp_xonly( params )
 %genData_fromExp: Generate system data and snapshot pairs from experimental
 %data
 %   Detailed explanation goes here
@@ -12,17 +12,14 @@ alltrials = struct;
 num = params.numTrials;
 trialCount = 0;        % trial counter
 
-% Load in sysid data trials
-disp('Please select all .mat files corresponding to sysid trials:');
-[data_file,data_path] = uigetfile('MultiSelect','on');
-
 alltrials.t = []; alltrials.y = []; alltrials.u = []; alltrials.x = [];
 x = []; y = [];
-for i = 1 : length(data_file)
+for i = 1:num
     trialCount = trialCount + 1;    % increment trial counter
     
-    % generate data from the ith s
-    trialData = get_data(data_file{i}, data_path, params);
+    % generate data from one simulation
+    disp(['Please select .mat file corresponding to trial number ', num2str(i), '...']);
+    trialData = get_data_xonly(params);
     
     % append this data to the "alltrials" field of data
     alltrials.t = [alltrials.t; trialData.t];     % time vector
@@ -47,41 +44,27 @@ for i = 1 : length(data_file)
     
 end
 
-
 % define snapshotPairs struct
 snapshotPairs = struct;
 snapshotPairs.x = x;
 snapshotPairs.y = y;
 
-%% Read in validation data set(s)
+%% Read in validation data set
 
-% Load in validation data trials
-disp('Please select all .mat files corresponding to validation trials:');
-[val_file,val_path] = uigetfile('MultiSelect','on');
-
-for j = 1 : length(val_file)
-    
-    % generate data from the jth validation trial
-    valData = get_data(val_file{j}, val_path, params);
-    
-    % save this trial data to the output struct
-    valID = ['val', num2str(j)];
-    data.(valID) = valData;   
-
-end
+disp(['Please select .mat file corresponding to validation trial...']);
+validation = get_data_xonly(params);
 
 
 %% Define output
 
 data.alltrials = alltrials;     % saves data from all trials as a single timeseries
 data.snapshotPairs = snapshotPairs;
-data.validation = data.val1;   % a trial that can be used for model validation
+data.validation = validation;   % trial that can be used for model validation
 data.valparams = params;   % saves params used for validation so we can remember
 
 %% save datafile without overwriting previous files with same name
 % SaveWithNumber(['dataFiles', filesep, params.systemName, '.mat'], data);
 [unique_fname, change_detect] = auto_rename(['dataFiles', filesep, params.systemName, '.mat'], '0');
 save(unique_fname, 'data');
-
 
 end
