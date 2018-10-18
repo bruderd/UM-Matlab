@@ -23,11 +23,11 @@ params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser')
 
 % Koopman Sysid parameters
 params.n = 3;   % dimension of state space (including state derivatives)
-params.p = 1;   % dimension of input
+params.p = 3;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum "degree" for basis elements (NOTE: m1 = 1)
-params.maxDegree = 2;   % maximum degree of vector field monomial basis
+params.maxDegree = 4;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
@@ -42,18 +42,18 @@ end
 disp('Done.')
 
 % Koopman sysid tuning parameters
-params.t        = 1.8 * params.N; % penalty on model complexity
+params.t        = 7 * params.N; % penalty on model complexity
 params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
 % parameters for reading in data
-params.numTrials        = 1;        % numer of sysid trials
-params.numVals          = 1;        % number of validation trials
+params.numTrials        = 4;        % numer of sysid trials
+params.numVals          = 4;        % number of validation trials
 params.Ts               = 0.02;     % sampling period
 params.K                = 5000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 
-params.systemName          = 'sinTest_2pts_scale1_polyBasis_debug';  % name of current system
+params.systemName          = 'flaccy_5000pts_scale1_polyBasis_noderivs';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % output parameters

@@ -18,8 +18,8 @@
 %% Define system parameters (USER EDIT SECTION)
 params = struct;
 
-params.getData = 'file';            % ('exp, 'file', or 'sim')
-params.basisID = 'fourier';   % ('fourier' or 'poly' or 'fourier_sparser')
+params.getData = 'exp';            % ('exp, 'file', or 'sim')
+params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser')
 
 % Koopman Sysid parameters
 params.n = 3;   % dimension of state space (including state derivatives)
@@ -27,7 +27,7 @@ params.p = 1;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 
 % select maximum "degree" for basis elements (NOTE: m1 = 1)
-params.maxDegree = 1;   % maximum degree of vector field monomial basis
+params.maxDegree = 6;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
@@ -42,7 +42,7 @@ end
 disp('Done.')
 
 % Koopman sysid tuning parameters
-params.t        = 2 * params.N; % penalty on model complexity
+params.t        = 1.8 * params.N; % penalty on model complexity
 params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 

@@ -29,20 +29,21 @@ nx = params.N^2;
 % x is vectorized Koopman operator, decomposed into positive and negative parts of each entry x = [u11+, ..., uNN+, u11-, ... , uNN-]';
 % Uvec = M * x, where M subtracts the + and - parts of each entry: uij+ - uij-
 
-M = sparse( [eye(params.N^2) , -eye(params.N^2)] );
+M = [speye(params.N^2) , -speye(params.N^2)];
 
 PxTPx = Px' * Px;
 PxTPy = Px' * Py;
-ATA = sparse( kron(eye(params.N) , PxTPx) );  % repeat blocks diagonally N times
+ATA = kron(speye(params.N) , PxTPx);  % repeat blocks diagonally N times
 ATb = reshape(PxTPy, [params.N^2 , 1]);
 
 % L2 error as cost function
-H = M' * ATA * M;
+preH = ATA * M;
+H = M' * preH;
 f = -M' * ATb;
 
 % L1 regularization enforced as constraint
 t = params.t;
-Aq = [ -eye(2*params.N^2) ; ones(1 , 2*params.N^2) ];
+Aq = [ -speye(2*params.N^2) ; ones(1 , 2*params.N^2) ];
 bq = [ zeros(2*params.N^2 , 1) ; t ];
 
 % Solve the quadratic program
