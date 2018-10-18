@@ -5,7 +5,7 @@ function params = def_fourierLift( params )
 [n, p, naug, maxDegree] = deal(params.n, params.p, params.naug, params.maxDegree);
 
 x = sym('x', [n, 1]);   % state variable x
-% u = sym('u', [p, 1]);   % input vector u
+u = sym('u', [p, 1]);   % input vector u
 % xaug = [x; u];   % augmented state variable;
 
 % Number of basis elements, i.e. dimenstion of p(x)
@@ -45,7 +45,7 @@ params.jacobianBasis = dlift;   % symbolic jacobian of the vector of basis monom
 params.N = N;   % dimension of basis
 params.Np = N + p;  % dimension of the lifted state
 params.x = x;   % symbolic state variable
-% params.u = u;   % symbolic input variable
+params.u = u;   % symbolic input variable
 % params.xaug = xaug; % symbolic augmented state variable
 
 end

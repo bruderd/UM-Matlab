@@ -7,7 +7,7 @@ function params = def_polyLift( params )
 [n, p, naug, maxDegree] = deal(params.n, params.p, params.naug, params.maxDegree);
 
 x = sym('x', [n, 1]);   % state variable x
-% u = sym('u', [p, 1]);   % input vector u
+u = sym('u', [p, 1]);   % input vector u
 % xaug = [x; u];   % augmented state variable;
 
 % Number of mononials, i.e. dimenstion of p(x)
@@ -45,7 +45,7 @@ params.N = N;   % dimension of polyBasis
 params.Np = N + p; % dimension of the lifted state
 params.psi = psi;   % monomial exponent index function
 params.x = x;   % symbolic state variable
-% params.u = u;   % symbolic input variable
+params.u = u;   % symbolic input variable
 % params.xaug = xaug; % symbolic augmented state variable
 
 end

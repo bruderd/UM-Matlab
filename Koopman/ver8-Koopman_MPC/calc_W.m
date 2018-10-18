@@ -3,7 +3,7 @@ function W = calc_W( L , dataPoints , params)
 %   Detailed explanation goes here
 
 n = params.n;       % dimension of state, x
-N = params.N;       % length of the basis
+N = params.Np;       % length of the basis
 K = params.K; % size(dataPoints,1);     % total number of datapoints
 
 Ldiag = kron( ones(K,1) , L');    % diagonally stack the transpose of L
@@ -13,7 +13,7 @@ dpsi_dx = zeros(K*N, n);
 for i = 1 : K
     x = dataPoints( i , 1:n )';
     u = dataPoints( i , (n+1):end )';
-    dpsi_dx( (i-1)*N+1 : i*N , : ) =  jacobianLift(x,u);
+    dpsi_dx( (i-1)*N+1 : i*N , : ) =  [ jacobianLift(x) ; zeros(params.p , params.n)];
 end
 
 W = dpsi_dx \ Ldiag;

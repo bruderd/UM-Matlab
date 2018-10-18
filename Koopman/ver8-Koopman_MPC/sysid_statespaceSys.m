@@ -22,7 +22,7 @@ w = calc_W(Ldata,snapshotPairs.x,params);
 % w = L_scale * w * R_scale;    % scale the coefficients back up so that they can explain dynamics of real model
 
 % dynamics (gives symbolic expression in terms of state and input)
-vf2 = w * params.Basis;
+vf2 = w * [params.Basis ; params.u];
 
 matlabFunction(vf2, 'File', 'vf_koopman', 'Vars', {params.x, params.u});
 

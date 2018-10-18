@@ -7,7 +7,7 @@ UT = U';    % transpose of koopman operator
 
 A = UT( 1 : params.N , 1 : params.N );
 B = UT( 1 : params.N , params.N+1 : end );
-C = [eye(params.n), zeros(params.n , params.Np - params.n)];   % C selects the first n entries of the lifted state
+C = [eye(params.n), zeros(params.n , params.N - params.n)];   % C selects the first n entries of the lifted state
 
 %% define outputs
 out.A = A;

@@ -66,7 +66,7 @@ params.compareon           = true;  % boolean to decide whether to convert to id
 
 %% Learn the approximate Koopman operator and corresponding NL system
 U               = get_KoopmanConstGen( some_snapshotPairs, params );
-% statespaceSys   = sysid_statespaceSys( U, some_snapshotPairs, params );
+statespaceSys   = sysid_statespaceSys( U, some_snapshotPairs, params );
 liftedSys       = sysid_liftedSys( U, params );
 
 %% Simulate the results and compare to validation trial(s)
