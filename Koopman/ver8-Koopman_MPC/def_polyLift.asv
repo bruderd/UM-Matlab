@@ -7,11 +7,11 @@ function params = def_polyLift( params )
 [n, p, naug, maxDegree] = deal(params.n, params.p, params.naug, params.maxDegree);
 
 x = sym('x', [n, 1]);   % state variable x
-% u = sym('u', [p, 1]);   % input vector u
+u = sym('u', [p, 1]);   % input vector u
 % xaug = [x; u];   % augmented state variable;
 
 % Number of mononials, i.e. dimenstion of p(x)
-N = factorial(n + maxDegree) / ( factorial(n) * factorial(maxDegree) );
+N = n + factorial(n + maxDegree) / ( factorial(n) * factorial(maxDegree) );
 
 % Number of monomials in basis set for observables to be mapped through Lkj
 N1 = factorial(n + params.m1) / ( factorial(n) * factorial(params.m1) );
@@ -23,9 +23,12 @@ for i = 1:maxDegree
 end
 
 % create vector of orderd monomials (column vector)
-for i = 1:N
+for i = 1:N-n
     polyBasis(i,1) = get_monomial(x, exponents(i,:));
 end
+
+% put the full state at the beginnig of the basis vector
+fourierBasis = [x ; fourierBasis];
 
 % define matrix of exponents: columns=monomial term, rows=dimension of x
 psi = exponents';
@@ -42,10 +45,10 @@ matlabFunction(dlift, 'File', 'jacobianLift', 'Vars', {x});
 params.Basis = polyBasis;    % symbolic vector of basis monomials, p(x)
 params.jacobianBasis = dlift;
 params.N = N;   % dimension of polyBasis
-params.N1 = N1; % dimension of basis of observables to be mapped through Lkj
+params.Np = N + p; % dimension of the lifted state
 params.psi = psi;   % monomial exponent index function
 params.x = x;   % symbolic state variable
 params.u = u;   % symbolic input variable
-params.xaug = xaug; % symbolic augmented state variable
+% params.xaug = xaug; % symbolic augmented state variable
 
 end

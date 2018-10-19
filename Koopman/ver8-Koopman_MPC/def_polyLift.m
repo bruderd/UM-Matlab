@@ -23,12 +23,15 @@ for i = 1:maxDegree
 end
 
 % create vector of orderd monomials (column vector)
-for i = 1:N
+for i = 1:N-n
     polyBasis(i,1) = get_monomial(x, exponents(i,:));
 end
 
 % define matrix of exponents: columns=monomial term, rows=dimension of x
 psi = exponents';
+
+% put the full state at the beginnig of the basis vector
+polyBasis = [x ; polyBasis];
 
 % create the lifting function: x -> p(x)
 matlabFunction(polyBasis, 'File', 'stateLift', 'Vars', {x});
