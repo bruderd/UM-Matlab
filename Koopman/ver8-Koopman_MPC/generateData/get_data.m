@@ -51,7 +51,7 @@ if data_ext == '.mat'
         x = [xfilt, xdotfilt];
         
  %       % SCALE DATA (REMOVE THIS LATER!!)
-        [x, uq] = scale_    data(x, uq);
+        [x, uq] = scale_data(x, uq);
         
         % define output
         trialData.t = tq;

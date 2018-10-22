@@ -46,12 +46,13 @@ params.t        = 5 * params.N; % penalty on model complexity
 params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
-% parameters for reading in data
+% parameters for reading in data (these affect how shapshot pairs built from raw data).
 params.numTrials        = 1;        % numer of sysid trials
 params.numVals          = 1;        % number of validation trials
 params.Ts               = 0.02;     % sampling period
 params.K                = 5000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
+params.nd               = 2;        % number of delays to include in the snapshot pairs
 
 params.systemName          = 'dp_100s_scale01_5000pts';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
