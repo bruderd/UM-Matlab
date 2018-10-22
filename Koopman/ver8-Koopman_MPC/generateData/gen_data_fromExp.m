@@ -14,10 +14,15 @@ trialCount = 0;        % trial counter
 % Load in sysid data trials
 disp('Please select all .mat files corresponding to sysid trials:');
 [sysid_file,sysid_path] = uigetfile('MultiSelect','on');
+if iscell(sysid_file)
+    numTrials = length(sysid_file);
+else
+    numTrials = 1;
+end
 
 alltrials.t = []; alltrials.y = []; alltrials.u = []; alltrials.x = [];
 x = []; y = []; u = [];
-for i = 1 : length(sysid_file)
+for i = 1 : numTrials
     trialCount = trialCount + 1;    % increment trial counter
     
     % handle single file exception
@@ -56,7 +61,6 @@ for i = 1 : length(sysid_file)
     
 end
 
-
 % define snapshotPairs struct
 snapshotPairs = struct;
 snapshotPairs.x = x;
@@ -68,8 +72,13 @@ snapshotPairs.u = u;
 % Load in validation data trials
 disp('Please select all .mat files corresponding to validation trials:');
 [val_file,val_path] = uigetfile('MultiSelect','on');
+if iscell(val_file)
+    numVals = length(val_file);
+else
+    numVals = 1;
+end
 
-for j = 1 : length(val_file)
+for j = 1 : numVals
     
     % handle single file exception
     if ~iscell(val_file)

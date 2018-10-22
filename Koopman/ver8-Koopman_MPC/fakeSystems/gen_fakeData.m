@@ -12,10 +12,15 @@ Ts = params.Ts;     % sampling period
 x0 = params.x0;     % initial condition
 tf = params.tf;     % finel time (length of simulation)
 
-tspan = [0, tf];
+tspan = 0 : Ts : tf ;
 
-[t, v] = ode45(@(t,x) sysvf(x, sysinput(t), params), tspan, x0);   % simulate plant response input (defined below)
-u = sysinput(t);
+% Create vector of control inputs
+u = zeros(length(tspan) , params.p);
+for i = 1 : length(tspan)
+    u(i,:) = sysinput(tspan(i), params)';
+end
+
+[t, v] = ode45(@(t,x) sysvf(x, sysinput(t, params), params), tspan, x0);   % simulate plant response input (defined below)
 
 tq = (0:Ts:tf)';
 vq = interp1(t,v,tq);   % interpolate results to get samples at sampling interval Ts
@@ -27,14 +32,17 @@ sigma = 0.01;   % standard deviation
 noise = sigma .* randn(size(vq)) + mean;
 vq = vq + noise;
 
-% store data as a .mat file and a csv (make proper variable names for .mat)
+% Make proper variable names for .mat file
 t = tq;
 x = vq;
 u = uq;
 
-save( [sysName , '.mat'] , 't', 'x', 'u' );
+%% save datafile without overwriting previous files with same name
+% SaveWithNumber(['dataFiles', filesep, params.systemName, '.mat'], data);
+[unique_fname, change_detect] = auto_rename(['simData', filesep, sysName, '.mat'], '0');
+save(unique_fname, 't', 'x', 'u');
 
-% define output
+%% define output
 fakeData = struct;
 fakeData.t = tq;
 fakeData.x = vq;
