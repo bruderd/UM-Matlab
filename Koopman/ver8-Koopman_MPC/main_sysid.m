@@ -18,8 +18,8 @@
 %% Define system parameters (USER EDIT SECTION)
 params = struct;
 
-params.getData = 'file';            % ('exp, 'file', or 'sim')
-params.basisID = 'fourier_sparser';   % ('fourier' or 'poly' or 'fourier_sparser')
+params.getData = 'exp';            % ('exp, 'file', or 'sim')
+params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser')
 
 % Koopman Sysid parameters
 params.n = 4;   % dimension of state space (including state derivatives)
@@ -42,7 +42,7 @@ end
 disp('Done.')
 
 % Koopman sysid tuning parameters
-params.t        = 10 * params.N; % penalty on model complexity
+params.t        = 5 * params.N; % penalty on model complexity
 params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
