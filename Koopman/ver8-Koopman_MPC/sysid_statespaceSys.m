@@ -24,7 +24,7 @@ w = calc_W(Ldata,snapshotPairs.x,params);
 % dynamics (gives symbolic expression in terms of state and input)
 vf2 = w * [params.Basis ; params.u];
 
-matlabFunction(vf2, 'File', 'vf_koopman', 'Vars', {params.x, params.u});
+matlabFunction(vf2, 'File', 'vf_koopman', 'Vars', {params.x, params.u, params.xd, params.ud});
 
 
 %% Define outputs

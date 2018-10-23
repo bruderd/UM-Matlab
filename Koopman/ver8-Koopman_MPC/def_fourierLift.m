@@ -42,7 +42,7 @@ matlabFunction(dlift, 'File', 'jacobianLift', 'Vars', {x});
 %% output variables  
 params.Basis = fourierBasis;    % symbolic vector of basis functions, p(x)
 params.jacobianBasis = dlift;   % symbolic jacobian of the vector of basis monomials
-params.N = N;   % dimension of basis
+params.N = N;   % dimension of basis (including the state itself)
 params.Np = N + p;  % dimension of the lifted state
 params.x = x;   % symbolic state variable
 params.u = u;   % symbolic input variable

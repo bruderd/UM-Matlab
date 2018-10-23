@@ -7,7 +7,8 @@ disp('Finding Koopman operator approximation...');
 
 %% Extract snapshot pairs
 
-[x,y,u] = deal(snapshotPairs.x, snapshotPairs.y, snapshotPairs.u);
+% [x,y,u] = deal(snapshotPairs.x, snapshotPairs.y, snapshotPairs.u);
+[x,y,u] = deal(snapshotPairs.zeta_x, snapshotPairs.zeta_y, snapshotPairs.u);
 
 %% Build matrices
 

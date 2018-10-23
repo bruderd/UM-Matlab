@@ -4,51 +4,54 @@ function params = def_polyLift( params )
 % max_degree.
 %   e.g. 1 x1 x2 x1^2 x1x2 x2^2 ...
 
-[n, p, naug, maxDegree] = deal(params.n, params.p, params.naug, params.maxDegree);
+[n, p, nzeta, maxDegree] = deal(params.n, params.p, params.nzeta, params.maxDegree);
 
 x = sym('x', [n, 1]);   % state variable x
+xd = sym('xd', [params.nd * params.n, 1]);   % state delays i.e. for 2 delays: [x_i-1, x_i-2]'
+ud = sym('ud', [params.nd * params.p, 1]);   % input delays i.e. for 2 delays: [u_i-1, u_i-2]'
+zeta = [x ; xd; ud];    % state variable with delays
 u = sym('u', [p, 1]);   % input vector u
 % xaug = [x; u];   % augmented state variable;
 
 % Number of mononials, i.e. dimenstion of p(x)
-N = n + factorial(n + maxDegree) / ( factorial(n) * factorial(maxDegree) );
-
-% Number of monomials in basis set for observables to be mapped through Lkj
-N1 = factorial(n + params.m1) / ( factorial(n) * factorial(params.m1) );
+% N = n + factorial(n + maxDegree) / ( factorial(n) * factorial(maxDegree) );
+N = factorial(nzeta + maxDegree) / ( factorial(nzeta) * factorial(maxDegree) );
 
 % matrix of exponents (N x naug). Each row gives exponents for 1 monomial
-exponents = zeros(1,n);
+exponents = zeros(1,nzeta);
 for i = 1:maxDegree
-   exponents = [exponents; partitions(i, ones(1,n))]; 
+   exponents = [exponents; partitions(i, ones(1,nzeta))]; 
 end
 
 % create vector of orderd monomials (column vector)
-for i = 1:N-n
-    polyBasis(i,1) = get_monomial(x, exponents(i,:));
+for i = 1:N
+    polyBasis(i,1) = get_monomial(zeta, exponents(i,:));
 end
 
 % define matrix of exponents: columns=monomial term, rows=dimension of x
 psi = exponents';
 
-% put the full state at the beginnig of the basis vector
-polyBasis = [x ; polyBasis];
+% % put the full state at the beginnig of the basis vector
+% polyBasis = [zeta ; polyBasis];
 
 % create the lifting function: x -> p(x)
-matlabFunction(polyBasis, 'File', 'stateLift', 'Vars', {x});
+matlabFunction(polyBasis, 'File', 'stateLift', 'Vars', {zeta});
 
 %% define derivative of lifted state with respect to x
 
 dlift = jacobian(polyBasis,x);
-matlabFunction(dlift, 'File', 'jacobianLift', 'Vars', {x});
+matlabFunction(dlift, 'File', 'jacobianLift', 'Vars', {zeta});
 
 %% output variables  
 params.Basis = polyBasis;    % symbolic vector of basis monomials, p(x)
 params.jacobianBasis = dlift;
-params.N = N;   % dimension of polyBasis
+params.N = N;   % dimension of polyBasis (including the state itself)
 params.Np = N + p; % dimension of the lifted state
 params.psi = psi;   % monomial exponent index function
 params.x = x;   % symbolic state variable
 params.u = u;   % symbolic input variable
+params.xd = xd;
+params.ud = ud;
 % params.xaug = xaug; % symbolic augmented state variable
 
 end

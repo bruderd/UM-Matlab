@@ -13,6 +13,8 @@ index = datasample(s , 1:totalPairs , num , 'Replace' , false);
 some_snapshotPairs.x = snapshotPairs.x(index,:);
 some_snapshotPairs.y = snapshotPairs.y(index,:);
 some_snapshotPairs.u = snapshotPairs.u(index,:);
+some_snapshotPairs.zeta_x = snapshotPairs.zeta_x(index,:);
+some_snapshotPairs.zeta_y = snapshotPairs.zeta_y(index,:);
 
 end
 
