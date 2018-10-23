@@ -18,7 +18,7 @@
 %% Define system parameters (USER EDIT SECTION)
 params = struct;
 
-params.getData = 'exp';            % ('exp, 'file', or 'sim')
+params.getData = 'file';            % ('exp, 'file', or 'sim')
 params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).

@@ -17,7 +17,7 @@ for j = 1 : valparams.numVals
     [treal, xreal] = deal(tspan, valdata.x(index0 : end , :));
     
     
-    %% simulate the behavior of learned state space system
+    %% simulate the behavior of learned system
     
     % set initial condition
     x0 = valdata.x(index0 , :)';
@@ -118,14 +118,9 @@ function delays = get_delays(t, x, valdata, valparams)
         upast = [upast ; get_u(t,x,valdata,valparams)'];
     end
     
-    % remove repeated values caused by solver taking small steps
-    [tpast_unq, ind_unq] = unique(tpast);
-    xpast_unq = xpast(ind_unq, :);
-    upast_unq = upast(ind_unq, :);
-    
-    % interpolate to find values at valid sampling points
-    xq = interp1(tpast_unq, xpast_unq, valdata.t, 'linear', 0); % return 0 outside range
-    uq = interp1(tpast_unq, upast_unq, valdata.t, 'linear', 0); % return 0 outside range
+    tpast
+    xq = interp1(tpast, xpast, valdata.t, 'linear', 0); % return 0 outside range
+    uq = interp1(tpast, upast, valdata.t, 'linear', 0); % return 0 outside range
     
     % exclude values outsite the interpolation range
     xq_sofar = xq( ( xq(:,1) ~= 0 ) , :);
