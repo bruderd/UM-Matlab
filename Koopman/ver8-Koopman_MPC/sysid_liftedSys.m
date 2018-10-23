@@ -18,7 +18,7 @@ end
 out.A = A;
 out.B = B;
 out.C = C;
-out.sys = ss(A,B,C,0);  % state space system object
+out.sys = ss(A,B,C,0, params.Ts);  % discrete state space system object
 
 end
 

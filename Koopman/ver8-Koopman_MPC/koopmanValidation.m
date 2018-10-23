@@ -18,15 +18,15 @@ for j = 1 : valparams.numVals
     
     
     %% simulate the behavior of learned state space system
-    
-    % set initial condition
-    x0 = valdata.x(index0 , :)';
-
-    % simulate state space model
-    [tsysid, xsysid] = ode45(@(t,x) vf_koopman(x, get_delays(t, x, valdata, valparams) , get_u(t, x, valdata, valparams)), tspan, x0);
-    clear tpast xpast upast;    % clear persistent variables
-%     [tsysid, xsysid] = deal(treal, xreal);  % JUST A PLACEHOLDER. USE THIS IF WANT TO AVOID INTEGRATION ERROR
-
+%     
+%     % set initial condition
+%     x0 = valdata.x(index0 , :)';
+% 
+%     % simulate state space model
+%     [tsysid, xsysid] = ode45(@(t,x) vf_koopman(x, get_delays(t, x, valdata, valparams) , get_u(t, x, valdata, valparams)), tspan, x0);
+%     clear tpast xpast upast;    % clear persistent variables
+% %     [tsysid, xsysid] = deal(treal, xreal);  % JUST A PLACEHOLDER. USE THIS IF WANT TO AVOID INTEGRATION ERROR
+% 
 
     %% simulate the behavior of the learned lifted system
     
@@ -42,39 +42,42 @@ for j = 1 : valparams.numVals
     
     %% quantify the error between real behavior and simulated behavior
     
-    terror = treal;
-    xerror = abs( xreal - xsysid );
-%     xerror = abs( xreal - xkoop );
-    xerrormax = max(max(xerror(:,1:ceil(valparams.n/2))));
-    % xerrormin = min(min(xerror(:,1:ceil(valparams.n/2))));
-    RMSE = sqrt( sum( (xreal - xsysid).^2 ) / length(terror) );
+%     % quantify error
+%     terror = treal;
+%     xerror = abs( xreal - xsysid );
+% %     xerror = abs( xreal - xkoop );
+%     xerrormax = max(max(xerror(:,1:ceil(valparams.n/2))));
+%     % xerrormin = min(min(xerror(:,1:ceil(valparams.n/2))));
+%     RMSE = sqrt( sum( (xreal - xsysid).^2 ) / length(terror) );
+    error = 0;
     
-    % defind output
-    error.(valID).terror = terror;
-    error.(valID).xerror = xerror;
-    error.(valID).RMSE = RMSE;
+    %% define outputs
+%     error.(valID).terror = terror;
+%     error.(valID).xerror = xerror;
+%     error.(valID).RMSE = RMSE;
     
-    koopsim.(valID).t = tsysid;
-    koopsim.(valID).x = xsysid;
+    koopsim.(valID).t = tspan;
+%     koopsim.(valID).x = xsysid;       % should make this include both later...
+    koopsim.(valID).x = xss;
     
     
     %% plot the results
     
-    if valparams.ploton
-        figure
-        subplot(3,1,1)
-        plot(treal, xreal(:,1:ceil(valparams.n)))
-        title('Real system')
-        subplot(3,1,2)
-        plot(tsysid, xsysid(:,1:ceil(valparams.n)))
-        title('Identified system')
-        subplot(3,1,3)
-        hold on
-        plot(terror, xerror(:,1:ceil(valparams.n)))
-        plot(terror, xerrormax * ones(size(terror)), '--')
-        title('Error')
-        hold off
-    end
+%     if valparams.ploton
+%         figure
+%         subplot(3,1,1)
+%         plot(treal, xreal(:,1:ceil(valparams.n)))
+%         title('Real system')
+%         subplot(3,1,2)
+%         plot(tsysid, xsysid(:,1:ceil(valparams.n)))
+%         title('Identified system')
+%         subplot(3,1,3)
+%         hold on
+%         plot(terror, xerror(:,1:ceil(valparams.n)))
+%         plot(terror, xerrormax * ones(size(terror)), '--')
+%         title('Error')
+%         hold off
+%     end
 
 end
 

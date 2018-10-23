@@ -51,7 +51,7 @@ if data_ext == '.mat'
         x = [xfilt, xdotfilt];
         
  %       % SCALE DATA (REMOVE THIS LATER!!)
-        [x, uq] = scale_data(x, uq);
+        [x, uq] = scale_data(x, uq, params);
         
         % define output
         trialData.t = tq;
@@ -71,7 +71,7 @@ if data_ext == '.mat'
         xfilt = movmean(xq, params.filterWindow(1));
         
    %     % SCALE DATA (REMOVE THIS LATER!!)
-        [xfilt, uq] = scale_data(xfilt, uq);
+        [xfilt, uq] = scale_data(xfilt, uq, params);
 %    %     % ISOLATE x coordinate
 %         xfilt = xfilt(:,1);
 

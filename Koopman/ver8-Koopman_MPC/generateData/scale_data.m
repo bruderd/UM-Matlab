@@ -1,8 +1,8 @@
-function [ x_scaled, u_scaled ] = scale_data( x , u )
+function [ x_scaled, u_scaled ] = scale_data( x , u , params)
 %UNTITLED6 Summary of this function goes here
 %   Detailed explanation goes here
 
-scale = 0.1;
+scale = params.scale;
 n = size(x,2);
 p = size(u,2);
 

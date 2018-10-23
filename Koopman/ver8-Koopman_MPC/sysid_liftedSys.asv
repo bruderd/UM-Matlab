@@ -9,7 +9,7 @@ A = UT( 1 : params.N , 1 : params.N );
 B = UT( 1 : params.N , params.N+1 : end );
 
 if strcmp( params.basisID, 'poly' )
-    C = [zeros(params.n , 1) , eye(params.n) , zeros( params.n , params.N, - params.n - 1 )];
+    C = [zeros(params.n , 1) , eye(params.n) , zeros( params.n , params.N - params.n - 1 )];   % if poly we want to skip over first element of lifted state which is "1"
 else
     C = [eye(params.n), zeros(params.n , params.N - params.n)];   % C selects the first n entries of the lifted state
 end
@@ -18,6 +18,7 @@ end
 out.A = A;
 out.B = B;
 out.C = C;
+out.sys = ss(A,B,C,0, params.);  % state space system object
 
 end
 
