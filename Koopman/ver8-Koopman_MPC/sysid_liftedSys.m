@@ -18,6 +18,7 @@ end
 out.A = A;
 out.B = B;
 out.C = C;
+out.sys = ss(A,B,C,0);  % state space system object
 
 end
 

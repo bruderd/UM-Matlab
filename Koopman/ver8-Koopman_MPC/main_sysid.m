@@ -18,16 +18,16 @@
 %% Define system parameters (USER EDIT SECTION)
 params = struct;
 
-params.getData = 'file';            % ('exp, 'file', or 'sim')
+params.getData = 'exp';            % ('exp, 'file', or 'sim')
 params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
 params.numTrials        = 1;        % numer of sysid trials
 params.numVals          = 1;        % number of validation trials
 params.Ts               = 0.02;     % sampling period
-params.K                = 5000;     % numer of snapshotPairs to take
+params.K                = 3000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
-params.nd               = 1;        % number of delays to include in the snapshot pairs
+params.nd               = 0;        % number of delays to include in the snapshot pairs
 
 params.systemName          = 'dp_100s_scale01_5000pts';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
@@ -68,13 +68,13 @@ params.compareon           = true;  % boolean to decide whether to convert to id
 
 %% Learn the approximate Koopman operator and corresponding NL system
 U               = get_KoopmanConstGen( some_snapshotPairs, params );
-statespaceSys   = sysid_statespaceSys( U, some_snapshotPairs, params );
-liftedSys       = sysid_liftedSys( U, params );
+statespace      = sysid_statespaceSys( U, some_snapshotPairs, params );
+lifted          = sysid_liftedSys( U, params );
 
 %% Simulate the results and compare to validation trial(s)
 if params.validateon
     disp('Comparing to validation data set...');
-    [error, koopsim] = koopmanValidation( data, params, statespaceSys );
+    [error, koopsim] = koopmanValidation( data, params, statespace, lifted );
     disp('Done.')
 end
 

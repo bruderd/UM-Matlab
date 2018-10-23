@@ -17,7 +17,7 @@ disp('Done.')
 %% solve for the coefficients, i.e. Eq. (18) from Mauroy and Gonclaves (DNE)
 
 % matrix of coefficents of monomials
-w = calc_W(Ldata,snapshotPairs.x,params);
+w = calc_W(Ldata,snapshotPairs.zeta_x,params);
 
 % w = L_scale * w * R_scale;    % scale the coefficients back up so that they can explain dynamics of real model
 

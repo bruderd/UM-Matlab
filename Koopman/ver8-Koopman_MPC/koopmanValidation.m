@@ -1,4 +1,4 @@
-function [error, koopsim] = koopmanValidation( data, valparams, koopman )
+function [error, koopsim] = koopmanValidation( data, valparams, koopman, lifted )
 %koopmanValidation: Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -21,35 +21,23 @@ for j = 1 : valparams.numVals
     
     % set initial condition
     x0 = valdata.x(index0 , :)';
-%     xd0 = reshape( flipud( valdata.x(1 : valparams.nd , :) )' , [valparams.n * valparams.nd , 1] );
-%     ud0 = reshape( flipud( valdata.u(1 : valparams.nd , :) )' , [valparams.p * valparams.nd , 1] );
-%     zeta0 = [x0; xd0; ud0];   % same initial state as validation data initial state
 
+    % simulate state space model
     [tsysid, xsysid] = ode45(@(t,x) vf_koopman(x, get_delays(t, x, valdata, valparams) , get_u(t, x, valdata, valparams)), tspan, x0);
     clear tpast xpast upast;    % clear persistent variables
 %     [tsysid, xsysid] = deal(treal, xreal);  % JUST A PLACEHOLDER. USE THIS IF WANT TO AVOID INTEGRATION ERROR
+
+
+    %% simulate the behavior of the learned lifted system
     
-    % simulated forward using the transpose of Koopman operator (Note: this may be a scaled version of U)
-    xselector = [zeros(valparams.n,1), eye(valparams.n), zeros(valparams.n, valparams.N - valparams.n - 1)]; % matrix to extract state from lifted state
-    xkoop = zeros(length(tspan), valparams.n);
-%     xkoop(1,:) = x0sim';
-%     for i = 2 : length(tspan)
-%         ti = tspan(i);
-% %         xnext = xselector * koopman.U' * stateLift( xkoop(i-1,:)' , get_u(ti, 0, valdata, valparams) );
-%         xnext = xselector * koopman.U' * [ stateLift( xkoop(i-1,:)') ; get_u(ti, 0, valdata, valparams) ];
-%         xkoop(i,:) = xnext';
-%     end
+    % set initial condition
+    x0 = valdata.x(index0 , :)';
+    xd0 = reshape( flipud( valdata.x(1 : valparams.nd , :) )' , [valparams.n * valparams.nd , 1] );
+    ud0 = reshape( flipud( valdata.u(1 : valparams.nd , :) )' , [valparams.p * valparams.nd , 1] );
+    zeta0 = [x0; xd0; ud0];
     
-%     % FOR DEBUGGING: simulated forward using the transpose of Koopman operator, acting on real data points
-%     xselector = [zeros(valparams.n,1), eye(valparams.n), zeros(valparams.n, valparams.N - valparams.n - 1)]; % matrix to extract state from lifted state
-%     xkoop = zeros(length(tspan), valparams.n);
-%     xkoop(1,:) = x0sim';
-%     for i = 2 : length(tspan)
-%         ti = tspan(i);
-%         xnext = xselector * koopman.U' * stateLift( xreal(i-1,:)' , get_u(ti, 0, valdata, valparams) );
-%         xkoop(i,:) = xnext';
-%     end
-    
+    % simulate lifted linear model
+    [xss,tlifted,xlifted] = lsim(lifted.sys, valdata.u(index0 : end , :) , valdata.t(index0 : end , :) , stateLift(zeta0));
     
     
     %% quantify the error between real behavior and simulated behavior
@@ -74,21 +62,18 @@ for j = 1 : valparams.numVals
     
     if valparams.ploton
         figure
-        subplot(4,1,1)
+        subplot(3,1,1)
         plot(treal, xreal(:,1:ceil(valparams.n)))
         title('Real system')
-        subplot(4,1,2)
+        subplot(3,1,2)
         plot(tsysid, xsysid(:,1:ceil(valparams.n)))
         title('Identified system')
-        subplot(4,1,3)
+        subplot(3,1,3)
         hold on
         plot(terror, xerror(:,1:ceil(valparams.n)))
         plot(terror, xerrormax * ones(size(terror)), '--')
         title('Error')
         hold off
-        subplot(4,1,4)
-        plot(tspan, xkoop(:,1:ceil(valparams.n)))
-        title('Koopman Transpose Sim')
     end
 
 end
