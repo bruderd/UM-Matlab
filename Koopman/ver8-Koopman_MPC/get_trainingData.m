@@ -16,6 +16,7 @@ elseif strcmp(getData, 'file')
     [data_file,data_path] = uigetfile;
     matcontents = load([data_path, data_file]); % must be a .mat file
     data = matcontents.data;
+    data.valparams = params;    % makes sure that the params match the current problem
 end
 
 disp('Done.')
