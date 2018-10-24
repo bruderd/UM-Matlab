@@ -15,7 +15,7 @@ data4sysid.sysid = zsysid;
 for k = 1:params.numVals
     valID = ['val', num2str(k)];
     zID = ['z', num2str(k)];
-    data4sysid.valkoop.(zID) = iddata(koopsim.(valID).x, data.(valID).u, data.valparams.Ts, 'Name', 'Koopman');
+    data4sysid.valkoop.(zID) = iddata(koopsim.(valID).x, koopsim.(valID).u, data.valparams.Ts, 'Name', 'Koopman');
 end
 
 % show comparison of Koopman system verses ground truth

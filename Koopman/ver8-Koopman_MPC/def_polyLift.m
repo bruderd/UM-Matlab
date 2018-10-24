@@ -11,10 +11,8 @@ xd = sym('xd', [params.nd * params.n, 1]);   % state delays i.e. for 2 delays: [
 ud = sym('ud', [params.nd * params.p, 1]);   % input delays i.e. for 2 delays: [u_i-1, u_i-2]'
 zeta = [x ; xd; ud];    % state variable with delays
 u = sym('u', [p, 1]);   % input vector u
-% xaug = [x; u];   % augmented state variable;
 
 % Number of mononials, i.e. dimenstion of p(x)
-% N = n + factorial(n + maxDegree) / ( factorial(n) * factorial(maxDegree) );
 N = factorial(nzeta + maxDegree) / ( factorial(nzeta) * factorial(maxDegree) );
 
 % matrix of exponents (N x naug). Each row gives exponents for 1 monomial
@@ -30,9 +28,6 @@ end
 
 % define matrix of exponents: columns=monomial term, rows=dimension of x
 psi = exponents';
-
-% % put the full state at the beginnig of the basis vector
-% polyBasis = [zeta ; polyBasis];
 
 % create the lifting function: x -> p(x)
 matlabFunction(polyBasis, 'File', 'stateLift', 'Vars', {zeta});
@@ -50,8 +45,7 @@ params.Np = N + p; % dimension of the lifted state
 params.psi = psi;   % monomial exponent index function
 params.x = x;   % symbolic state variable
 params.u = u;   % symbolic input variable
-params.xd = xd;
-params.ud = ud;
-% params.xaug = xaug; % symbolic augmented state variable
+params.xd = xd; % symbolic state delays
+params.ud = ud; % symbolic input delays
 
 end

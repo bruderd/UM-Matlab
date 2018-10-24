@@ -19,7 +19,7 @@
 params = struct;
 
 params.getData = 'file';            % ('exp, 'file', or 'sim')
-params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser')
+params.basisID = 'fourier_sparser';   % ('fourier' or 'poly' or 'fourier_sparser')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
 params.numTrials        = 1;        % numer of sysid trials
@@ -28,7 +28,7 @@ params.Ts               = 0.02;     % sampling period
 params.K                = 3000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 params.scale            = 0.1;      % 
-params.nd               = 0;        % number of delays to include in the snapshot pairs
+params.nd               = 3;        % number of delays to include in the snapshot pairs
 
 params.systemName          = 'dp_100s_scale01_5000pts';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
@@ -40,7 +40,7 @@ params.naug = params.n + params.p; % dimension of augmented state (DNE)
 params.nzeta = params.n + params.nd * (params.naug);    % dimensinon of zeta (DNE)
 
 % select maximum "degree" for basis elements (NOTE: m1 = 1)
-params.maxDegree = 6;   % maximum degree of vector field monomial basis
+params.maxDegree = 1;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
@@ -55,7 +55,7 @@ end
 disp('Done.')
 
 % Koopman sysid tuning parameters
-params.t        = 10 * params.N; % penalty on model complexity
+params.t        = 0.9 * params.N; % penalty on model complexity
 params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 

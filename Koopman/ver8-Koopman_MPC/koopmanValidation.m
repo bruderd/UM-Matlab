@@ -59,6 +59,7 @@ for j = 1 : valparams.numVals
     koopsim.(valID).t = tspan;
 %     koopsim.(valID).x = xsysid;       % should make this include both later...
     koopsim.(valID).x = xss;
+    koopsim.(valID).u = valdata.u(index0 : end , :);
     
     
     %% plot the results

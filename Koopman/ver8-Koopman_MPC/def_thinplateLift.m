@@ -1,6 +1,6 @@
-function params = def_fourierLift( params )
-%def_fourierLift: Defines the lifting function that lifts state variable x to
-% a fourier basis
+function params = def_thinplateLift( params )
+%def_thinplateLift: Defines the lifting function that lifts state variable x to
+% a set of thin plate spline radial basis functions 
 
 [n, p, nzeta, maxDegree] = deal(params.n, params.p, params.nzeta, params.maxDegree);
 
@@ -11,7 +11,15 @@ zeta = [x ; xd; ud];    % state variable with delays
 u = sym('u', [p, 1]);   % input vector u
 
 % Number of basis elements, i.e. dimenstion of p(x)
-N = nzeta + (1 + 2*maxDegree)^nzeta; 
+N = nzeta + maxDegree; 
+
+% create basis functions with random centers in interval [-params.scale, params.scale]
+for i = 1 : maxDegree
+   zeta0 = params.scale * (2*rand([nzeta,1]) - 1); % random center
+   psi(i,:) = norm( zeta - zeta0 )^2 * log(zeta - zeta0) ;
+end
+
+
 
 % create sins of cosines of all the states
 poop = sym( zeros(1+2*maxDegree , nzeta) );
