@@ -1,18 +1,20 @@
-function [error, koopsim] = koopmanValidation( data, valparams, statespace, lifted )
+function [error, koopsim] = val_liftedSys( data, lifted )
 %koopmanValidation: Summary of this function goes here
 %   Detailed explanation goes here
+
+params = data.valparams;
 
 error = struct;     % error results comparing real and koopman system
 koopsim = struct;   % simulation results for koopman system
 
-for j = 1 : valparams.numVals
+for j = 1 : params.numVals
     %% real system
      
     % isolate the jth validation trial
     valID = ['val', num2str(j)];
     valdata = data.(valID);
     
-    index0 = valparams.nd + 1;  % index of the first state
+    index0 = params.nd + 1;  % index of the first state
     tspan = valdata.t(index0 : end);    % start simulation late so delays can be taken into account
     [treal, xreal] = deal(tspan, valdata.x(index0 : end , :));
     
@@ -23,7 +25,7 @@ for j = 1 : valparams.numVals
 %     x0 = valdata.x(index0 , :)';
 % 
 %     % simulate state space model
-%     [tsysid, xsysid] = ode45(@(t,x) vf_koopman(x, get_delays(t, x, valdata, valparams) , get_u(t, x, valdata, valparams)), tspan, x0);
+%     [tsysid, xsysid] = ode45(@(t,x) vf_koopman(x, get_delays(t, x, valdata, params) , get_u(t, x, valdata, params)), tspan, x0);
 %     clear tpast xpast upast;    % clear persistent variables
 % %     [tsysid, xsysid] = deal(treal, xreal);  % JUST A PLACEHOLDER. USE THIS IF WANT TO AVOID INTEGRATION ERROR
 % 
@@ -32,8 +34,8 @@ for j = 1 : valparams.numVals
     
     % set initial condition
     x0 = valdata.x(index0 , :)';
-    xd0 = reshape( flipud( valdata.x(1 : valparams.nd , :) )' , [valparams.n * valparams.nd , 1] );
-    ud0 = reshape( flipud( valdata.u(1 : valparams.nd , :) )' , [valparams.p * valparams.nd , 1] );
+    xd0 = reshape( flipud( valdata.x(1 : params.nd , :) )' , [params.n * params.nd , 1] );
+    ud0 = reshape( flipud( valdata.u(1 : params.nd , :) )' , [params.p * params.nd , 1] );
     zeta0 = [x0; xd0; ud0];
     
     % simulate lifted linear model
@@ -46,8 +48,8 @@ for j = 1 : valparams.numVals
 %     terror = treal;
 %     xerror = abs( xreal - xsysid );
 % %     xerror = abs( xreal - xkoop );
-%     xerrormax = max(max(xerror(:,1:ceil(valparams.n/2))));
-%     % xerrormin = min(min(xerror(:,1:ceil(valparams.n/2))));
+%     xerrormax = max(max(xerror(:,1:ceil(params.n/2))));
+%     % xerrormin = min(min(xerror(:,1:ceil(params.n/2))));
 %     RMSE = sqrt( sum( (xreal - xsysid).^2 ) / length(terror) );
     error = 0;
     
@@ -64,17 +66,17 @@ for j = 1 : valparams.numVals
     
     %% plot the results
     
-%     if valparams.ploton
+%     if params.ploton
 %         figure
 %         subplot(3,1,1)
-%         plot(treal, xreal(:,1:ceil(valparams.n)))
+%         plot(treal, xreal(:,1:ceil(params.n)))
 %         title('Real system')
 %         subplot(3,1,2)
-%         plot(tsysid, xsysid(:,1:ceil(valparams.n)))
+%         plot(tsysid, xsysid(:,1:ceil(params.n)))
 %         title('Identified system')
 %         subplot(3,1,3)
 %         hold on
-%         plot(terror, xerror(:,1:ceil(valparams.n)))
+%         plot(terror, xerror(:,1:ceil(params.n)))
 %         plot(terror, xerrormax * ones(size(terror)), '--')
 %         title('Error')
 %         hold off
@@ -85,26 +87,26 @@ end
 end
 
 
-function u = get_u(t, x, valdata, valparams)
+function u = get_u(t, x, valdata, params)
 %get_u: Interpolates to estimate the value of the input at a specific t
 
 u = interp1(valdata.t, valdata.u, t)';
 
 end
 
-function delays = get_delays(t, x, valdata, valparams)
+function delays = get_delays(t, x, valdata, params)
     
     persistent tpast xpast upast
     
     % store the past values of t,x,u at ode solver steps
     if isempty(tpast)
-        tpast = valdata.t(1 : valparams.nd+1);
-        xpast = valdata.x(1 : valparams.nd+1 , :);
-        upast = valdata.u(1 : valparams.nd+1 , :);
+        tpast = valdata.t(1 : params.nd+1);
+        xpast = valdata.x(1 : params.nd+1 , :);
+        upast = valdata.u(1 : params.nd+1 , :);
     else
         tpast = [tpast ; t];
         xpast = [xpast ; x'];
-        upast = [upast ; get_u(t,x,valdata,valparams)'];
+        upast = [upast ; get_u(t,x,valdata,params)'];
     end
     
     % remove repeated values caused by solver taking small steps
@@ -121,12 +123,12 @@ function delays = get_delays(t, x, valdata, valparams)
     uq_sofar = uq( ( xq(:,1) ~= 0 ) , :);
     
     % just take the last nd values
-    xq_nd = xq_sofar(end-valparams.nd : end , :);
-    uq_nd = uq_sofar(end-valparams.nd : end , :);
+    xq_nd = xq_sofar(end-params.nd : end , :);
+    uq_nd = uq_sofar(end-params.nd : end , :);
     
     % vectorize
-    xd = reshape( flipud( xq_nd(1 : valparams.nd , :) )' , [valparams.n * valparams.nd , 1] );
-    ud = reshape( flipud( uq_nd(1 : valparams.nd , :) )' , [valparams.p * valparams.nd , 1] );
+    xd = reshape( flipud( xq_nd(1 : params.nd , :) )' , [params.n * params.nd , 1] );
+    ud = reshape( flipud( uq_nd(1 : params.nd , :) )' , [params.p * params.nd , 1] );
     
     % set the output
     delays = [xd; ud];

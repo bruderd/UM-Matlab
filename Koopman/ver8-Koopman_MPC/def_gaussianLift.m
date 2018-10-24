@@ -1,4 +1,4 @@
-function params = def_thinplateLift( params )
+function params = def_gaussianLift( params )
 %def_thinplateLift: Defines the lifting function that lifts state variable x to
 % a set of thin plate spline radial basis functions 
 
@@ -18,7 +18,7 @@ psi = sym('psi', [maxDegree , 1]);
 zeta0 = params.scale * (2*rand([nzeta,maxDegree]) - 1); % columns are random centers
 for i = 1 : maxDegree
    radius = norm( zeta - zeta0(:,i) );
-   psi(i,:) = radius^2 * log(radius) ;
+   psi(i,:) = exp(-( 1 * radius )^2) ;
 end
 
 % define basis vector, putting the full state at the beginnig of the basis vector

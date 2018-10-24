@@ -16,31 +16,32 @@
 
 
 %% Define system parameters (USER EDIT SECTION)
+
 params = struct;
 
-params.getData = 'exp';            % ('exp, 'file', or 'sim')
-params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser')
+params.getData = 'file';            % ('exp, 'file', or 'sim')
+params.basisID = 'thinplate';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
 params.numTrials        = 1;        % numer of sysid trials
 params.numVals          = 1;        % number of validation trials
-params.Ts               = 0.02;     % sampling period
+params.Ts               = 0.01;     % sampling period
 params.K                = 3000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
-params.scale            = 0.1;      % 
-params.nd               = 3;        % number of delays to include in the snapshot pairs
+params.scale            = 1;      % scale down all state to be in range [-scale , scale]
+params.nd               = 1;        % number of delays to include in the snapshot pairs
 
-params.systemName          = 'dp_100s_scale01_5000pts';  % name of current system
+params.systemName          = 'DCmotor_100s_scale1_3000pts';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % Koopman Sysid parameters
-params.n = 4;   % dimension of state space (including state derivatives)
+params.n = 2;   % dimension of state space (including state derivatives)
 params.p = 1;   % dimension of input
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 params.nzeta = params.n + params.nd * (params.naug);    % dimensinon of zeta (DNE)
 
 % select maximum "degree" for basis elements (NOTE: m1 = 1)
-params.maxDegree = 1;   % maximum degree of vector field monomial basis
+params.maxDegree = 100;   % maximum degree of vector field monomial basis
 params.m1 = 1;  % maximum degree of observables to be mapped through Lkj (DNE)
 
 % define lifting function and basis
@@ -51,11 +52,15 @@ elseif strcmp(params.basisID, 'poly')
     params = def_polyLift(params);  % creates polynomial lifting function, polyLift
 elseif strcmp(params.basisID, 'fourier_sparser')
     params = def_fourierLift_sparser(params);
+elseif strcmp(params.basisID, 'thinplate')
+    params = def_thinplateLift(params);
+elseif strcmp(params.basisID, 'gaussian')
+    params = def_gaussianLift(params);
 end
 disp('Done.')
 
 % Koopman sysid tuning parameters
-params.t        = 5 * params.N; % penalty on model complexity
+params.t        = 10 * params.N; % penalty on model complexity
 params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
@@ -69,13 +74,14 @@ params.compareon           = true;  % boolean to decide whether to convert to id
 
 %% Learn the approximate Koopman operator and corresponding NL system
 U               = get_KoopmanConstGen( some_snapshotPairs, params );
-statespace      = sysid_statespaceSys( U, some_snapshotPairs, params );
+% statespace      = sysid_statespaceSys( U, some_snapshotPairs, params );
 lifted          = sysid_liftedSys( U, params );
 
 %% Simulate the results and compare to validation trial(s)
 if params.validateon
     disp('Comparing to validation data set...');
-    [error, koopsim] = koopmanValidation( data, params, statespace, lifted );
+%     [error, koopsim] = koopmanValidation( data, params, statespace, lifted );
+    [error, koopsim] = val_liftedSys(data, lifted);
     disp('Done.')
 end
 
