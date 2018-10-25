@@ -19,6 +19,7 @@ out.A = A;
 out.B = B;
 out.C = C;
 out.sys = ss(A,B,C,0, params.Ts);  % discrete state space system object
+out.params = params;    % save system parameters as part of system struct
 
 end
 

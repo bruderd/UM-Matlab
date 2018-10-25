@@ -1,0 +1,16 @@
+% main_MPC
+%
+%
+%
+%
+%
+
+%% load in system model
+[model_file , model_path] = uigetfile('./models/');
+model = load( [model_path , model_file] );
+
+%% set mpc parameters
+mpc = struct;
+
+mpc.Ts = model.params.Ts;   % sampling time must be the same as discrete model
+mpc.tf = ;      
