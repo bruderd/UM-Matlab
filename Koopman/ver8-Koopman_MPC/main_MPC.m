@@ -26,7 +26,7 @@ for i = 1 : length(mpc.tspan)
 end
 
 
-%% define cost function
+%% define cost function matrices
 % Cost function is defined: U'HU + ( z0'G + Yr'D )U
 
 % A
@@ -66,5 +66,37 @@ H = B' * C' * Q * C * B + R;
 G = 2 * A' * C' * Q * C * B;
 D = -2 * Q * C * B;
 
+%% define constraint matrices 
+
+nc = 1;     % number of constraints
+
+% F
+F = sparse( nc * (mpc.Np+1) , size(B,2) );  % no constraints, all zeros
+
+% E
+E = sparse( nc * (mpc.Np+1) , size(B,1) );  % no constraints, all zeros
+
+% L , M
+L = F + E*B;
+M = E*A;
+
+%% save matrices in struct
+mpc.H = H; mpc.G = G; mpc.D = D; mpc.L = L; mpc.M = M;
+
 
 %% run MPC simulation
+
+% [t, x] = ode45( @(t,x) system_dynamics(t, x, unext(t,x,ulast,mpc)), mpc.tspan, x0 );
+
+function unext = get_MPCinput( t , x , ulast, mpc)
+
+z = % lift x
+u = quadprog(); % use H, G etc here...
+
+unext = u( 1 : model.params.p );
+
+end
+
+
+
+
