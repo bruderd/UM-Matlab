@@ -6,7 +6,7 @@
 params = struct;
 
 % system parameters
-params.name = 'DCmotor_100s';
+params.name = 'DCmotor_120s';
 params.n = 2;   % number of states
 params.p = 1;   % number of inputs
 
@@ -22,7 +22,7 @@ params.ua      = 60;
 
 % simulation parameters
 params.Ts = 0.01;
-params.tf = 100;
+params.tf = 120;
 params.x0 = 1 * (2*rand([2,1]) - 1);
 
 % step/ramp input parameters

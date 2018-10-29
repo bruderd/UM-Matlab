@@ -23,8 +23,8 @@ mpc.nc      = 1;                % number of constraints
 %% define reference trajectory
 
 for i = 1 : length(mpc.tspan)
-%     ref = [ 0.08 * sin( mpc.tspan(i) ) ];
-    ref = [ 0.1 ];      % step input
+    ref = [ 0.8 * sin( mpc.tspan(i) ) ];
+%     ref = [ 0.1 ];      % step input
     Yr( (i-1)*model.params.ny+1 : i*model.params.ny , 1 ) = ref;
 end
 

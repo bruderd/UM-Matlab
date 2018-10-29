@@ -14,7 +14,11 @@ function xdot = dp_vf(x,u,params)
 
 g=params.g; m1=params.m1; m2=params.m2; l1=params.l1; l2=params.l2;
 
-xdot=zeros(4,1);
+if isa(x,'sym')
+    xdot = sym( 'xdot' , [params.n,1] );
+else
+    xdot=zeros(4,1);
+end
 
 xdot(1)=x(3);
 
@@ -28,3 +32,14 @@ xdot(3)=-((g*(2*m1+m2)*sin(x(1))+m2*(g*sin(x(1)-2*x(2))+2*(l2*x(4)^2+...
 xdot(4)=(((m1+m2)*(l1*x(3)^2+g*cos(x(1)))+l2*m2*x(4)^2*cos(x(1)-x(2)))*...
     sin(x(1)-x(2)))/(l2*(m1+m2-m2*cos(x(1)-x(2))^2)) + ...
     -1*(x(4) - x(3));   % damping
+
+
+% if input is symbolic, create matlab function that evaluates these
+% dynamics with the given parameters.
+if isa( x , 'sym' )
+    name = [ 'simDynamics' , filesep , params.name , '_dynamics.m' ];
+    matlabFunction( xdot, 'File', name, 'Vars', {x , u} );
+end
+
+
+end

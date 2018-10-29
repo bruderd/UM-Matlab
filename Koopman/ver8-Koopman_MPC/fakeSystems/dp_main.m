@@ -33,3 +33,7 @@ params.tconstant = 1.5;
 %% simulate double pendulum
 data = gen_fakeData( params.name, @dp_vf, @dp_input, params );
 
+%% save function that evaluates dynamics with these system parameters
+x = sym('x' , [params.n , 1]);
+u = sym('u' , [params.p , 1]);
+symbolic_dynamics = dp_vf(x, u, params);
