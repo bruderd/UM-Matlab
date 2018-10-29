@@ -11,7 +11,7 @@ B = UT( 1 : params.N , params.N+1 : end );
 if strcmp( params.basisID, 'poly' )
     C = [zeros(params.n , 1) , eye(params.n) , zeros( params.n , params.N - params.n - 1 )];   % if poly we want to skip over first element of lifted state which is "1"
 else
-    C = [eye(params.n), zeros(params.n , params.N - params.n)];   % C selects the first n entries of the lifted state
+    C = [eye(params.ny), zeros(params.ny , params.N - params.ny)];   % C selects the first ny entries of the lifted state (so output can be different than state)
 end
 
 %% define outputs

@@ -1,4 +1,4 @@
-function xdot = DCmotor_vf(x,u,params)
+function xdot = SMD_vf(x,u,params)
 % DCmotor_vf: Ordinary differential equations for double pendulum.
 %
 %   author:  Alexander Erlich (alexander.erlich@gmail.com)
@@ -12,21 +12,16 @@ function xdot = DCmotor_vf(x,u,params)
 %
 %   ---------------------------------------------------------------------
 
-La = params.La;
-Ra = params.Ra;
-km = params.km;
-J = params.J;
-B = params.B;
-tau1 = params.tau1;
-ua = params.ua;
+m = params.m;
+b = params.b;
+k = params.k;
 
 if isa(x,'sym')
     xdot = sym( 'xdot' , [params.n,1] );
 else
-    xdot = zeros(2,1);
+    xdot = zeros(params.n,1);
 end
-xdot(1) = -(Ra/La) * x(1) - (km/La) * x(2) * u + ua/La;
-xdot(2) = -(B/J) * x(2) + (km/J) * x(1) * u - tau1/J;
+xdot = [0, 1; -k/m, -b/m] * x + [0, 1]' * u;
 
 
 % if input is symbolic, create matlab function that evaluates these
