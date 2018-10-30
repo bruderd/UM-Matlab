@@ -9,7 +9,13 @@ if nd == 0
 else
     zeta = [ xnow ; kron( ones(nd,1) , xnow ) ; zeros(nd * model.params.p , 1) ];   % assume state doesn't change during all time before 0
 end
-z = stateLift(zeta);   % lift x
+
+% lift the state
+cd( 'liftingFunctions' );
+lift = str2func( [ 'lift_' , model.params.systemName ] );
+cd('..');
+z = lift(zeta);   % lift x
+
 Yr = ref( (know)*model.params.ny+1 : ((know+1) + mpc.Np)*model.params.ny , 1 ); % reference trajectory over prediction horizon
 H = 2 * mpc.H;
 f = ( z' * mpc.G + Yr' * mpc.D )';

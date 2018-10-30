@@ -24,11 +24,12 @@ else
     end
     
     % lift the state
-    cd( 'liftingFunctions' );
-    lift = str2func( [ 'lift_' , model.params.systemName ] );
-    cd('..');
+    cd(  );
+    addpath( [ '.' , filesep , 'liftingFunctions' ]);
+    lift = str2func( model.params.systemName );  % identify appropriate lifting function
     z = lift(zeta);   % lift zeta
-
+    rmpath( [ '.' , filesep , 'liftingFunctions' ]);
+    
     Yr = ref( (know)*model.params.ny+1 : ((know+1) + mpc.Np)*model.params.ny , 1 ); % reference trajectory over prediction horizon
     H = 2 * mpc.H;
     f = ( z' * mpc.G + Yr' * mpc.D )';
