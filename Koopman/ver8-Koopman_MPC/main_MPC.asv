@@ -23,8 +23,8 @@ mpc.nc      = 1;                % number of constraints
 %% define reference trajectory
 
 for i = 1 : length(mpc.tspan)
-    ref = [ 0.8 * sin( mpc.tspan(i) ) ];
-%     ref = [ 0.1 ];      % step input
+%     ref = [ 0.08 * sin( mpc.tspan(i) ) ];
+    ref = [ 0.1 ];      % step input
     Yr( (i-1)*model.params.ny+1 : i*model.params.ny , 1 ) = ref;
 end
 
@@ -59,7 +59,7 @@ end
 C = kron( speye(mpc.Np+1) , model.C);
 
 % Q
-Q = kron( speye(mpc.Np+1) , eye(model.params.ny)); % error magnitude penalty
+Q = kron( speye(mpc.Np+1) , eye(model.params.ny) * 1); % error magnitude penalty
 
 % R
 R = kron( speye(mpc.Np) , eye(model.params.p) * 0.01);  % input magnitude penalty
@@ -97,6 +97,7 @@ system_dynamics = str2func( fileparsed{1} );
 addpath(vf_path);
 [t, x] = ode45( @(t,x) system_dynamics(x, get_MPCinput(t,x,Yr,mpc,model)), mpc.tspan(1 : end-mpc.Np), mpc.x0 );
 rmpath(vf_path);
+clear functions;    % clea
 
 
 
