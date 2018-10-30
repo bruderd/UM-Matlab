@@ -62,7 +62,7 @@ C = kron( speye(mpc.Np+1) , model.C);
 Q = kron( speye(mpc.Np+1) , eye(model.params.ny) * 1); % error magnitude penalty
 
 % R
-R = kron( speye(mpc.Np) , eye(model.params.p) * 0.001);  % input magnitude penalty
+R = kron( speye(mpc.Np) , eye(model.params.p) * 0.0001);  % input magnitude penalty
 
 % H, G, D
 H = B' * C' * Q * C * B + R;
@@ -89,30 +89,30 @@ mpc.H = H; mpc.G = G; mpc.D = D; mpc.L = L; mpc.M = M;
 
 %% run MPC simulation
 
-% % identify system dynamics function
-% [vf_file , vf_path] = uigetfile('./fakeSystems/simDynamics');
-% fileparsed = split( vf_file , '.' );
-% system_dynamics = str2func( fileparsed{1} );
-% 
-% addpath(vf_path);
-% [t, x] = ode45( @(t,x) system_dynamics(x, get_MPCinput(t,x,Yr,mpc,model)), mpc.tspan(1 : end-mpc.Np), mpc.x0 );
-% rmpath(vf_path);
-%    
-% clear get_MPCinput; % clears the persistent variables from the get_MPCinput function
-
-%% run open loop simulation
-
 % identify system dynamics function
 [vf_file , vf_path] = uigetfile('./fakeSystems/simDynamics');
 fileparsed = split( vf_file , '.' );
 system_dynamics = str2func( fileparsed{1} );
 
-% solve for input over entire time horizon based on model
-u = gen_OLinput( 0 , mpc.x0 , Yr , mpc , model);
-
-% simulate system
 addpath(vf_path);
-[t, x] = ode45( @(t,x) system_dynamics(x, get_OLinput(t,u,mpc,model)), mpc.tspan(1 : mpc.Np), mpc.x0 );
+[t, x] = ode45( @(t,x) system_dynamics(x, get_MPCinput(t,x,Yr,mpc,model)), mpc.tspan(1 : end-mpc.Np), mpc.x0 );
 rmpath(vf_path);
+   
+clear get_MPCinput; % clears the persistent variables from the get_MPCinput function
+
+%% run open loop simulation
+
+% % identify system dynamics function
+% [vf_file , vf_path] = uigetfile('./fakeSystems/simDynamics');
+% fileparsed = split( vf_file , '.' );
+% system_dynamics = str2func( fileparsed{1} );
+% 
+% % solve for input over entire time horizon based on model
+% u = gen_OLinput( 0 , mpc.x0 , Yr , mpc , model);
+% 
+% % simulate system
+% addpath(vf_path);
+% [t, x] = ode45( @(t,x) system_dynamics(x, get_OLinput(t,u,mpc,model)), mpc.tspan(1 : mpc.Np), mpc.x0 );
+% rmpath(vf_path);
 
 

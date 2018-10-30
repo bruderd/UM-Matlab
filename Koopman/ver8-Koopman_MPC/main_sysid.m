@@ -18,20 +18,20 @@
 %% Define system parameters (USER EDIT SECTION)
 
 params = struct;
-params.getData = 'exp';            % ('exp' or 'file')
-params.loadLift = true;            % true if 
+params.getData = 'file';            % ('exp' or 'file')
+% params.loadLift = true;            % true if 
 params.basisID = 'fourier_sparser';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
-params.numTrials        = 1;        % numer of sysid trials
+params.numTrials        = 3;        % numer of sysid trials
 params.numVals          = 1;        % number of validation trials
 params.Ts               = 0.01;     % sampling period
-params.K                = 3000;     % numer of snapshotPairs to take
+params.K                = 5000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 params.scale            = 0.1;      % scale down all state to be in range [-scale , scale]
 params.nd               = 0;        % number of delays to include in the snapshot pairs
 
-params.systemName          = 'doublePendulum_100s_scale01_3000pts';  % name of current system
+params.systemName          = 'doublePendulum_scale01_5000pts';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % Koopman Sysid parameters
@@ -42,7 +42,7 @@ params.naug = params.n + params.p; % dimension of augmented state (DNE)
 params.nzeta = params.n + params.nd * (params.naug);    % dimensinon of zeta (DNE)
 
 % select maximum "degree" for basis elements
-params.maxDegree = 2;   % maximum degree of vector field monomial basis
+params.maxDegree = 3;   % maximum degree of vector field monomial basis
 
 % define lifting function and basis
 disp('Defining basis of observables...')
@@ -61,7 +61,7 @@ disp('Done.')
 
 %% (section break, so can start from here...)
 % Koopman sysid tuning parameters
-params.t        = 1 * params.N; % penalty on model complexity
+params.t        = 2 * params.N; % penalty on model complexity
 params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
@@ -102,5 +102,5 @@ if strcmp( saveModel , 'Yes' )
     
     % save the lifting function
     liftFunDest = ['liftingFunctions' , filesep , 'lift_' , params.systemName, '.m'];
-    copyfile stateLift.m liftFunDest
+    copyfile(stateLift.m , liftFunDest);
 end
