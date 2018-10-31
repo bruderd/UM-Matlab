@@ -43,7 +43,7 @@ props = regionprops(bwlabel(laser), 'Area', 'Centroid');
 area = [props.Area];
 [num_pixels, index] = max(area);
 
-threshold = 5;
+threshold = 1;
 if (num_pixels > threshold)
     % Area of laser is big enough, get region info.
     row = props(index).Centroid(2);
