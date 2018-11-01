@@ -4,7 +4,7 @@
 
 params = struct;
 
-params.calPoints = [0 0; 0 1; 1 1; 1 0];  % set of calibration points?
+params.calPoints = [0 0; 0 1; 1 1; 1 0; 0.5 0.5];  % set of calibration points?
 params.numFrames = 200;     % how long to perform tracking
 
 %% Initialize Camera
@@ -22,7 +22,7 @@ calib = calibrate_laser(vid,params);      % perform cali
 
 %% Run Tracking
 
- laser = track_laser(vid, calib , params); % laser is struct with .x , .y , .t
+laser = track_laser(vid, calib , params); % laser is struct with .x , .y , .t
 
 
 % Stop the acquisition, remove the object from memory,
@@ -35,7 +35,7 @@ clear vid
 resultPlot = figure;
 hold on
 plot(laser.x , laser.y, '*');    % draw connected plot of all the points the laser was recorded
-plot(laser.x , laser.y);
+plot(laser.x , laser. y);
 
 %% Save Results (optional)
 
