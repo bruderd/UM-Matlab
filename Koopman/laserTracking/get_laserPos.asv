@@ -1,15 +1,18 @@
-function [xLaser , yLaser] = get_laserPos( vid , tform)
+function [xLaser , yLaser] = get_laserPos( vid , calib)
 %get_laserPos: Determine the laser postion in world coordinates
 %   Detailed explanation goes here
 
-frame = getdata(vid, 1);
+% pull out x and y from calib struct
+xCalib = calib.x;
+yCalib = calib.y;
+tform = calib.tform;
 
-start(vid);
+frame = getdata(vid, 1);
 [x, y] = util_findlaser(frame);
-stop(vid);
 
 if ~isnan(x) && ~isnan(y)
     % Determine spatial transformation from the calibration points.
+    tform = calib.tform;
     xyScreen = tformfwd([x, y], tform);
     xLaser = xyScreen(1);
     yLaser = xyScreen(2);
