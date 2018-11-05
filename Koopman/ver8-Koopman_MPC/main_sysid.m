@@ -21,30 +21,29 @@ if ~exist('params' ,'var')  % recycle struct from previous run
     params = struct;
 end
 params.getData = 'file';            % ('exp' or 'file')
-% params.loadLift = true;            % true if 
-params.basisID = 'gaussian';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
+params.basisID = 'fourier_sparser';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
-params.numTrials        = 3;        % numer of sysid trials
+params.numTrials        = 4;        % numer of sysid trials
 params.numVals          = 1;        % number of validation trials
-params.Ts               = 0.01;     % sampling period
+params.Ts               = 0.02;     % sampling period
 params.K                = 5000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 params.scale            = 0.1;      % scale down all state to be in range [-scale , scale]
 params.nd               = 0;        % number of delays to include in the snapshot pairs
 
-params.systemName          = 'dp_gaussian_scale01_5000pts';  % name of current system
+params.systemName          = 'flaccy_xyonly_scale1_5000pts';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % Koopman Sysid parameters
-params.n = 4;   % dimension of state space (including state derivatives)
-params.p = 1;   % dimension of input
-params.ny = 1;  % dimension of output
+params.n = 2;   % dimension of state space (including state derivatives)
+params.p = 3;   % dimension of input
+params.ny = 2;  % dimension of output
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 params.nzeta = params.n + params.nd * (params.naug);    % dimensinon of zeta (DNE)
 
 % select maximum "degree" for basis elements
-params.maxDegree = 50;   % maximum degree of vector field monomial basis
+params.maxDegree = 4;   % maximum degree of vector field monomial basis
 
 
 if ~isfield(params , 'Basis')   % only do this if the Basis is not already defined. Will need to clear before running with a different basis
@@ -65,10 +64,8 @@ if ~isfield(params , 'Basis')   % only do this if the Basis is not already defin
 end
 
 
-
-%% (section break, so can start from here...)
 % Koopman sysid tuning parameters
-params.t        = 2 * params.N; % penalty on model complexity
+params.t        = 0.5 * params.N; % penalty on model complexity
 params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
@@ -79,7 +76,7 @@ params.compareon           = true;  % boolean to decide whether to convert to id
 
 
 %% Get training data
-[data, some_snapshotPairs] = get_trainingData(params);
+[data, some_snapshotPairs, params] = get_trainingData(params);
 
 %% Learn the approximate Koopman operator and corresponding NL system
 U               = get_KoopmanConstGen( some_snapshotPairs, params );

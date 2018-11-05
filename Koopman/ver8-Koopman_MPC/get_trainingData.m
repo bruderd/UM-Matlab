@@ -1,4 +1,4 @@
-function [ data, some_snapshotPairs ] = get_trainingData( params )
+function [ data, some_snapshotPairs , params ] = get_trainingData( params )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -9,7 +9,7 @@ getData = params.getData;
 
 if strcmp(getData, 'exp')
     addpath('generateData');
-    data = gen_data_fromExp( params );
+    [data , params] = gen_data_fromExp( params );
     rmpath('generateData')
 elseif strcmp(getData, 'file')
     % Prompt user to identify data file

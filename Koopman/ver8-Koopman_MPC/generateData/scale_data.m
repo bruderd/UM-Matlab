@@ -1,4 +1,4 @@
-function [ x_scaled, u_scaled ] = scale_data( x , u , params)
+function [ x_scaled, u_scaled , params ] = scale_data( x , u , params)
 %UNTITLED6 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -15,6 +15,10 @@ x_scaled = scale * x ./ maxStates;
 
 % scale the input so that it never goes above scale
 u_scaled = scale * u ./ maxInput;
+
+%% store the scaling factor in the params struct
+params.xScaleFactor = scale ./ maxStates;
+params.uScaleFactor = scale ./ maxInput;
 
 end
 

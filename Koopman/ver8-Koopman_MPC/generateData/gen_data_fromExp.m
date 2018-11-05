@@ -1,4 +1,4 @@
-function data = gen_data_fromExp( params )
+function [data , params] = gen_data_fromExp( params )
 %genData_fromExp: Generate system data and snapshot pairs from experimental
 %data
 %   Detailed explanation goes here
@@ -23,7 +23,6 @@ else
 end
 
 alltrials.t = []; alltrials.y = []; alltrials.u = []; alltrials.x = [];
-x = []; y = []; u = []; zeta_x = []; zeta_y = [];
 for i = 1 : numTrials
     trialCount = trialCount + 1;    % increment trial counter
     
@@ -43,6 +42,29 @@ for i = 1 : numTrials
     alltrials.u = [alltrials.u; trialData.u];     % input
     alltrials.x = [alltrials.x; trialData.x];     % actual state
     
+    % save this trial data to the output struct
+    trialID = ['trial', num2str(trialCount)];
+    data.(trialID) = trialData;
+    
+end
+
+%% scale all of the sysid data trials and save snapshot pairs
+
+[alltrials.x, alltrials.u, params] = scale_data(alltrials.x, alltrials.u, params);  % scaling factor determined by maxes over all trial data
+
+x = []; y = []; u = []; zeta_x = []; zeta_y = [];
+for i = 1 : numTrials
+    
+    % rename for convenience
+    trialID = ['trial', num2str(i)];
+    trialData = data.(trialID);
+    
+    % scale the data from each of the trials
+    trialData.x = trialData.x * diag(params.xScaleFactor);
+    trialData.y = trialData.y * diag(params.xScaleFactor);
+    trialData.u = trialData.u * diag(params.uScaleFactor);
+    
+    % pull out snapshot pairs from the scaled data
     n = size(trialData.y , 2);  % length of state vector (also should be specified in params)
     p = size(trialData.u , 2);  % length of input vector (also should be specified in params)
     
@@ -83,13 +105,7 @@ for i = 1 : numTrials
     u = [u; uk];
     zeta_x = [zeta_x; zeta_xk];
     zeta_y = [zeta_y; zeta_yk];
-    
-    % save this trial data to the output struct
-    trialID = ['trial', num2str(trialCount)];
-    data.(trialID) = trialData;
-    
 end
-
 
 %% define snapshotPairs struct
 
@@ -122,6 +138,11 @@ for j = 1 : numVals
     
     % generate data from the jth validation trial
     valData = get_data(file, val_path, params);
+    
+    % scale data
+    valData.x = valData.x * diag(params.xScaleFactor);
+    valData.y = valData.y * diag(params.xScaleFactor);
+    valData.u = valData.u * diag(params.uScaleFactor);
     
     % save this trial data to the output struct
     valID = ['val', num2str(j)];

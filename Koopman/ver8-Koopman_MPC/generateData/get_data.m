@@ -38,8 +38,8 @@ if data_ext == '.mat'
         % filter state measurements to lessen noise impact
         xfilt = movmean(xq, params.filterWindow(1));
         
-%    %     % ISOLATE x coordinate
-%         xfilt = xfilt(:,1);
+        % ISOLATE xy coordinates
+        xfilt = xfilt(:,1:2);
         
         % take numerical derivatives between sampled points
         numstates = params.n/2;
@@ -50,8 +50,8 @@ if data_ext == '.mat'
         xdotfilt = movmean(xdot, params.filterWindow(2));
         x = [xfilt, xdotfilt];
         
- %       % SCALE DATA (REMOVE THIS LATER!!)
-        [x, uq] = scale_data(x, uq, params);
+%         % SCALE DATA (REMOVE THIS LATER!!)
+%         [x, uq] = scale_data(x, uq, params);
         
         % define output
         trialData.t = tq;
@@ -70,10 +70,11 @@ if data_ext == '.mat'
         % filter state measurements to lessen noise impact
         xfilt = movmean(xq, params.filterWindow(1));
         
-   %     % SCALE DATA (REMOVE THIS LATER!!)
-        [xfilt, uq] = scale_data(xfilt, uq, params);
-%    %     % ISOLATE x coordinate
-%         xfilt = xfilt(:,1);
+%         % SCALE DATA (REMOVE THIS LATER!!)
+%         [xfilt, uq] = scale_data(xfilt, uq, params);
+
+        % ISOLATE xy coordinates
+        xfilt = xfilt(:,1:2);
 
         % define output
         trialData.t = tq;
