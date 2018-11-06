@@ -21,7 +21,7 @@ if ~exist('params' ,'var')  % recycle struct from previous run
     params = struct;
 end
 params.getData = 'file';            % ('exp' or 'file')
-params.basisID = 'fourier_sparser';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
+params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
 params.numTrials        = 8;        % numer of sysid trials
@@ -30,9 +30,9 @@ params.Ts               = 0.02;     % sampling period
 params.K                = 50000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 params.scale            = 0.1;      % scale down all state to be in range [-scale , scale]
-params.nd               = 2;        % number of delays to include in the snapshot pairs
+params.nd               = 0;        % number of delays to include in the snapshot pairs
 
-params.systemName          = 'flaccy_xyonly_scale01_50000pts';  % name of current system
+params.systemName          = 'flaccy_xyonly_scale01_50000pts_nodelays';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % Koopman Sysid parameters
@@ -43,10 +43,10 @@ params.naug = params.n + params.p; % dimension of augmented state (DNE)
 params.nzeta = params.n + params.nd * (params.naug);    % dimensinon of zeta (DNE)
 
 % select maximum "degree" for basis elements
-params.maxDegree = 1;   % maximum degree of vector field monomial basis
+params.maxDegree = 12;   % maximum degree of vector field monomial basis
 
 
-if ~isfield(params , 'Basis')   % only do this if the Basis is not already defined. Will need to clear before running with a different basis
+if ~isfield(params , 'Basis')   % only do this if the Basis is not already defined. Will need to clear before running with a different basis or maxDegree
     % define lifting function and basis
     disp('Defining basis of observables...')
     if strcmp(params.basisID, 'fourier')
@@ -65,7 +65,7 @@ end
 
 
 % Koopman sysid tuning parameters
-params.t        = 1 * params.N; % penalty on model complexity
+params.t        = 100 * params.N; % penalty on model complexity
 params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
