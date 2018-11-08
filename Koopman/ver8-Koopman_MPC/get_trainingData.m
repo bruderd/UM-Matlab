@@ -16,7 +16,11 @@ elseif strcmp(getData, 'file')
     [data_file,data_path] = uigetfile;
     matcontents = load([data_path, data_file]); % must be a .mat file
     data = matcontents.data;
-    data.valparams = params;    % makes sure that the params match the current problem
+%     data.valparams = params;    % makes sure that the params match the current problem
+    for fn = fieldnames(params)'    % update params but remember the ScaleFactor fields
+        data.valparams.(fn{1}) = params.(fn{1});
+    end
+    params = data.valparams;
 end
 
 disp('Done.')
