@@ -47,8 +47,10 @@ Aq = [ -speye(2*params.Np^2) ; ones(1 , 2*params.Np^2) ];
 bq = [ zeros(2*params.Np^2 , 1) ; t ];
 
 % Solve the quadratic program
-options = optimoptions('quadprog', 'Display', 'iter');
-[ x, fval, exitflag ] = quadprog(H, f, Aq, bq, [], [], [], [], [], options);
+[x , results] = quadprog_gurobi( H , f , Aq , bq );       % use gurobi to solve
+% options = optimoptions('quadprog', 'Display', 'iter');
+% [ x, fval, exitflag ] = quadprog(H, f, Aq, bq, [], [], [], [], [],options);      % use matlab to solve
+
 
 % Recover Uvec from the optimization variable
 xout = M * x;
