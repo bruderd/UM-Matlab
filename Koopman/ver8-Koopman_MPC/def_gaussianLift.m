@@ -19,6 +19,9 @@ zeta0 = params.scale * (2*rand([nzeta,maxDegree]) - 1); % columns are random cen
 for i = 1 : maxDegree
    radius = norm( zeta - zeta0(:,i) );
    psi(i,:) = exp(-( 1 * radius )^2) ;
+%    % I think this might work faster
+%    radius = sum( ( zeta - zeta0(:,i) ).^2 );
+%    psi(i,:) = exp( -radius );
 end
 
 % define basis vector, putting the full state at the beginnig of the basis vector
