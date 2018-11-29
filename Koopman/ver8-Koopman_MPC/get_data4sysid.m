@@ -24,6 +24,10 @@ if params.ploton
         zID = ['z', num2str(k)];
         figure
         compare(data4sysid.val.(zID), data4sysid.valkoop.(zID));
+        
+        % change y-axis of figure
+        ax = gca;
+        ax.YLim = [-params.scale , params.scale];    
     end
 end
 

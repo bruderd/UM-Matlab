@@ -16,10 +16,11 @@ u = sym('u', [p, 1]);   % input vector u
 N = factorial(nzeta + maxDegree) / ( factorial(nzeta) * factorial(maxDegree) );
 
 % matrix of exponents (N x naug). Each row gives exponents for 1 monomial
-exponents = zeros(1,nzeta);
+exponents = [];
 for i = 1:maxDegree
    exponents = [exponents; partitions(i, ones(1,nzeta))]; 
 end
+exponents = [exponents ; zeros(1,nzeta)];   % put constant at end of basis so state can be the first nzeta elements
 
 % create vector of orderd monomials (column vector)
 for i = 1:N
