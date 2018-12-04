@@ -26,8 +26,12 @@ if params.ploton
         compare(data4sysid.val.(zID), data4sysid.valkoop.(zID));
         
         % change y-axis of figure
-        ax = gca;
-        ax.YLim = [-params.scale , params.scale];    
+        fig = gcf;
+        allaxes = findall(fig, 'type', 'axes');
+        allaxes(5).YLim = [-params.scale , params.scale];
+        allaxes(6).YLim = [-params.scale , params.scale];
+%         ax = gca;
+%         ax.YLim = [-params.scale , params.scale];    
     end
 end
 
