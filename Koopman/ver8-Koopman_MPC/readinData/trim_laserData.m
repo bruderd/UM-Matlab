@@ -20,8 +20,9 @@ rawdata.T(any(isnan(rawdata.Y), 2), :) = [];
 rawdata.Y(any(isnan(rawdata.Y), 2), :) = [];
 rawdata.U(any(isnan(rawdata.Y), 2), :) = [];
 
-% interpolate over outliers (using cubic spline interp)
-rawdata.Y = filloutliers(rawdata.Y,'spline',1);
+% interpolate over outliers (using cubic spline interp) (careful, this can
+% cause problems. MAY NEED TO TRIM DATA AGAIN WITHOUT THIS!!!)
+% rawdata.Y = filloutliers(rawdata.Y,'linear',1);
 
 %% trim the data
 % find index of first data point past tstart
@@ -46,6 +47,7 @@ u = rawdata.U(i_tstart : i_tend , :);
 % save trimmed data files
 % val_fname = ['trimdataFiles', filesep, data_name, '_200s.mat'];
 val_fname = ['trimdataFiles', filesep, data_name, '_trim.mat'];
-save(val_fname, 't', 'x', 'u');
+[unique_fname, change_detect] = auto_rename(val_fname, '0');
+save(unique_fname, 't', 'x', 'u');
 
 end

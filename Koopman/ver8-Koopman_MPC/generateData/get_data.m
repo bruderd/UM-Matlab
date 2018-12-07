@@ -32,8 +32,8 @@ if data_ext == '.mat'
         
         % interpolate data so that it lines up with sampling times
         tq = ( 0:params.Ts:traw(end) )';
-        xq = interp1(traw_uq, xraw(index,:), tq, 'spline');   % interpolate results to get samples at sampling interval Ts
-        uq = interp1(traw_uq, uraw(index,:), tq, 'spline');
+        xq = interp1(traw_uq, xraw(index,:), tq, 'linear');   % interpolate results to get samples at sampling interval Ts
+        uq = interp1(traw_uq, uraw(index,:), tq, 'linear');
         
         % filter state measurements to lessen noise impact
         xfilt = movmean(xq, params.filterWindow(1));
@@ -64,8 +64,8 @@ if data_ext == '.mat'
         
         % interpolate data so that it lines of with sampling times
         tq = ( 0:params.Ts:traw(end) )';
-        xq = interp1(traw,xraw,tq, 'spline');   % interpolate results to get samples at sampling interval Ts
-        uq = interp1(traw,uraw,tq, 'spline');
+        xq = interp1(traw,xraw,tq, 'linear');   % interpolate results to get samples at sampling interval Ts
+        uq = interp1(traw,uraw,tq, 'linear');
         
         % filter state measurements to lessen noise impact
         xfilt = movmean(xq, params.filterWindow(1));

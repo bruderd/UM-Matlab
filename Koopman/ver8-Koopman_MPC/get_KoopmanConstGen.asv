@@ -38,9 +38,8 @@ Uvec = solve_KoopmanQP(Px, Py, params);
 U = reshape(Uvec, [Np,Np]);
 
 %% check how well U works at each point (optional)
-% dif = Px * U - Py;
-% dif_x = dif( : , 1 : params.n);
-    
+for i = 1 : length(x)
+    dif = Px * U - Py;
 
 %% Check which points the solution holds for, and repeat process as necessary
 

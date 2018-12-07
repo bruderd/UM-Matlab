@@ -20,19 +20,19 @@
 if ~exist('params' ,'var')  % recycle struct from previous run 
     params = struct;
 end
-params.getData = 'file';            % ('exp' or 'file')
+params.getData = 'exp';            % ('exp' or 'file')
 params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
-params.numTrials        = 4;        % numer of sysid trials
-params.numVals          = 12;        % number of validation trials
+params.numTrials        = 10;        % numer of sysid trials
+params.numVals          = 9;        % number of validation trials
 params.Ts               = 0.1;     % sampling period
-params.K                = 29000;     % numer of snapshotPairs to take
+params.K                = 119000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 params.scale            = 0.9;      % scale down all state to be in range [-scale , scale]
 params.nd               = 1;        % number of delays to include in the snapshot pairs
 
-params.systemName          = 'isosingles_larm_scale09_29000pts_1delays_poly3_Ts1';  % name of current system
+params.systemName          = 'ISR2fxd_larm_scale09_119000pts_1delays_poly3_Ts1';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % Koopman Sysid parameters
@@ -65,7 +65,7 @@ end
 
 
 % Koopman sysid tuning parameters
-params.t        = 80 * params.N; % penalty on model complexity
+params.t        = 100 * params.N; % penalty on model complexity
 params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
