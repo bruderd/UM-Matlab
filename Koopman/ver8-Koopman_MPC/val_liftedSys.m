@@ -55,7 +55,7 @@ for j = 1 : params.numVals
             zetak = [xk; xdk; udk];
         end
         psik = stateLift(zetak);
-        psikp1 = lifted.A * psik + lifted.B * valdata.u(i,:)';
+        psikp1 = lifted.Asim * psik + lifted.Bsim * valdata.u(i,:)';
         xdis(i+1,:) = ( lifted.C * psikp1 )';
     end
     

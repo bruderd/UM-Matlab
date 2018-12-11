@@ -7,7 +7,8 @@ U = koopData.u;
 
 L = zeros( size(Px,1) , params.N );
 for i = 1 : size( Px , 1)    
-    L(i,:) = ( A * Px(i,:)' + B * U(i,:)' )' ;
+    L(i,:) = ( A * Px(i,:)' + B * U(i,:)' )' ;        % with input
+%     L(i,:) = ( A * Px(i,:)' )' ;        % without input
 end
 
 end

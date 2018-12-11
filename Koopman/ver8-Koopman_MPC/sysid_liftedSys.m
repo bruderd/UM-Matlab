@@ -24,8 +24,8 @@ Cz = [eye(params.nzeta), zeros(params.nzeta , params.N - params.nzeta)];
 %% find matrix that (approximately) projects a lifted point onto the subset of all legitimate lifted points in R^N
 
 L = get_L4M( A , B , koopData , params );
-R = get_R4M( L , Cz , params );
-Mtranspose = pinv(L) * R ; %L \ R;
+R = get_R4M( L , Cz , koopData, params );
+Mtranspose = L \ R; % pinv(L) * R ;
 M = Mtranspose';
 
 %% define outputs
@@ -35,6 +35,7 @@ out.Asim = A;
 out.Bsim = B;
 out.C = C;
 out.Cz = Cz;
+out.M = M;
 out.sys = ss(A,B,C,0, params.Ts);  % discrete state space system object
 out.params = params;    % save system parameters as part of system struct
 
