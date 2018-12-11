@@ -15,24 +15,17 @@ B = UT( 1 : params.N , params.N+1 : end );
 % end
 
 % matrix to recover the state with delays, i.e. zeta
-Cz = [eye(params.nzeta), zeros(params.nzeta , params.N - params.nzeta)];
+Cz = [eye(params.n), zeros(params.n , params.N - params.n)];
 
 % % solve for C matrix that best recovers state from lifted state
 % Ctranspose = koopData.Px \ koopData.x ;
 % C = Ctranspose' ;
 
-%% find matrix that (approximately) projects a lifted point onto the subset of all legitimate lifted points in R^N
-
-L = get_L4M( A , B , koopData , params );
-R = get_R4M( L , Cz , params );
-Mtranspose = pinv(L) * R ; %L \ R;
-M = Mtranspose';
+%% find matrix that (approximately) projects a lifted point onto the subset of all legitimate lifted
 
 %% define outputs
-out.A = M*A;  % edited to include projection M, 12/11/2018
-out.B = M*B;  % edited to include projection M, 12/11/2018
-out.Asim = A;
-out.Bsim = B;
+out.A = A;
+out.B = B;
 out.C = C;
 out.Cz = Cz;
 out.sys = ss(A,B,C,0, params.Ts);  % discrete state space system object

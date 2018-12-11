@@ -20,7 +20,7 @@
 if ~exist('params' ,'var')  % recycle struct from previous run 
     params = struct;
 end
-params.getData = 'exp';            % ('exp' or 'file')
+params.getData = 'file';            % ('exp' or 'file')
 params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
@@ -32,7 +32,7 @@ params.numericalDerivs  = false;    % choose whether or not to take numerical de
 params.scale            = 0.9;      % scale down all state to be in range [-scale , scale]
 params.nd               = 1;        % number of delays to include in the snapshot pairs
 
-params.systemName          = 'ISR2fxd_larm_scale09_119000pts_1delays_poly3_Ts1';  % name of current system
+params.systemName          = 'Mproj_larm_scale09_119000pts_1delays_poly3_Ts1';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % Koopman Sysid parameters
@@ -79,9 +79,9 @@ params.compareon           = true;  % boolean to decide whether to convert to id
 [data, some_snapshotPairs, params] = get_trainingData(params);
 
 %% Learn the approximate Koopman operator and corresponding NL system
-U               = get_KoopmanConstGen( some_snapshotPairs, params );
+[U , koopData ] = get_KoopmanConstGen( some_snapshotPairs, params );
 % statespace      = sysid_statespaceSys( U, some_snapshotPairs, params );
-lifted          = sysid_liftedSys( U, params );
+lifted          = sysid_liftedSys( U , params , koopData );
 
 %% Simulate the results and compare to validation trial(s)
 if params.validateon

@@ -1,4 +1,4 @@
-function U = get_KoopmanConstGen( snapshotPairs , params )
+function [ U , koopData ] = get_KoopmanConstGen( snapshotPairs , params )
 %get_KoopmanConstGen: Find the best possible koopman operator given
 %snapshot pairs using constraint generation to deal with large data sets.
 %   Detailed explanation goes here
@@ -25,6 +25,13 @@ end
 
 K = size(Px,1);
 Np = size(Px,2);
+
+%% Store useful data that can be used outside this function
+koopData.Px = Px( : , 1 : params.N );   % only want state, not input
+koopData.Py = Py( : , 1 : params.N );
+koopData.x = snapshotPairs.x;
+koopData.u = u;
+koopData.zeta_x = snapshotPairs.zeta_x;
 
 %% Solve for inital Koopman Operator wish subset of data points
 
