@@ -57,7 +57,7 @@ for i = 1 : length(tspan)-1
         zetak = [xk; xdk; udk];
     end
     psik = stateLift(zetak);
-    psikp1 = model.A * psik + model.B * uobs(i,:)';
+    psikp1 = model.Asim * psik + model.Bsim * uobs(i,:)';
     xdis(i+1,:) = ( model.C * psikp1 )';
 end
 

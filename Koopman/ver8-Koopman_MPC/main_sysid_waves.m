@@ -20,19 +20,19 @@
 if ~exist('params' ,'var')  % recycle struct from previous run 
     params = struct;
 end
-params.getData = 'exp';            % ('exp' or 'file')
+params.getData = 'ISR3_larm_sc09_155000pts_1delays_poly3_Ts1.mat';            % (name of the data file)
 params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
-params.numTrials        = 10;        % numer of sysid trials
+params.numTrials        = 13;        % numer of sysid trials
 params.numVals          = 9;        % number of validation trials
 params.Ts               = 0.1;     % sampling period
-params.K                = 119000;     % numer of snapshotPairs to take
+params.K                = 155000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 params.scale            = 0.9;      % scale down all state to be in range [-scale , scale]
 params.nd               = 1;        % number of delays to include in the snapshot pairs
 
-params.systemName          = 'ISR2fxd_Mproj_larm_scale09_119000pts_1delays_poly3_Ts1';  % name of current system
+params.systemName          = 'ISR3_larm_sc09_155000pts_1delays_poly3_Ts1';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % Koopman Sysid parameters
@@ -70,13 +70,28 @@ params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
 % output parameters
-params.validateon          = true;  % boolean to decide whether to validate the model
-params.ploton              = true;  % boolean to turn validation/error/compare plot on or off
-params.compareon           = true;  % boolean to decide whether to convert to iddata and compare to validation data with Matlab compare function
+params.validateon          = false;  % boolean to decide whether to validate the model
+params.ploton              = false;  % boolean to turn validation/error/compare plot on or off
+params.compareon           = false;  % boolean to decide whether to convert to iddata and compare to validation data with Matlab compare function
 
 
 %% Get training data
-[data, some_snapshotPairs, params] = get_trainingData(params);
+
+% Load in the training data file
+disp('Retreiving training data...');
+data_path = 'dataFiles';
+matcontents = load([ data_path , filesep ,  params.getData ]); % must be a .mat file
+data = matcontents.data;
+for fn = fieldnames(params)'    % update params but remember the ScaleFactor fields
+    data.valparams.(fn{1}) = params.(fn{1});
+end
+params = data.valparams;
+disp('Done.')
+
+% Get the snapshot pairs
+disp([ 'Extracting random sampling of ', num2str(params.K), ' snapshot pairs from data...'  ])
+some_snapshotPairs = get_randsnapshotPairs(params.K, data.snapshotPairs);
+disp('Done.')
 
 %% Learn the approximate Koopman operator and corresponding NL system
 [U , koopData ] = get_KoopmanConstGen( some_snapshotPairs, params );
@@ -84,27 +99,27 @@ params.compareon           = true;  % boolean to decide whether to convert to id
 lifted          = sysid_liftedSys( U , params , koopData );
 
 %% Simulate the results and compare to validation trial(s)
-if params.validateon
-    disp('Comparing to validation data set...');
-%     [error, koopsim] = koopmanValidation( data, params, statespace, lifted );
-    [error, koopsim] = val_liftedSys(data, lifted);
-    disp('Done.')
-end
-
+% if params.validateon
+%     disp('Comparing to validation data set...');
+% %     [error, koopsim] = koopmanValidation( data, params, statespace, lifted );
+%     [error, koopsim] = val_liftedSys(data, lifted);
+%     disp('Done.')
+% end
+% 
 %% Convert to iddata and compare to validation data
-if params.compareon
-    disp('Converting to iddata format...');
-    data4sysid = get_data4sysid( data , koopsim , params );
-    disp('Done.')
-end
+% if params.compareon
+%     disp('Converting to iddata format...');
+%     data4sysid = get_data4sysid( data , koopsim , params );
+%     disp('Done.')
+% end
 
 %% Save the model file if the user agrees
-saveModel = questdlg('Would you like to save this model?');
-if strcmp( saveModel , 'Yes' )
-    % save the dynamics
-    save_model(lifted);
-    
-    % save the lifting function
-    liftFunDest = ['liftingFunctions' , filesep , 'lift_' , params.systemName, '.m'];
-    copyfile('stateLift.m' , liftFunDest);
-end
+
+% save the dynamics
+[unique_fname] = save_model(lifted);
+unique_name = unique_fname( 1 : end - 4 );  % remove the file extension '.mat'
+
+% save the lifting function
+liftFunDest = ['liftingFunctions' , filesep , 'lift_' , unique_name, '.m'];
+copyfile('stateLift.m' , liftFunDest);
+
