@@ -10,6 +10,7 @@ params.ploton = true;       % decides whether to animate the result
 params.movie = false;       % decides wheter to save animation or not
 params.n = 4;   % number of states
 params.p = 2;   % number of inputs
+params.ny = 2;  % dimension of the output
 
 % physical parameters (note, angles are absolute, not relative)
 params.phi1                = 0; % (pi/2)*rand - pi/4;
@@ -72,3 +73,10 @@ set(gca,'nextplot','replacechildren');
     if params.movie==true
         movie2avi(F,'doublePendulumAnimation.avi','compression','Cinepak','fps',fps)
     end
+    
+
+%% save y as x so that it can work with the sysid code
+data.
+
+
+

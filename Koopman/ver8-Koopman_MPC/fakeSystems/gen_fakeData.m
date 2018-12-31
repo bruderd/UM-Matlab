@@ -47,5 +47,5 @@ fakeData = struct;
 fakeData.t = tq;
 fakeData.x = vq;
 fakeData.u = uq;
-    
+
 end

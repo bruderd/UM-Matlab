@@ -22,7 +22,7 @@ if data_ext == '.mat'
 %     traw = 12 * traw;    
     
     traw = traw - traw(1);  % remove any offset in start time
-    xraw = raw.x;
+    xraw = raw.x( : , 1:params.n );    % if the state to be learned from has smaller dimension than its size in the input data file
     uraw = raw.u;
     [traw_uq, index] = unique(traw);    % filter out non-unique values
     
