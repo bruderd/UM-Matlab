@@ -5,7 +5,8 @@
 params = struct;
 
 % system parameters
-params.name = 'manipulator_1000s';
+params.name = 'manipulator_2000s';
+params.saveon = true;      % decides wheter to save data from simulation
 params.ploton = true;       % decides whether to animate the result
 params.movie = false;       % decides wheter to save animation or not
 params.n = 4;   % number of states
@@ -22,27 +23,28 @@ params.m1                  = 1;
 params.m2                  = 1; 
 params.l1                  = 1; 
 params.l2                  = 1;
-params.k1                  = 50;
-params.k2                  = 50;
+params.k1                  = 1*50;
+params.k2                  = 1*50;
 params.b1                  = -3.5;
 params.b2                  = -3.5;
 
 % simulation parameters
 params.Ts = 0.02;
-params.tf = 1000;
+params.tf = 2000;
 params.x0 = [params.phi1, params.phi2, params.dtphi1, params.dtphi2]';
 
 % step/ramp input parameters
 params.steplen = 1;  % duration of each step
-params.steps = 2*pi * ( rand(2000, params.p) - 0.5 );   % random list of 1000 step inputs between -pi and pi
+params.steps = 2*pi * ( rand(20000, params.p) - 0.5 );   % random list of 1000 step inputs between -pi and pi
+% params.steps = [ 0 , 0 ; 0 , 0 ; pi/2 , -pi ; pi/2 , -pi ];   % beginning and end ramp
 params.tconstant = 1.5;
 
 %% simulate manipulator
-data = gen_fakeData( params.name, @manipulator_vf, @manipulator_input, params );
+[ data , fname ] = gen_fakeData( params.name, @manipulator_vf, @manipulator_input, params );
 
 %% calculate output, the position of the end effector
 
-data.y = zeros(size(data.x));
+data.y = zeros( size(data.x,1) , params.ny);
 data.y(:,1) = params.l1 * sin( data.x(:,1) ) + params.l2 * sin( data.x(:,2) );
 data.y(:,2) = params.l1 * cos( data.x(:,1) ) + params.l2 * cos( data.x(:,2) );
 
@@ -75,8 +77,12 @@ set(gca,'nextplot','replacechildren');
     end
     
 
-%% save y as x so that it can work with the sysid code
-data.
-
+%% resave datafile with y as x so that it can work with the sysid code
+if params.saveon
+    t = data.t;
+    u = data.u;
+    x = data.y;
+    save(fname, 't', 'x', 'u');
+end
 
 

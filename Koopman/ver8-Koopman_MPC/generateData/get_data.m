@@ -60,7 +60,8 @@ if data_ext == '.mat'
         trialData.y = trialData.x;    % observed state == state since we have no other ground truth
     else 
         % filter raw data to smooth it out a bit
-        xraw = movmean(xraw, 50);     
+        xraw = movmean(xraw, params.filterWindow(1));
+%         xraw = movmean(xraw, 50);     
         
         % interpolate data so that it lines of with sampling times
         tq = ( 0:params.Ts:traw(end) )';
@@ -68,7 +69,7 @@ if data_ext == '.mat'
         uq = interp1(traw,uraw,tq, 'linear');
         
         % filter state measurements to lessen noise impact
-        xfilt = movmean(xq, params.filterWindow(1));
+        xfilt = movmean(xq, params.filterWindow(2));
         
 %         % SCALE DATA (REMOVE THIS LATER!!)
 %         [xfilt, uq] = scale_data(xfilt, uq, params);

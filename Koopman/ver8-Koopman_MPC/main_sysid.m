@@ -21,19 +21,20 @@ if ~exist('params' ,'var')  % recycle struct from previous run
     params = struct;
 end
 params.getData = 'file';            % ('exp' or 'file')
-params.basisID = 'fourier_sparser';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
+params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
 params.numTrials        = 1;        % numer of sysid trials
 params.numVals          = 1;        % number of validation trials
 params.Ts               = 0.02;     % sampling period
-params.K                = 50000;     % numer of snapshotPairs to take
+params.K                = 100000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 params.scale            = 0.9;      % scale down all state to be in range [-scale , scale]
 params.nd               = 1;        % number of delays to include in the snapshot pairs
 
-params.systemName          = 'manSim_1val_1sid_sc09_50000pts_1del_Ts02';  % name of current system
-params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
+params.systemName          = 'manSim2_1val_1sid_sc09_100000pts_1del_Ts02';  % name of current system
+% params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
+params.filterWindow        = floor( [6, 6] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % Koopman Sysid parameters
 params.n = 2;   % dimension of state space (including state derivatives)
@@ -43,7 +44,7 @@ params.naug = params.n + params.p; % dimension of augmented state (DNE)
 params.nzeta = params.n + params.nd * (params.naug);    % dimensinon of zeta (DNE)
 
 % select maximum "degree" for basis elements
-params.maxDegree = 2;   % maximum degree of vector field monomial basis
+params.maxDegree = 4;   % maximum degree of vector field monomial basis
 
 % only do this if the Basis is not already defined. Will need to clear before running with a different basis or maxDegree
 if ~isfield(params , 'Basis')   

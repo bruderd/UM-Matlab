@@ -45,19 +45,32 @@ for j = 1 : params.numVals
     %% simulate the behavior of the discrete linear system
     xdis = zeros(length(tspan) , params.n);
     xdis(1,:) = valdata.x(index0 , :);
+    psi0 = stateLift(zeta0);
     for i = 1 : length(tspan)-1
         if i == 1
-            zetak = zeta0;
+            psik = psi0;
         else
-            xk = xdis(i , :)';
-            xdk = reshape( flipud( xdis( (i-params.nd) : i-1 , : ) )' , [params.n * params.nd , 1] );
-            udk = reshape( flipud( valdata.u(i-params.nd : i-1 , :) )' , [params.p * params.nd , 1] );
-            zetak = [xk; xdk; udk];
+            psik = psikp1;
         end
-        psik = stateLift(zetak);
-        psikp1 = lifted.Asim * psik + lifted.Bsim * valdata.u(i,:)';
+        psikp1 = lifted.A * psik + lifted.B * valdata.u(i,:)';
         xdis(i+1,:) = ( lifted.C * psikp1 )';
     end
+    
+%     xdis = zeros(length(tspan) , params.n);
+%     xdis(1,:) = valdata.x(index0 , :);
+%     for i = 1 : length(tspan)-1
+%         if i == 1
+%             zetak = zeta0;
+%         else
+%             xk = xdis(i , :)';
+%             xdk = reshape( flipud( xdis( (i-params.nd) : i-1 , : ) )' , [params.n * params.nd , 1] );
+%             udk = reshape( flipud( valdata.u(i-params.nd : i-1 , :) )' , [params.p * params.nd , 1] );
+%             zetak = [xk; xdk; udk];
+%         end
+%         psik = stateLift(zetak);
+%         psikp1 = lifted.Asim * psik + lifted.Bsim * valdata.u(i,:)';
+%         xdis(i+1,:) = ( lifted.C * psikp1 )';
+%     end
     
     %% quantify the error between real behavior and simulated behavior
     

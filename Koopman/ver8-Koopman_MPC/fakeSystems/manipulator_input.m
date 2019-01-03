@@ -1,5 +1,5 @@
 function u = manipulator_input( t , params )
-%dp_input: input torque into the double pendulum
+%manipulator_input: input torque into the double pendulum
 %   Detailed explanation goes here
 
 % ramp between random values every steplen
