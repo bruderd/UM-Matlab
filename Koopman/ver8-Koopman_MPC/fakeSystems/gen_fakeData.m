@@ -26,11 +26,11 @@ tq = (0:Ts:tf)';
 vq = interp1(t,v,tq);   % interpolate results to get samples at sampling interval Ts
 uq = interp1(t,u,tq);
 
-% inject noise with standard deviation 0.01
-mean = 0;   % mean offset
-sigma = 0.01;   % standard deviation
-noise = sigma .* randn(size(vq)) + mean;
-vq = vq + noise;
+% % inject noise with standard deviation 0.01
+% mean = 0;   % mean offset
+% sigma = 0.01;   % standard deviation
+% noise = sigma .* randn(size(vq)) + mean;
+% vq = vq + noise;
 
 % Make proper variable names for .mat file
 t = tq;
@@ -42,6 +42,8 @@ u = uq;
 if params.saveon
     [unique_fname, change_detect] = auto_rename(['simData', filesep, sysName, '.mat'], '0');
     save(unique_fname, 't', 'x', 'u');
+else
+    unique_fname = 'poop';
 end
 
 %% define output

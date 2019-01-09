@@ -5,8 +5,8 @@
 params = struct;
 
 % system parameters
-params.name = 'manip_jang_stiffish_2000s';
-params.saveon = true;      % decides wheter to save data from simulation
+params.name = 'manip_stiffish_2000s';
+params.saveon = false;      % decides wheter to save data from simulation
 params.ploton = true;       % decides whether to animate the result
 params.movie = false;       % decides wheter to save animation or not
 params.n = 4;   % number of states
@@ -23,10 +23,10 @@ params.m1                  = 1;
 params.m2                  = 1; 
 params.l1                  = 1; 
 params.l2                  = 1;
-params.k1                  = 10*50;    % was 1*50 , stiffish = 10*50
-params.k2                  = 10*50;    % was 1*50 , stiffish = 10*50
-params.b1                  = -3.5 * 5; % was -3.5*1 , stiffish = -3.5 * 5
-params.b2                  = -3.5 * 5; % was -3.5*1 , stiffish = -3.5 * 5
+params.k1                  = 10*50;    % was 1*50
+params.k2                  = 10*50;    % was 1*50
+params.b1                  = -3.5 * 5; % was -3.5*1
+params.b2                  = -3.5 * 5; % was -3.5*1
 
 % simulation parameters
 params.Ts = 0.02;
@@ -79,11 +79,11 @@ set(gca,'nextplot','replacechildren');
     
 
 %% resave datafile with y as x so that it can work with the sysid code
-% if params.saveon
-%     t = data.t;
-%     u = data.u;
-%     x = data.y;
-%     save(fname, 't', 'x', 'u');
-% end
+if params.saveon
+    t = data.t;
+    u = data.u;
+    x = data.y;
+    save(fname, 't', 'x', 'u');
+end
 
 
