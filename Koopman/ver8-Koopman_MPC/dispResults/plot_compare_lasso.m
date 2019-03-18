@@ -1,0 +1,63 @@
+% plot_compare_lasso
+%   Generates the figure that shows how sparsity and error are affected by 
+%   the choice of lasso parameter
+
+% load the datafile (update this if new comparison file is desired)
+load(['lassoCompareData',filesep,'waves_larm_OL50pc_100val10s_16sid_sc09_191000pts_1del_Ts1_poly3_2.mat']);
+
+%% Mess with the data to get it in correct plotting form
+
+% % reverse the direction of the data
+% derror = flipud(totnerror.dist);
+% Adensity = fliplr(density.A);
+% MAdensity = fliplr(density.MA);
+% lambda = fliplr(lassoParams);
+
+% assign new names (only needed since above is commented out)
+derror = totnerror.dist;
+Adensity = density.A;
+MAdensity = density.MA;
+lambda = lassoParams;
+
+% take every other data point
+derror = [ derror(1) ; derror(2:2:end) ];
+Adensity = [ Adensity(1) , Adensity(2:2:end) ];
+MAdensity = [ MAdensity(1) , MAdensity(2:2:end) ];
+lambda = [ 0.01 , lambda(2:2:end) ];    % replace first 0 with 0.01 so log plot can handle it
+
+%% generate figure
+
+% plot the stuff
+figure;
+semilogx( lambda , derror , 'LineWidth' , 2 );
+hold on;
+semilogx( lambda , Adensity , 'LineWidth' , 2 );
+semilogx( lambda , MAdensity , 'LineWidth' , 2 );
+hold off;
+set ( gca, 'xdir', 'reverse' ); % reverse xaxis direction
+
+% plot the best choise of lambda
+bestlam = lambda(10); % occurs at the 10th spot
+hold on;
+line( [bestlam bestlam] , get(gca,'YLim') , 'Color' , [0 0 0 0.25] , 'LineWidth' , 3);
+hold off;
+
+% modify figure appearance
+axis([ 0.01 , 19.975 , 0 , 1 ]);
+legend( { 'Error' , 'Density: A' , 'Density: PA' } , 'location' , 'northeast');
+xlabel('$\lambda$' , 'Interpreter' , 'Latex');
+
+set(gca,'TickLabelInterpreter', 'Latex');
+xticks([0.01 , 19.975]);
+xticklabels({ '$0$ solution' , '$L^2$ solution' });
+yticks([0,1]);
+yticklabels([0,1]);
+
+
+
+% figure;
+% hold on;
+% plot( lambda , derror );
+% plot( lambda , Adensity );
+% plot( lambda , MAdensity );
+% hold off;

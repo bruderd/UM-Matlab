@@ -21,31 +21,31 @@ if ~exist('params' ,'var')  % recycle struct from previous run
     params = struct;
 end
 params.getData = 'exp';            % ('exp' or 'file')
-params.basisID = 'gaussian';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
+params.basisID = 'fourier';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian' or 'hermite')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
-params.numTrials        = 16;        % numer of sysid trials
-params.numVals          = 100;        % number of validation trials
-params.Ts               = 0.1;     % sampling period
-params.K                = 191000;     % numer of snapshotPairs to take
+params.numTrials        = 1;        % numer of sysid trials
+params.numVals          = 1;        % number of validation trials
+params.Ts               = 0.02;     % sampling period
+params.K                = 5000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 params.scale            = 0.9;      % scale down all state to be in range [-scale , scale]
-params.nd               = 1;        % number of delays to include in the snapshot pairs
+params.nd               = 0;        % number of delays to include in the snapshot pairs
 
-params.systemName          = 'larm_OL50pc_100val10s_16sid_sc09_191000pts_1del_Ts1';  % name of current system
+params.systemName          = 'arm_load9_ss5000_sysid100s_val10s';  % name of current system
 % params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 params.filterWindow        = floor( [1, 1] );  % no smoothing
 % params.filterWindow        = floor( [6, 6] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % Koopman Sysid parameters
 params.n = 2;   % dimension of state space (including state derivatives)
-params.p = 3;   % dimension of input
+params.p = 1;   % dimension of input
 params.ny = 2;  % dimension of output
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 params.nzeta = params.n + params.nd * (params.naug);    % dimensinon of zeta (DNE)
 
 % select maximum "degree" for basis elements
-params.maxDegree = 1;   % maximum degree of vector field monomial basis
+params.maxDegree = 2;   % maximum degree of vector field monomial basis
 
 % only do this if the Basis is not already defined. Will need to clear before running with a different basis or maxDegree
 if ~isfield(params , 'Basis')   
@@ -61,13 +61,15 @@ if ~isfield(params , 'Basis')
         params = def_thinplateLift(params);
     elseif strcmp(params.basisID, 'gaussian')
         params = def_gaussianLift(params);
+    elseif strcmp(params.basisID, 'hermite')
+        params = def_hermiteLift(params);
     end
     disp('Done.')
 end
 
 
 % Koopman sysid tuning parameters
-params.t        = 1 * params.N; % penalty on model complexity
+params.t        = 100 * params.N; % penalty on model complexity
 params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
@@ -81,7 +83,7 @@ params.compareon           = true;  % boolean to decide whether to convert to id
 [data, some_snapshotPairs, params] = get_trainingData(params);
 
 %% Learn the approximate Koopman operator and corresponding NL system
-[U , koopData ] = get_KoopmanConstGen( some_snapshotPairs, params );
+[U , koopData ] = get_Koopman( some_snapshotPairs, params );
 % statespace      = sysid_statespaceSys( U, some_snapshotPairs, params );
 lifted          = sysid_liftedSys( U , params , koopData );
 

@@ -1,0 +1,24 @@
+function [ zeta, y ] = test_zeta( valdata )
+% test out the neural net model
+
+% preallocation and assigment
+TS = length(valdata.t);
+zeta = zeros(TS,8);
+y = zeros(TS,2);
+u = valdata.u;
+yreal = valdata.x;
+
+% initial values
+y(1,:) = valdata.x(2,:);
+zeta(1:2,:) = [ yreal(1:2,:) , u(1:2,:) , u(2:3,:) ];
+
+for i = 2 : TS-2
+    
+    zeta(i,:) = [ y(i-1,:) , u(i,:) , u(i+1,:) ];
+
+    [yout,xf1] = larm_zeta_1del( zeta(i,:)' , zeta(i-1,:)' );
+    
+    y(i,:) = yout';
+    zeta(i+1,:) = [ y(i,:) , u(i+1,:), u(i+2,:) ];
+
+end
