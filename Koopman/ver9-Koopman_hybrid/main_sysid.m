@@ -21,18 +21,18 @@ if ~exist('params' ,'var')  % recycle struct from previous run
     params = struct;
 end
 params.getData = 'exp';            % ('exp' or 'file')
-params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian' or 'hermite')
+params.basisID = 'hermite';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian' or 'hermite')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
 params.numTrials        = 11;        % numer of sysid trials
-params.numVals          = 7;        % number of validation trials
+params.numVals          = 11;        % number of validation trials
 params.Ts               = 0.02;     % sampling period
-params.K                = 55000;     % numer of snapshotPairs to take
+params.K                = 5000*11;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 params.scale            = 0.9;      % scale down all state to be in range [-scale , scale]
 params.nd               = 0;        % number of delays to include in the snapshot pairs
 
-params.systemName          = 'armload_load0to10_ss55000_sysid100s_val10s_poly2_';  % name of current system
+params.systemName          = 'armload_load0to10_ss55000_sysid100s_val10s';  % name of current system
 % params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 params.filterWindow        = floor( [1, 1] );  % no smoothing
 % params.filterWindow        = floor( [6, 6] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
@@ -40,7 +40,7 @@ params.filterWindow        = floor( [1, 1] );  % no smoothing
 % Koopman Sysid parameters
 params.n = 3;   % dimension of state space (including state derivatives)
 params.p = 1;   % dimension of input
-params.ny = 2;  % dimension of output
+params.ny = 3;  % dimension of output
 params.naug = params.n + params.p; % dimension of augmented state (DNE)
 params.nzeta = params.n + params.nd * (params.naug);    % dimensinon of zeta (DNE)
 
