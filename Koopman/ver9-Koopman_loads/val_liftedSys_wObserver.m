@@ -112,8 +112,8 @@ for j = 1 : params.numVals
 %     Co = lifted.Cy;
 %     
     % choose observer gain L to ensure observer error goes to 0
-    opole = linspace(-0.3,-0.1,numo);
-    L = place(Ao', Co', opole)' * 1e-4; % reducing gain a lot seems to make it stable
+    opole = linspace(-0.9,-0.8,numo);
+    L = place(Ao', Co', opole)';% * 1e-8; % reducing gain a lot seems to make it stable
 %     opole = [ linspace(0.98, 0.99 , numo-params.ny), ones(1,params.ny) ];   % for the measured states place poles on the unit circle, place other poles close to origin
 %     L = place(Ao', Co', opole)'; % reducing gain a lot seems to make it stable
     
@@ -148,6 +148,10 @@ for j = 1 : params.numVals
         psihatkp1 = T * [ nohatk ; ohatkp1 ];
 %         psihatkp1 = [ nohatk ; ohatkp1 ];
 %         psihatkp1 = Tinv * [ nohatk ; ohatkp1 ];
+
+        % impose saturation limits on state (hopefully will help with observer overshoot/instability
+        psihatkp1 = min(psihatkp1, ones(size(psihatkp1)) );   
+        psihatkp1 = max(psihatkp1, -ones(size(psihatkp1)) );  % impose saturation limits on state
         
         % update the nonlifted state
         xhatkp1 = lifted.C * psihatkp1;

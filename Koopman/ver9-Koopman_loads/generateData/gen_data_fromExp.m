@@ -50,7 +50,10 @@ end
 
 %% scale all of the sysid data trials and save snapshot pairs
 
+% PLEASE CHANGE ME BACK WHEN YOU"RE DONE!!!! (4/1/2019)
 [alltrials.x, alltrials.u, params] = scale_data(alltrials.x, alltrials.u, params);  % scaling factor determined by maxes over all trial data
+% params.xScaleFactor = 1;
+% params.uScaleFactor = 1;
 
 x = []; y = []; u = []; zeta_x = []; zeta_y = [];
 for i = 1 : numTrials

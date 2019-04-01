@@ -11,7 +11,7 @@ end
 
 
 xdot(1,:) = x(2);
-xdot(2,:) = ( 1 / ( ( (1/3)*params.M + x(3) ) * params.L^2 ) ) * ( x(3)*params.L*params.g*cos(x(1)) + params.K*(u-x(1)) + params.D*x(2) );
+xdot(2,:) = ( 1 / ( ( (1/3)*params.M + x(3) ) * params.L^2 ) ) * ( -x(3)*params.L*params.g*cos(x(1)) + params.K*(u-x(1)) + params.D*x(2) );
 xdot(3,:) = 0;
 
 

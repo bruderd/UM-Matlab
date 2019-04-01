@@ -112,13 +112,10 @@ for j = 1 : params.numVals
 %     Co = lifted.Cy;
 %     
     % choose observer gain L to ensure observer error goes to 0
-%     opole = linspace(-0.3,-0.1,numo);
-%     L = place(Ao', Co', opole)' * 1e-9; % reducing gain a lot seems to make it stable
-    opole = [ linspace(0.01, 0.1 , numo-params.ny), ones(1,params.ny) ];   % for the measured states place poles on the unit circle, place other poles close to origin
-    opole =
-    L = place(Ao', Co', opole)'; % reducing gain a lot seems to make it stable
-%     L = 1e-2 * [-0.5, 0 0 0 0 0 0 0 0; -0.5 0 0 0 0 0 0 0 0]';
-%     L = lqr(Ao',Co',eye(params.N),eye(params.ny),0)';
+    opole = linspace(-0.05,-0.01,numo);
+    L = place(Ao', Co', opole)' * 1e-8; % reducing gain a lot seems to make it stable
+%     opole = [ linspace(0.98, 0.99 , numo-params.ny), ones(1,params.ny) ];   % for the measured states place poles on the unit circle, place other poles close to origin
+%     L = place(Ao', Co', opole)'; % reducing gain a lot seems to make it stable
     
     % simulate observer
     xhat = zeros(length(tspan) , params.n);
@@ -146,6 +143,8 @@ for j = 1 : params.numVals
         
         % simulate the observable state
         ohatkp1 = Ao * ohatk + Bo * valdata.u(i,:)' + L * ( yk - Co * ohatk );
+        ohatkp1 = min(ohatkp1, ones(size(ohatkp))*params.scale);   % impose saturation limits on state
+        ohatkp1 = max(ohatkp1, -params.scale);  % impose saturation limits on state
         
         % estimate the regular lifted state using inverse transformation
         psihatkp1 = T * [ nohatk ; ohatkp1 ];
