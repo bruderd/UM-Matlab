@@ -5,7 +5,7 @@
 params = struct;
 
 % system parameters
-params.name = 'armloadv2_100s_load0';
+params.name = 'armloadv2_100s_load7';
 params.n = 3;   % number of states (load is the third state)
 params.p = 1;   % number of inputs
 
@@ -15,7 +15,7 @@ params.K = 20;
 params.L = 1;
 params.D = -10;
 params.g = 9.81;
-params.load = 8;    % LOAD ATTACHED TO END EFFECTOR
+params.load = 6;    % LOAD ATTACHED TO END EFFECTOR
 
 % simulation parameters
 params.Ts = 0.02;
