@@ -94,7 +94,7 @@ for j = 1 : params.numVals
     
     % simulate observer
     xhat = zeros(length(tspan) , params.n);
-    xhat(1,:) = valdata.x(index0 , :) * blkdiag( eye(params.n-1) , 0 );  % Zero the load initially. VERY SPECIFIC TO ARM ROBOT
+    xhat(1,:) = valdata.x(index0 , :);% * blkdiag( eye(params.n-1) , 0 );  % Zero the load initially. VERY SPECIFIC TO ARM ROBOT
     psihat0 = liftState(xhat(1,:)');
 %     xhat(1,:) = 0.5*ones( 1 , params.n );  % 0.5 initial condition for observer states
 %     psihat0 = liftState(xhat(1,:)');   % 0.5 initial condition for observer states
@@ -184,8 +184,9 @@ for j = 1 : params.numVals
         
         % save ohat and oreal so that I can plot them against eachother (i.e. how well it is observing the so called "observable states"
         ohat(i+1,:) = ohatkp1';
-        odis(i+1,:) = ( Toinv * psi(i+1,:)' )';    % psi is the real lifted state according to the model dynamics (not real dynamics)
-        
+%         odis(i+1,:) = ( Toinv * psi(i+1,:)' )';    % psi is the real lifted state according to the model dynamics (not real dynamics)
+        odis(i+1,:) = ( Toinv(end-2:end , :) * psi(i+1,:)' )';    % psi is the real lifted state according to the model dynamics (not real dynamics)
+  
     end
     
     
