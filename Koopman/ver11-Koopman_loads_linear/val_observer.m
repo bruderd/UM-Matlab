@@ -1,6 +1,6 @@
-function [error, koopsim] = val_liftedSys_wKalman_v2( data, lifted )
-%val_liftedSys: Validates the lifted system by comparing simulations to
-%validation trials
+function [error, koopsim] = val_observer( data, lifted )
+%val_lobserver: Validates the observer for the lifted system, which tries
+%to estimate the load by linearly incorporating it into the lifted state.
 %   Detailed explanation goes here
 
 % params = data.valparams;    % model parameters
@@ -47,7 +47,7 @@ for j = 1 : params.numVals
             psireliftk = psi0;
         else
             psik = psikp1;
-            psireliftk = liftState(xrelift);
+            psireliftk = liftState(zrelift);
         end
         % linear dynamics
         psikp1 = lifted.A * psik + lifted.B * valdata.u(i,:)' + lifted.W * valdata.w(i,:)';
@@ -55,7 +55,7 @@ for j = 1 : params.numVals
         
         % dynamics when relifting at each timestep
         psireliftkp1 = lifted.A * psireliftk + lifted.B * valdata.u(i,:)' + lifted.W * valdata.w(i,:)';
-        xrelift = lifted.C * psireliftkp1;
+        zrelift = lifted.Cz * psireliftkp1;
        
         % save psihat so that I can plot it
         psi(i+1,:) = psikp1;
@@ -65,59 +65,61 @@ for j = 1 : params.numVals
     %% simulate observer system (Kalman Filter on Observable subsystem)
     
     % Transform into observable form
-    Ob = obsv( lifted.A , lifted.Cy );  % observability matrix
+    Aaug = [ [lifted.A , lifted.W] ; [zeros(params.nw , params.N + params.nw - 1) , eye(params.nw)] ]; % for observer consider the load as the end of the lifted state
+    Cyaug = [ lifted.Cy , zeros( params.ny , params.nw) ];
+    Caug = [ lifted.C , zeros( params.ny , params.nw) ];
+    Baug = [ lifted.B ; zeros( params.nw , params.p ) ];
+    Naug = params.N + params.nw;    % the length of the augmented state
+    Ob = obsv( Aaug , Cyaug );  % observability matrix
     numo = rank( Ob );    % dimension of observable subspace
     To = orth(pinv(Ob));
     Tno = null(Ob);
     T = [ Tno , To ];   % observable decomposition operator
     Tinv = T\eye(size(T)); %inv(T);
     Toinv = Tinv(end-numo+1 : end , :);   % just observable submatrix of Tinv 
-    Abar = Tinv * lifted.A * T;
-    Bbar = Tinv * lifted.B;
-    Cbar = lifted.Cy * T;
+    Abar = Tinv * Aaug * T; 
+    Bbar = Tinv * Baug;  
+    Cbar = Cyaug * T;
 
-%     Ao = Abar(end-numo+1:end , end-numo+1:end);
-%     Bo = Bbar(end-numo+1:end , :);
-%     Co = Cbar(: , end-numo+1:end );
-    Ao = Abar(end-numo+7:end , end-numo+7:end);
-    Bo = Bbar(end-numo+7:end , :);
-    Co = Cbar(: , end-numo+7:end );
+    Ao = Abar(end-numo+1:end , end-numo+1:end);
+    Bo = Bbar(end-numo+1:end , :);
+    Co = Cbar(: , end-numo+1:end );
+%     Ao = Abar(end-numo+7:end , end-numo+7:end);
+%     Bo = Bbar(end-numo+7:end , :);
+%     Co = Cbar(: , end-numo+7:end );
 %     Ao = lifted.A;
 %     Bo = lifted.B;
 %     Co = lifted.Cy;
 
     % set up Kalman filter on observable subsystem
-%     Q = 1e1 * eye(numo); % + 5e0 * ones(numo,numo); % covariance of process noise (set really high because I want filter to be aggressive)
-%     R = 0.001 * eye(params.ny);  % covariance of measurement noise
-%     P0 = zeros(numo , numo);
-    Q = 1e1 * eye(numo-6); % + 5e0 * ones(numo,numo); % covariance of process noise (set really high because I want filter to be aggressive)
+    Q = 1e1 * eye(numo); % + 5e0 * ones(numo,numo); % covariance of process noise (set really high because I want filter to be aggressive)
     R = 0.001 * eye(params.ny);  % covariance of measurement noise
-    P0 = zeros(numo-6 , numo-6);
+    P0 = zeros(numo , numo);
+%     Q = 1e1 * eye(numo-6); % + 5e0 * ones(numo,numo); % covariance of process noise (set really high because I want filter to be aggressive)
+%     R = 0.001 * eye(params.ny);  % covariance of measurement noise
+%     P0 = zeros(numo-6 , numo-6);
     
     % simulate observer
     xhat = zeros(length(tspan) , params.n);
-    xhat(1,:) = valdata.x(index0 , :) * blkdiag( eye(params.n-1) , 0 );  % Zero the load initially. VERY SPECIFIC TO ARM ROBOT
-    psihat0 = liftState(xhat(1,:)');
-%     xhat(1,:) = 0.5*ones( 1 , params.n );  % 0.5 initial condition for observer states
-%     psihat0 = liftState(xhat(1,:)');   % 0.5 initial condition for observer states
-    psihat = zeros(length(tspan) , params.N);
-    psihat(1,:) = psihat0;
-%     ohat = zeros(length(tspan) , numo);
-%     ohat(1,:) = Toinv * psihat0;
-%     odis = zeros(length(tspan) , numo);
-%     odis(1,:) = Toinv * psi(1,:)';
-    ohat = zeros(length(tspan) , numo-6);
-    ohat(1,:) = Toinv(end-2:end,:) * psihat0;
-    odis = zeros(length(tspan) , numo-6);
-    odis(1,:) = Toinv(end-2:end,:) * psi(1,:)';
-    oram = zeros(length(tspan) , numo-6);
-    oram(1,:) = Toinv(end-2:end,:) * psihat0;
-    odisrelift = zeros(length(tspan) , numo-6);
-    odisrelift(1,:) = Toinv(end-2:end,:) * psihat0;
+    psihat = zeros(length(tspan) , Naug);
+    psihat0 = psihat(1,:)';
+    ohat = zeros(length(tspan) , numo);
+    ohat(1,:) = ( Toinv * psihat0 )';
+    odis = zeros(length(tspan) , numo);
+    odis(1,:) = ( Toinv * [ psi(1,:)' ; valdata.w(1,:)' ] )';
+    what = zeros(length(tspan) , params.nw);
+%     ohat = zeros(length(tspan) , numo-6);
+%     ohat(1,:) = ( Toinv(end-2:end,:) * psihat0 )';
+%     odis = zeros(length(tspan) , numo-6);
+%     odis(1,:) = ( Toinv(end-2:end,:) * psi(1,:)' )';
+%     oram = zeros(length(tspan) , numo-6);
+%     oram(1,:) = ( Toinv(end-2:end,:) * psihat0 )';
+%     odisrelift = zeros(length(tspan) , numo-6);
+%     odisrelift(1,:) = ( Toinv(end-2:end,:) * psihat0 )';
     
     hor = 100;
-    Oest = zeros(3*hor,1);  % for estimating load
-    Ohat = zeros(3*hor,1);  % for estimating load
+    Oest = zeros(numo*hor,1);  % for estimating load
+    Ohat = zeros(numo*hor,1);  % for estimating load
     for i = 1 : length(tspan)-1
         if i == 1
             psihatk = psihat0;
@@ -133,18 +135,25 @@ for j = 1 : params.numVals
 %         psibarhatk = psihatk;
 
         % decompose observable and unobservable states
-%         ohatk = psibarhatk(end-numo+1 : end); % isolate the observable states
-%         nohatk = psibarhatk(1 : end-numo);  % isolate the unobservable states
         if i == 1
-            ohatk = psibarhatk(end-numo+7 : end); % isolate the observable states
-            nohatk = psibarhatk(1 : end-numo+6);  % isolate the unobservable states
+            ohatk = psibarhatk(end-numo+1 : end); % isolate the observable states
+            nohatk = psibarhatk(1 : end-numo);  % isolate the unobservable states
+            whatk = what(1,:)';
         else
             ohatk = ohatkp1;    % don't transform and untransform the observable state, just reload it
-            nohatk = psibarhatk(1 : end-numo+6);
+            nohatk = psibarhatk(1 : end-numo);
+            whatk = whatkp1;
         end
+%         if i == 1
+%             ohatk = psibarhatk(end-numo+7 : end); % isolate the observable states
+%             nohatk = psibarhatk(1 : end-numo+6);  % isolate the unobservable states
+%         else
+%             ohatk = ohatkp1;    % don't transform and untransform the observable state, just reload it
+%             nohatk = psibarhatk(1 : end-numo+6);
+%         end
          
         % Prediction
-        ohatkp1_ = Ao * ohatk + Bo * valdata.u(i,:)';
+        ohatkp1_ = Ao * ohatk + Bo * valdata.u(i,:)' ;
         Pkp1_ = Ao * Pk * Ao' + Q;
         
         % Measurement
@@ -159,66 +168,34 @@ for j = 1 : params.numVals
         ohatkp1 = ohatkp1_ + Kkp1 * ( ykp1 - Co * ohatkp1_ );
         Pkp1 = ( eye(size(Pk)) - Kkp1 * Co ) * Pkp1_;
         
-%         % solve polynomial for x3 using the observable state
-%         x3est = fsolve( @(x) func(x,ykp1,ohatkp1,params,Tinv,numo) , 0.5 );
-        
         % estimate the regular lifted state using inverse transformation
 %         psihatkp1 = T * [ zeros(size(nohatk)) ; ohatkp1 ];   % use zeros for the unobservable states
         psihatkp1 = T * [ nohatk ; ohatkp1 ];   % have to use old unobservable states since we can't update them
 %         psihatkp1 = [ nohatk ; ohatkp1 ];
 %         psihatkp1 = To * ohatkp1;
 %         psihatkp1 = To(end-2:end , :) * ohatkp1;  % recover full lifted state from just the last three "observable state"
-
-%         % Polynomial solver version
-%         x3est = fsolve( @(x) sol4x3(x,ykp1,ohatkp1,Toinv(end-2:end,:),params) , 0 );
-%         psihatkp1(3) = x3est;
-        
-%         % Polynomial solver over some horizon of past points using fsolve
-%         basest = subs(lifted.params.Basis , { 'x1','x2' } , { ykp1(1) , ykp1(2) });
-%         oest = Toinv(end-2:end,:) * basest;
-%         Oest = [oest ; Oest(1:3*(hor-1))];
-%         Ohat = [ohatkp1 ; Ohat(1:3*(hor-1))];
-%         x3est = fsolve( @(x) sol4x3_past(x,Oest,Ohat,params) , psihatkp1(3) );
-%         psihatkp1(3) = x3est;
-        
-%         % Polynomial solver over some horizon of past points using roots function
-%         basest = subs(lifted.params.Basis , { 'x1','x2' } , { ykp1(1) , ykp1(2) });
-%         oest = Toinv(end-2:end,:) * basest;
-%         Oest = [oest ; Oest(1:3*(hor-1))];
-%         Ohat = [ohatkp1 ; Ohat(1:3*(hor-1))];
-% %         mysym = sum(Oest) - sum(Ohat);    % sum all the equations
-%         mysym = Oest(1) - Ohat(1);      % just solve the first equation
-%         mypoly = sym2poly(mysym);
-%         x3est = roots(mypoly);
-%         psihatkp1(3) = min(x3est);  % use the smallest root of the polynomial (the other one is greater than 1)
-        
-        % Solves by finding minimum of the square sum of equations
-        basest = subs(lifted.params.Basis , { 'x1','x2' } , { ykp1(1) , ykp1(2) });
-        oest = Toinv(end-2:end,:) * basest;
-        Oest = [oest ; Oest(1:3*(hor-1))];
-        Ohat = [ohatkp1 ; Ohat(1:3*(hor-1))];
-        mysym = sum( (Oest - Ohat).^2 );    % sum the square of all the equations
-        myfun = matlabFunction( mysym ) ;
-        x3est = fmincon(@(x) myfun(x) , psihatkp1(3) , [] , [] , [] , [] , -0.9 , 0.9);
-        psihatkp1(3) = min(x3est);  % use the smallest root of the polynomial (the other one is greater than 1)
         
         % impose saturation limits on state (hopefully will help with observer overshoot/instability) NOT NEEDED WITH KALMAN FILTER
         psihatkp1 = min(psihatkp1, ones(size(psihatkp1)) );   
         psihatkp1 = max(psihatkp1, -ones(size(psihatkp1)) );  % impose saturation limits on state
         
         % update the nonlifted state
-        xhatkp1 = lifted.C * psihatkp1;
+        xhatkp1 = Caug * psihatkp1;
         xhat(i+1,:) = xhatkp1';
+        
+        % update estimate
+        whatkp1 = [zeros(params.nw , params.N + params.nw - 1) , eye(params.nw)] * psihatkp1;
+        what(i+1,:) = whatkp1';
         
         % save psihat so that I can plot it
         psihat(i+1,:) = psihatkp1';
         
         % save ohat and oreal so that I can plot them against eachother (i.e. how well it is observing the so called "observable states"
         ohat(i+1,:) = ohatkp1';
-%         odis(i+1,:) = ( Toinv * psi(i+1,:)' )';    % psi is the real lifted state according to the model dynamics (not real dynamics)
-        odis(i+1,:) = ( Toinv(end-2:end , :) * psi(i+1,:)' )';    % psi is the real lifted state according to the model dynamics (not real dynamics)
-        odisrelift(i+1,:) = ( Toinv(end-2:end , :) * psirelift(i+1,:)' )';    % psi is the real lifted state according to the model dynamics when relifted at each timestep (not real dynamics)
-        oram(i+1,:) = ( Toinv(end-2:end , :) * liftState(xhat(i,:)') )' ;
+        odis(i+1,:) = ( Toinv * [ psi(i+1,:)' ; valdata.w(i+1,:)' ] )';    % psi is the real lifted state according to the model dynamics (not real dynamics)
+%         odis(i+1,:) = ( Toinv(end-2:end , :) * psi(i+1,:)' )';    % psi is the real lifted state according to the model dynamics (not real dynamics)
+%         odisrelift(i+1,:) = ( Toinv(end-2:end , :) * psirelift(i+1,:)' )';    % psi is the real lifted state according to the model dynamics when relifted at each timestep (not real dynamics)
+%         oram(i+1,:) = ( Toinv(end-2:end , :) * liftState(xhat(i,:)') )' ;
   
     end
     
@@ -250,12 +227,15 @@ for j = 1 : params.numVals
     koopsim.(valID).psi = psi;
     koopsim.(valID).psihat = psihat;
     
+    koopsim.(valID).what = what;
+    koopsim.(valID).w = valdata.w(index0 : end , :);
+    
     koopsim.(valID).psirelift = psirelift;
     
     koopsim.(valID).o = odis;
-    koopsim.(valID).orelift = odisrelift;
+%     koopsim.(valID).orelift = odisrelift;
     koopsim.(valID).ohat = ohat;
-    koopsim.(valID).oram = oram;
+%     koopsim.(valID).oram = oram;
     
     
     %% plot the results

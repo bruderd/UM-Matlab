@@ -7,7 +7,7 @@ UT = U';    % transpose of koopman operator
 
 A = UT( 1 : params.N , 1 : params.N );
 B = UT( 1 : params.N , params.N+1 : params.N+params.p );
-W = UT( 1 : params.N , params.N+params.p : end );   % load matrix
+W = UT( 1 : params.N , params.N+params.p+1 : end );   % load matrix
 
 % matrix to recover non-lifted state
 C = [eye(params.n), zeros(params.n , params.N - params.n)];   % C selects the first n entries of the lifted state (so output can be different than state)

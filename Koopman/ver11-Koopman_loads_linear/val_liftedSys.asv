@@ -82,7 +82,7 @@ for j = 1 : params.numVals
 %     koopsim.(valID).x = xss;
     koopsim.(valID).x = xdis;
     koopsim.(valID).u = valdata.u(index0 : end , :);
-    koopsim.(valID).wreal = valdata.w(index0 : end , :);    % the real load from the experiment
+    koopsim.(valID).wreal = valdata.w(index0 : end , :)
     koopsim.(valID).xreal = xreal;  % the real measured state from experiments
     
     
