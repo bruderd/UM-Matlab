@@ -94,7 +94,7 @@ for j = 1 : params.numVals
     
     % simulate observer
     xhat = zeros(length(tspan) , params.n);
-    xhat(1,:) = valdata.x(index0 , :) * blkdiag( eye(params.n-1) , 0 );  % Zero the load initially. VERY SPECIFIC TO ARM ROBOT
+    xhat(1,:) = valdata.x(index0 , :);% * blkdiag( eye(params.n-1) , 0 );  % Zero the load initially. VERY SPECIFIC TO ARM ROBOT
     psihat0 = liftState(xhat(1,:)');
 %     xhat(1,:) = 0.5*ones( 1 , params.n );  % 0.5 initial condition for observer states
 %     psihat0 = liftState(xhat(1,:)');   % 0.5 initial condition for observer states
@@ -109,9 +109,8 @@ for j = 1 : params.numVals
     odis = zeros(length(tspan) , numo-6);
     odis(1,:) = Toinv(end-2:end,:) * psi(1,:)';
     
-    hor = 30;
-    Oest = zeros(3*hor,1);  % for estimating load
-    Ohat = zeros(3*hor,1);  % for estimating load
+    Amat = [];  % for estimating load
+    Bmat = [];  % for estimating load
     for i = 1 : length(tspan)-1
         if i == 1
             psihatk = psihat0;
@@ -157,27 +156,20 @@ for j = 1 : params.numVals
 %         psihatkp1 = To * ohatkp1;
 %         psihatkp1 = To(end-2:end , :) * ohatkp1;  % recover full lifted state from just the last three "observable state"
 
+        % Solve for the unmeasured "real" state by extracting it from coupled terms of lifted state estimate (THIS IS JUST FOR A SPECIFC SYSTEM AND MUST BE UPDATED)
+%         %         Amat = [ Amat ; psihatkp1(1) ; psihatkp1(2)];% ; psihatkp1(4) ; psihatkp1(5) ; psihatkp1(6) ; 1 ; psihatkp1(3) ];
+%         Bmat = [ Bmat ; psihatkp1(7) ; psihatkp1(8)];% ; psihatkp1(14) ; psihatkp1(15) ; psihatkp1(16) ; psihatkp1(3) ; psihatkp1(9) ];
+%         lambda = 0; % quadratic penalty term on magnitud of x3
+%         H = 2 * Amat' * Amat + lambda;
+%         fT = -2 * Bmat' * Amat;
+%         x3 = quadprog(H,fT',[],[],[],[],[-0.9],[0.9]);
+% %         x3 = Amat \ Bmat;
+%         psihatkp1(3) = x3;
+
 %         % Polynomial solver version
-%         x3est = fsolve( @(x) sol4x3(x,ykp1,ohatkp1,Toinv(end-2:end,:),params) , 0 );
-%         psihatkp1(3) = x3est;
-        
-%         % Polynomial solver over some horizon of past points
 %         basest = subs(lifted.params.Basis , { 'x1','x2' } , { ykp1(1) , ykp1(2) });
-%         oest = Toinv(end-2:end,:) * basest;
-%         Oest = [oest ; Oest(1:3*(hor-1))];
-%         Ohat = [ohatkp1 ; Ohat(1:3*(hor-1))];
-%         x3est = fsolve( @(x) sol4x3_past(x,Oest,Ohat,params) , psihatkp1(3) );
-%         psihatkp1(3) = x3est;
-        
-        % Polynomial solver over some horizon of past points using roots function
-        basest = subs(lifted.params.Basis , { 'x1','x2' } , { ykp1(1) , ykp1(2) });
-        oest = Toinv(end-2:end,:) * basest;
-        Oest = [oest ; Oest(1:3*(hor-1))];
-        Ohat = [ohatkp1 ; Ohat(1:3*(hor-1))];
-        mysym = sum(Oest) - sum(Ohat);
-        mypoly = sym2poly(mysym);
-        x3est = roots(mypoly);
-        psihatkp1(3) = min(x3est);  % use the smallest root of the polynomial
+%         x3est = fsolve( @(x) sol4x3(x,ykp1,psihatkp1,params) , psihatkp1(3) );
+%          psihatkp1(3) = x3est;
         
         % impose saturation limits on state (hopefully will help with observer overshoot/instability) NOT NEEDED WITH KALMAN FILTER
         psihatkp1 = min(psihatkp1, ones(size(psihatkp1)) );   
@@ -251,21 +243,12 @@ end
 
 end
 
-% function to solve for the load state x3
-function fart = sol4x3(x,y,ohat,Toinv,params)
-basest = subs( params.Basis, {'x1','x2','x3'} , {y(1),y(2),x} );
-basest = double(basest);
-oest = Toinv * basest;
-fart = sum(oest) - sum(ohat);
-end
-
-% function to solve for the load state x3 over all past points
-function fart = sol4x3_past(x,oest,ohat,params)
-oestx = subs( oest , 'x3' , x );
-oestx = double(oestx);
-fart = sum(oestx) - sum(ohat);
-end
-
+% function fart = sol4x3(x,y,psi,params)
+% basest = subs( params.Basis, {'x1','x2','x3'} , {y(1),y(2),x} );
+% basest = double(basest);
+% fart = basest - psi;
+% end
+% 
 % function fart = func(x,y,opsi,params,Tinv,numo)
 % ob0 = Tinv * params.Basis;
 % ob1 = ob0(end-numo+1 : end , :);
