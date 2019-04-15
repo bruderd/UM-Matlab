@@ -45,8 +45,7 @@ x = rawdata.Y(i_tstart : i_tend , :);
 u = rawdata.U(i_tstart : i_tend , :);
 
 % save trimmed data files
-% val_fname = ['trimdataFiles', filesep, data_name, '_200s.mat'];
-val_fname = ['trimdataFiles', filesep, data_name, '_trim.mat'];
+val_fname = ['trimdataFiles_v2', filesep, data_name, '_trim.mat'];
 [unique_fname, change_detect] = auto_rename(val_fname, '0');
 save(unique_fname, 't', 'x', 'u');
 

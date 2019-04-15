@@ -20,19 +20,19 @@
 if ~exist('params' ,'var')  % recycle struct from previous run 
     params = struct;
 end
-params.getData = 'exp';            % ('exp' or 'file')
-params.basisID = 'gaussian';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
+params.getData = 'file';            % ('exp' or 'file')
+params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
 params.numTrials        = 16;        % numer of sysid trials
-params.numVals          = 100;        % number of validation trials
+params.numVals          = 160;        % number of validation trials
 params.Ts               = 0.1;     % sampling period
-params.K                = 191000;     % numer of snapshotPairs to take
+params.K                = 10*900*15;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 params.scale            = 0.9;      % scale down all state to be in range [-scale , scale]
 params.nd               = 1;        % number of delays to include in the snapshot pairs
 
-params.systemName          = 'larm_OL50pc_100val10s_16sid_sc09_191000pts_1del_Ts1';  % name of current system
+params.systemName          = 'larmv2_160val10s_16sid_sc09_135000pts_1del_Ts1';  % name of current system
 % params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 params.filterWindow        = floor( [1, 1] );  % no smoothing
 % params.filterWindow        = floor( [6, 6] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
