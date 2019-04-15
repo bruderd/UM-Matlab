@@ -62,6 +62,62 @@ for j = 1 : params.numVals
         psirelift(i+1,:) = psireliftkp1';    % the lifted state if you relift at each timestep
     end
     
+    %% simulate observer system based on lifting and solving
+    
+    % initialize the measured output
+    y = zeros( length(tspan) , params.ny );
+    y(1,:) = psirelift(1,1:params.ny);
+    
+    % initialize estimate of lifted state
+    psihat = zeros( length(tspan) , params.N );
+    psihat(1,:) = psirelift(1,:)';
+    
+    % initialize load estimate
+    what = zeros( lenfth(tspan) , params.nw );
+    
+    % build matrices for estimating the load
+    hor = 1;    % number of time steps to be considered in load estimate equation
+    UK = zeros(params.p*hor,1); % stack of inputs
+    PsiK = zeros(params.N*hor,1);  % stack of lifted states (no load)
+    PsiKp1 = zeros(params.N*hor,1);  % stack of lifted states (no load)
+    Wstack = kron( ones(hor,1) , lifted.W );    % matrix of stacked load matrices
+    Wstackinv = pinv(Wstack);
+    Astack = kron(lifted.A , eye(hor));
+    Bstack = kron(lifted.B , eye(hor));
+    
+    for i = 1 : length(tspan) - 1
+        
+        % Measurement
+        mu = 0; % mean of measurement noise
+        sigma = 0.000;  % standard deviation of measurement noise
+%         ykp1 = xdis(i+1,1:params.ny)' + normrnd(mu,sigma);   % has some noise added in
+%         ykp1 = xreal(i+1,1:params.ny)' + normrnd(mu,sigma);   % has some noise added in
+        ykp1 = psirelift(i+1,1:params.ny)' + normrnd(mu,sigma);   % has some noise added in
+        y(i+1,:) = ykp1';
+        
+        % Lift the measured output
+        psihatkp1 = liftState(ykp1);
+        psihat(i+1,:) = psihatkp1';
+        
+        % get better estimate of the load using least squares over past horizon (on psihat)
+        PsiK = PsiKp1;
+        PsiKp1 = [ psihatkp1(1:params.N) ; PsiKp1(1 : params.N*(hor-1)) ];
+        UK = [ valdata.u(i,:)' ; UK(1 : params.p*(hor-1)) ];
+        whatkp1 = Wstackinv * ( PsiKp1 - Astack * PsiK - Bstack * UK);
+        what(i+1,:) = whatkp1';
+
+        % update the nonlifted state
+        xhatkp1 = [ ykp1 ,  ];
+        xhat(i+1,:) = xhatkp1';
+        
+        
+    end 
+        
+        
+        
+        
+        
+        
     %% simulate observer system (Kalman Filter on Observable subsystem)
     
     % Transform into observable form
@@ -137,8 +193,8 @@ for j = 1 : params.numVals
     PsiKp1 = zeros(params.N*hor,1);  % stack of lifted states (no load)
     Wstack = kron( ones(hor,1) , lifted.W );    % matrix of stacked load matrices
     Wstackinv = pinv(Wstack);
-    Astack = kron(eye(hor) , lifted.A);
-    Bstack = kron(eye(hor) , lifted.B);
+    Astack = kron(lifted.A , eye(hor));
+    Bstack = kron(lifted.B , eye(hor));
     % for estimatin load with ohat
     OK = zeros(nsubo*hor,1);  % stack of observer states
     OKp1 = zeros(nsubo*hor,1);  % stack of observer states
@@ -146,8 +202,8 @@ for j = 1 : params.numVals
     Wtstack = kron( ones(hor,1) , Wt );
     Wtstackinv = pinv(Wtstack);
     Aot = Ao * Toinv(:,1:params.N);
-    Aotstack = kron(eye(hor) , Aot);
-    Bostack = kron(eye(hor) , Bo);
+    Aotstack = kron(Aot , eye(hor));
+    Bostack = kron(Bo , eye(hor));
     for i = 1 : length(tspan)-1
         if i == 1
             psihatk = psihat0;

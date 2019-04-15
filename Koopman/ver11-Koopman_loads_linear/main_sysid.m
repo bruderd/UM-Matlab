@@ -32,7 +32,7 @@ params.numericalDerivs  = false;    % choose whether or not to take numerical de
 params.scale            = 0.9;      % scale down all state to be in range [-scale , scale]
 params.nd               = 0;        % number of delays to include in the snapshot pairs
 
-params.systemName          = 'armlinLoad_load5_sp5000_sysid100s_val10s_poly2_';  % name of current system
+params.systemName          = 'armlinLoad_load5_sp5000_sysid100s_val100s_poly2_';  % name of current system
 % params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 params.filterWindow        = floor( [1, 1] );  % no smoothing
 % params.filterWindow        = floor( [6, 6] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
