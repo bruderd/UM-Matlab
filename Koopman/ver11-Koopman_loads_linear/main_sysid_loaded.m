@@ -1,4 +1,4 @@
-%main_sysid
+%main_sysid_loaded
 %main_sysid: A generic "main" function for learning model from data
 %   Performs linear system identification of nonlinear systems using a
 %   lifting technique based on the Koopman operator projected onto a finite
@@ -30,9 +30,10 @@ params.Ts               = 0.02;     % sampling period
 params.K                = 100*50*10;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 params.scale            = 0.9;      % scale down all state to be in range [-scale , scale]
-params.nd               = 0;        % number of delays to include in the snapshot pairs
+params.nd               = 1;        % number of delays to include in the snapshot pairs
 
-params.system              = 'armlinLoad_load0to9_sp5000_sysid100s_val10s_0del'; % name of the current system
+params.name             = 'arm_loaded_load0to9';    % user defined custom part of name
+params.system              = [ params.name , '_' , num2str(params.K) , 'sp_' , num2str(params.numTrials) , 'sysid_' ,  num2str(params.numVals) , 'val_' , num2str(params.nd), 'del']; % name of the current system
 % params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 params.filterWindow        = floor( [1, 1] );  % no smoothing
 % params.filterWindow        = floor( [6, 6] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
@@ -46,7 +47,7 @@ params.naug = params.n + params.p; % dimension of augmented state (DNE)
 params.nzeta = params.n + params.nd * (params.naug);    % dimensinon of zeta (DNE)
 
 % select maximum "degree" for basis elements
-params.maxDegree = 2;   % maximum degree of vector field monomial basis
+params.maxDegree = 4;   % maximum degree of vector field monomial basis
 
 % system name imcludeing the degree 
 params.systemName = [ params.system , '_' , params.basisID , num2str(params.maxDegree) , '_'];
@@ -58,7 +59,7 @@ if ~isfield(params , 'Basis')
     if strcmp(params.basisID, 'fourier')
         params = def_fourierLift(params);  % creates fourier lifting function, fourierLift;
     elseif strcmp(params.basisID, 'poly')
-        params = def_polyLift(params);  % creates polynomial lifting function, polyLift
+        params = def_polyLift_loaded(params);  % creates polynomial lifting function, polyLift
     elseif strcmp(params.basisID, 'fourier_sparser')
         params = def_fourierLift_sparser(params);
     elseif strcmp(params.basisID, 'thinplate')
@@ -87,15 +88,15 @@ params.compareon           = true;  % boolean to decide whether to convert to id
 [data, some_snapshotPairs, params] = get_trainingData(params);
 
 %% Learn the approximate Koopman operator and corresponding NL system
-[U , koopData ] = get_Koopman( some_snapshotPairs, params );
+[U , koopData ] = get_Koopman_loaded( some_snapshotPairs, params );
 % statespace      = sysid_statespaceSys( U, some_snapshotPairs, params );
-lifted          = sysid_liftedSys( U , params , koopData );
+lifted          = sysid_liftedSys_loaded( U , params , koopData );
 
 %% Simulate the results and compare to validation trial(s)
 if params.validateon
     disp('Comparing to validation data set...');
 %     [error, koopsim] = koopmanValidation( data, params, statespace, lifted );
-    [error, koopsim] = val_liftedSys(data, lifted);
+    [error, koopsim] = val_liftedSys_loaded(data, lifted);
     disp('Done.')
 end
 
@@ -115,4 +116,9 @@ if strcmp( saveModel , 'Yes' )
     % save the lifting function
     liftFunDest = ['liftingFunctions' , filesep , 'lift_' , params.systemName, '.m'];
     copyfile('stateLift.m' , liftFunDest);
+    
+    % save the other lifting function
+    WliftFunDest = ['liftingFunctions' , filesep , 'Wlift_' , params.systemName, '.m'];
+    copyfile('Wlift.m' , WliftFunDest);
 end
+

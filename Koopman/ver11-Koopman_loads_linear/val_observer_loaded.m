@@ -1,4 +1,4 @@
-function [error, koopsim] = val_observer_v2( data, lifted )
+function [error, koopsim] = val_observer_loaded( data, lifted )
 %val_lobserver: Validates the observer for the lifted system, which tries
 %to estimate the load by linearly incorporating it into the lifted state.
 %   At each time step the states are measured, then the load is estimated
@@ -13,6 +13,7 @@ koopsim = struct;   % simulation results for koopman system
 % identify the lifting function
 cd('liftingFunctions');
 liftState = str2func([ 'lift_' , params.systemName ]);
+liftW = str2func([ 'Wlift_' , params.systemName ]);
 cd('..');
 
 for j = 1 : params.numVals
@@ -37,7 +38,7 @@ for j = 1 : params.numVals
     % simulate the behavior of the discrete linear system
     xdis = zeros(length(tspan) , params.n);
     xdis(1,:) = valdata.x(index0 , :);
-    psi0 = liftState(zeta0);
+    psi0 = liftState( zeta0 , valdata.w(1,:)' );
     psi = zeros(length(tspan) , params.N);
     psi(1,:) = psi0;
     psirelift = zeros(length(tspan) , params.N);
@@ -48,14 +49,14 @@ for j = 1 : params.numVals
             psireliftk = psi0;
         else
             psik = psikp1;
-            psireliftk = liftState(zrelift);
+            psireliftk = liftState(zrelift , valdata.w(i,:)');
         end
         % linear dynamics
-        psikp1 = lifted.A * psik + lifted.B * valdata.u(i,:)' + lifted.W * valdata.w(i,:)';
+        psikp1 = lifted.A * psik + lifted.B * valdata.u(i,:)';
         xdis(i+1,:) = ( lifted.C * psikp1 )';
         
         % dynamics when relifting at each timestep
-        psireliftkp1 = lifted.A * psireliftk + lifted.B * valdata.u(i,:)' + lifted.W * valdata.w(i,:)';
+        psireliftkp1 = lifted.A * psireliftk + lifted.B * valdata.u(i,:)';
         zrelift = lifted.Cz * psireliftkp1;
        
         % save psihat so that I can plot it
@@ -74,71 +75,71 @@ for j = 1 : params.numVals
     psihat(1,:) = psirelift(1,:)';
     
     % initialize load estimate
-    what = zeros( length(tspan) , params.nw );
+    what = zeros( length(tspan) , params.nw);
+    whatkp1 = zeros( params.nw , 1 );
     
     % initialize the state with load appended at the end
     xhat = [ y , what ];
     
     % build matrices for estimating the load
-    hor = 1;    % number of time steps to be considered in load estimate equation
+    hor = 50;    % number of time steps to be considered in load estimate equation
     UK = zeros(params.p*hor,1); % stack of inputs
-    PsiK = zeros(params.N*hor,1);  % stack of lifted states (no load)
-    PsiKp1 = zeros(params.N*hor,1);  % stack of lifted states (no load)
-    YK = zeros(params.ny*hor,1);
-    YKp1 = zeros(params.ny*hor,1);
-    Wstack = kron( ones(hor,1) , lifted.W );    % matrix of stacked load matrices
-    Wstackinv = pinv(Wstack);
+    Ykp1 = zeros(params.ny*hor,1);
+    Wk = zeros(params.N*hor , 1 + params.nw);
     Astack = kron(eye(hor) , lifted.A);
     Bstack = kron(eye(hor) , lifted.B);
     CAstack = kron(eye(hor) , lifted.Cy * lifted.A);
     CBstack = kron(eye(hor) , lifted.Cy * lifted.B);
-    CWstack = kron( ones(hor,1) , lifted.Cy * lifted.W );
     
     for i = 1 : length(tspan) - 1
+        
+        % Lift the previous measurement
+        if params.nd == 1   % assuming 1 or zeros delays, not 2 or more (for now)
+            if i == 1
+                zetak = [ y(i,:)' ; y(i,:)' ; valdata.u(i,:)' ]; % the nonlifted state when there is 1 delay
+            else
+                zetak = [ y(i,:)' ; y(i-1,:)' ; valdata.u(i,:)' ]; % the nonlifted state when there is 1 delay
+            end
+        else
+            zetak = y(i,:)';
+        end
+        Whatk = liftW(zetak);
+        psihat(i,:) = Whatk * [1 ; whatkp1]; % used previous estimate of load to update psihat
         
         % Measurement
         mu = 0; % mean of measurement noise
         sigma = 0.00;  % standard deviation of measurement noise
 %         ykp1 = xdis(i+1,1:params.ny)' + normrnd(mu,sigma);   % has some noise added in
-%         ykp1 = xreal(i+1,1:params.ny)' + normrnd(mu,sigma);   % measure the real nonl
-        ykp1 = psirelift(i+1,1:params.ny)' + normrnd(mu,sigma);   % has some noise added in
+        ykp1 = xreal(i+1,1:params.ny)' + normrnd(mu,sigma);   % measure the real nonl
+%         ykp1 = psirelift(i+1,1:params.ny)' + normrnd(mu,sigma);   % has some noise added in
         y(i+1,:) = ykp1';
         
-        % Lift the measured output
-        if params.nd == 1   % assuming 1 or zeros delays, not 2 or more (for now)
-            zetakp1 = [ ykp1 ; y(i,:)' ; valdata.u(i,:)' ]; % the nonlifted state when there is 1 delay
-        else
-            zetakp1 = ykp1;
-        end
-        psihatkp1 = liftState(zetakp1);
-        psihat(i+1,:) = psihatkp1';
-        
-%         % get estimate of the load using least squares over past horizon (on psihat)
-%         PsiK = PsiKp1;
-%         PsiKp1 = [ psihatkp1(1:params.N) ; PsiKp1(1 : params.N*(hor-1)) ];
-%         UK = [ valdata.u(i,:)' ; UK(1 : params.p*(hor-1)) ];
-%         whatkp1 = Wstack \ ( PsiKp1 - Astack * PsiK - Bstack * UK);
-%         what(i+1,:) = whatkp1';
-% 
-%         % Use lasso instead of just least squares
-%         lasso = 1e-3; % L1 penalty weight
-%         H = 2 * ( Wstack' * Wstack + lasso );
-%         f = -2 * Wstack' * ( PsiKp1 - Astack * PsiK - Bstack * UK );
-%         whatkp1 = quadprog(H,f,[],[],[],[],0,0.9);
-%         what(i+1,:) = whatkp1';
+%         % Lift the measured output (should do this before measuring)
+%         if params.nd == 1   % assuming 1 or zeros delays, not 2 or more (for now)
+%             zetakp1 = [ ykp1 ; y(i,:)' ; valdata.u(i,:)' ]; % the nonlifted state when there is 1 delay
+%         else
+%             zetakp1 = ykp1;
+%         end
+%         Whatkp1 = liftW(zetakp1);
+%         psihat(i+1,:) = Whatkp1 * [1 ; whatkp1]; % used previous estimate of load to update psihat
         
         % get estimate of the load using least squares over past horizon (on xhat)
-        YK = YKp1;
-        YKp1 = [ ykp1 ; YKp1(1 : params.ny*(hor-1)) ];
-        PsiK = PsiKp1;
-        PsiKp1 = [ psihatkp1(1:params.N) ; PsiKp1(1 : params.N*(hor-1)) ];
+        Ykp1 = [ ykp1 ; Ykp1(1 : params.ny*(hor-1)) ];
+        Wk = [ Whatk ; Wk(1 : params.N*(hor - 1) , :) ];
         UK = [ valdata.u(i,:)' ; UK(1 : params.p*(hor-1)) ];
-        whatkp1 = CWstack \ ( YKp1 - CAstack * PsiK - CBstack * UK);
-        if all( whatkp1 < ones(params.nw,1) ) && all( whatkp1 >= zeros(params.nw,1) )  % set what to zero if solution lies outside of bounds [0,1]
-            what(i+1,:) = whatkp1';
-        else
-            what(i+1,:) = zeros(1,params.nw);
-        end
+        Clsqlin = CAstack * Wk;
+        dlsqlin = Ykp1 - CBstack * UK;
+        Aeq = blkdiag( 1 , zeros(params.nw , params.nw) );
+        beq = [ 1 ; zeros(params.nw,1) ];
+        lb = zeros(params.nw+1,1);
+        ub = [ Inf ; 0.9 * ones(params.nw,1) ];
+        sol = lsqlin( Clsqlin , dlsqlin , [] , [] , Aeq , beq , lb , ub );  % solve for what using constrained least squares solver
+        whatkp1 = sol(2:end);
+%         if all( whatkp1 < ones(params.nw,1) ) && all( whatkp1 >= zeros(params.nw,1) )  % set what to zero if solution lies outside of bounds [0,1]
+%             what(i+1,:) = whatkp1';
+%         else
+%             what(i+1,:) = zeros(1,params.nw);
+%         end
         
 %         % Use lasso instead of just least squares
 %         lasso = 0; % L1 penalty weight

@@ -169,7 +169,7 @@ data.valparams = params;   % saves params used for validation so we can remember
 
 %% save datafile without overwriting previous files with same name
 % SaveWithNumber(['dataFiles', filesep, params.systemName, '.mat'], data);
-[unique_fname, change_detect] = auto_rename(['dataFiles', filesep, params.systemName, '.mat'], '0');
+[unique_fname, change_detect] = auto_rename(['dataFiles', filesep, params.system, '.mat'], '0');
 save(unique_fname, 'data');
 
 

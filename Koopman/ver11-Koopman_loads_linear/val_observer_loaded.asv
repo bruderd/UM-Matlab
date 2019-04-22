@@ -1,4 +1,4 @@
-function [error, koopsim] = val_observer_v2( data, lifted )
+function [error, koopsim] = val_observer_loaded( data, lifted )
 %val_lobserver: Validates the observer for the lifted system, which tries
 %to estimate the load by linearly incorporating it into the lifted state.
 %   At each time step the states are measured, then the load is estimated
@@ -37,7 +37,7 @@ for j = 1 : params.numVals
     % simulate the behavior of the discrete linear system
     xdis = zeros(length(tspan) , params.n);
     xdis(1,:) = valdata.x(index0 , :);
-    psi0 = liftState(zeta0);
+    psi0 = liftState( zeta0 , valdata.w(1,:)' );
     psi = zeros(length(tspan) , params.N);
     psi(1,:) = psi0;
     psirelift = zeros(length(tspan) , params.N);
@@ -48,14 +48,14 @@ for j = 1 : params.numVals
             psireliftk = psi0;
         else
             psik = psikp1;
-            psireliftk = liftState(zrelift);
+            psireliftk = liftState(zrelift , valdata.w(i,:)');
         end
         % linear dynamics
-        psikp1 = lifted.A * psik + lifted.B * valdata.u(i,:)' + lifted.W * valdata.w(i,:)';
+        psikp1 = lifted.A * psik + lifted.B * valdata.u(i,:)';
         xdis(i+1,:) = ( lifted.C * psikp1 )';
         
         % dynamics when relifting at each timestep
-        psireliftkp1 = lifted.A * psireliftk + lifted.B * valdata.u(i,:)' + lifted.W * valdata.w(i,:)';
+        psireliftkp1 = lifted.A * psireliftk + lifted.B * valdata.u(i,:)';
         zrelift = lifted.Cz * psireliftkp1;
        
         % save psihat so that I can plot it
@@ -86,13 +86,11 @@ for j = 1 : params.numVals
     PsiKp1 = zeros(params.N*hor,1);  % stack of lifted states (no load)
     YK = zeros(params.ny*hor,1);
     YKp1 = zeros(params.ny*hor,1);
-    Wstack = kron( ones(hor,1) , lifted.W );    % matrix of stacked load matrices
-    Wstackinv = pinv(Wstack);
     Astack = kron(eye(hor) , lifted.A);
     Bstack = kron(eye(hor) , lifted.B);
     CAstack = kron(eye(hor) , lifted.Cy * lifted.A);
     CBstack = kron(eye(hor) , lifted.Cy * lifted.B);
-    CWstack = kron( ones(hor,1) , lifted.Cy * lifted.W );
+    Wstack = zeros(params.N*hor , 1 + params.nw);
     
     for i = 1 : length(tspan) - 1
         
@@ -110,30 +108,22 @@ for j = 1 : params.numVals
         else
             zetakp1 = ykp1;
         end
-        psihatkp1 = liftState(zetakp1);
-        psihat(i+1,:) = psihatkp1';
-        
-%         % get estimate of the load using least squares over past horizon (on psihat)
-%         PsiK = PsiKp1;
-%         PsiKp1 = [ psihatkp1(1:params.N) ; PsiKp1(1 : params.N*(hor-1)) ];
-%         UK = [ valdata.u(i,:)' ; UK(1 : params.p*(hor-1)) ];
-%         whatkp1 = Wstack \ ( PsiKp1 - Astack * PsiK - Bstack * UK);
-%         what(i+1,:) = whatkp1';
-% 
-%         % Use lasso instead of just least squares
-%         lasso = 1e-3; % L1 penalty weight
-%         H = 2 * ( Wstack' * Wstack + lasso );
-%         f = -2 * Wstack' * ( PsiKp1 - Astack * PsiK - Bstack * UK );
-%         whatkp1 = quadprog(H,f,[],[],[],[],0,0.9);
-%         what(i+1,:) = whatkp1';
+        Whatkp1 = Wlift(zetakp1);
+        psihat(i+1,:) = Whatkp1 * what; % used previous estimate of load to update psihat
         
         % get estimate of the load using least squares over past horizon (on xhat)
-        YK = YKp1;
-        YKp1 = [ ykp1 ; YKp1(1 : params.ny*(hor-1)) ];
+        Yk = Ykp1;
+        Ykp1 = [ ykp1 ; Ykp1(1 : params.ny*(hor-1)) ];
         PsiK = PsiKp1;
         PsiKp1 = [ psihatkp1(1:params.N) ; PsiKp1(1 : params.N*(hor-1)) ];
+        Wk = Wkp1;
+        Wkp1 = [ Whatkp1 ; Wkp1(1 : params.N*(hor - 1)) ];
         UK = [ valdata.u(i,:)' ; UK(1 : params.p*(hor-1)) ];
-        whatkp1 = CWstack \ ( YKp1 - CAstack * PsiK - CBstack * UK);
+        Clsqlin = CAstack * Wkp1;
+        dlsqlin = Ykp1 - CBstack * UK;
+        Aeq = blkdiag( 1 , zeros(params.nw , params.nw) );
+        beq = [ 1 ; zeros(pa) ];
+        whatkp1 = lsqlin( Clsqlin , dlsqlin , [] , [] , Aeq , beq , 0 , 0.9 );  % solve for what using constrained least squares solver
         if all( whatkp1 < ones(params.nw,1) ) && all( whatkp1 >= zeros(params.nw,1) )  % set what to zero if solution lies outside of bounds [0,1]
             what(i+1,:) = whatkp1';
         else

@@ -1,4 +1,4 @@
-%main_sysid
+%main_sysid_loaded
 %main_sysid: A generic "main" function for learning model from data
 %   Performs linear system identification of nonlinear systems using a
 %   lifting technique based on the Koopman operator projected onto a finite
@@ -32,7 +32,8 @@ params.numericalDerivs  = false;    % choose whether or not to take numerical de
 params.scale            = 0.9;      % scale down all state to be in range [-scale , scale]
 params.nd               = 0;        % number of delays to include in the snapshot pairs
 
-params.system              = 'armlinLoad_load0to9_sp5000_sysid100s_val10s_0del'; % name of the current system
+params.name             = 'armlinLoad_load0to9';
+params.system              = [ params.name , '_' ]'armlinLoad_load0to9_sp5000_sysid100s_val10s_0del'; % name of the current system
 % params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 params.filterWindow        = floor( [1, 1] );  % no smoothing
 % params.filterWindow        = floor( [6, 6] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
@@ -58,7 +59,7 @@ if ~isfield(params , 'Basis')
     if strcmp(params.basisID, 'fourier')
         params = def_fourierLift(params);  % creates fourier lifting function, fourierLift;
     elseif strcmp(params.basisID, 'poly')
-        params = def_polyLift(params);  % creates polynomial lifting function, polyLift
+        params = def_polyLift_loaded(params);  % creates polynomial lifting function, polyLift
     elseif strcmp(params.basisID, 'fourier_sparser')
         params = def_fourierLift_sparser(params);
     elseif strcmp(params.basisID, 'thinplate')
