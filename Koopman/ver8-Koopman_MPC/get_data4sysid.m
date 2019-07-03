@@ -27,9 +27,9 @@ if params.ploton
         
         % change y-axis of figure
         fig = gcf;
-%         allaxes = findall(fig, 'type', 'axes');
-%         allaxes(5).YLim = [-params.scale , params.scale];
-%         allaxes(6).YLim = [-params.scale , params.scale];
+        allaxes = findall(fig, 'type', 'axes');
+        allaxes(5).YLim = [-params.scale , params.scale]; 
+        allaxes(6).YLim = [-params.scale , params.scale];
         
 %         ax = gca;
 %         ax.YLim = [-params.scale , params.scale];    

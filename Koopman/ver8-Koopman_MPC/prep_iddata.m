@@ -33,7 +33,7 @@ nd = data.valparams.nd;     % number of delays in model
 
 % initialize merged dataset
 zsysid.z1 = iddata(data.trial1.y(nd+1 : end , :), data.trial1.u(nd+1 : end , :), data.valparams.Ts);
-zsysid_merged = zsysid.z1;
+% zsysid_merged = zsysid.z1;
 
 % create iddata objects for all trials
 for i = 2 : numTrials
@@ -43,9 +43,12 @@ for i = 2 : numTrials
    expID = ['z', num2str(i)];
    zsysid.(expID) = iddata(trialName.y(nd+1 : end , :), trialName.u(nd+1 : end , :), data.valparams.Ts);
    
-   % merge all of the data sets into single multiexperiment object
-   zsysid_merged = merge( zsysid_merged, zsysid.(expID) );
+%    % merge all of the data sets into single multiexperiment object (THIS IS BAD BECAUSE IT MAKES THE SYSID TRAINING DATA UNSCALED FOR THE LINEAR SYSTEM)
+%    zsysid_merged = merge( zsysid_merged, zsysid.(expID) );
 end
+
+%% create merged iddata object (THIS ENSURES THE SYSID DATA IS SCALED PROPERLY)
+zsysid_merged = iddata(data.alltrials.x(nd+1 : end , :), data.alltrials.u(nd+1 : end , :), data.valparams.Ts);
 
 %% create iddata objects for validation trials
 

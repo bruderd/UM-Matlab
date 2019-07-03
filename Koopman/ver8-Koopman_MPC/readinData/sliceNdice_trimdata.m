@@ -43,6 +43,6 @@ for i = 1 : num_vals
     t = val_data.t;
     x = val_data.x;
     u = val_data.u;
-    val_fname = ['trimdataFiles_v2', filesep, 'sliceNdice', filesep, data_name, '_val_', num2str(val_len), 's_' , num2str(i) , '.mat'];
+    val_fname = ['trimdataFiles_v3', filesep, 'sliceNdice', filesep, data_name, '_val_', num2str(val_len), 's_' , num2str(i) , '.mat'];
     save(val_fname, 't', 'x', 'u');
 end

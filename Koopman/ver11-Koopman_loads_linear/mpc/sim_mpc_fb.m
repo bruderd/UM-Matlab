@@ -95,7 +95,7 @@ while now < length(yr)  % stop when all trajectory points have been targeted
     end
     zetak = [xk; xdk; udk];
     psik = stateLift(zetak,0.5);  % NEED TO INPUT THE REAL LOAD HERE!
-    psikp1 = model.Asim * psik + model.Bsim * usck;
+    psikp1 = model.A * psik + model.B * usck;   % was Asim and Bsim before
     xkp1 = diag(model.params.xScaleFactor.^(-1)) * ( model.C * psikp1 );    % isolate state and scale back up
     
     % update values of output parameters
