@@ -18,7 +18,7 @@ matlabFunction(J_aq, 'File', 'J_aq', 'Vars', {alpha});
 
 %% Spine Block Jacobian
 
-x = alpha2x_sym(alpha, params);
+x = alpha2x_sym_exact(alpha, params);
 
 J_ax = jacobian(x, alpha);
 

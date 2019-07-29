@@ -35,10 +35,10 @@ xdot = Jax * alphadot;
 % kinetic energy
 KE = (1/2) * xdot' * M * xdot + (1/2) * alphadot' * I * alphadot;
 
-% potential energy
+% potential energy (forgot energy stored in joint springs, also seems to use the linearization of sin)
 PE = 0;
 for i = 1:p
-   PE = PE - g* x(3*(i-1)+2,1) * M(i,i); 
+   PE = PE - g * x(3*(i-1)+2,1) * M(i,i); 
 end
 
 % lagrangian
@@ -61,8 +61,8 @@ x0tdot = sym(x0tdot);
 for j = 1 : p
    jstr = num2str(j);
    
-   x0t(j) = sym(strcat('x0t', jstr, '(t)'));
-   x0tdot(j) = sym(strcat('x0tdot', jstr, '(t)'));
+   x0t(j) = str2sym(strcat('x0t', jstr, '(t)'));
+   x0tdot(j) = str2sym(strcat('x0tdot', jstr, '(t)'));
 end
 
 dLdx0dot_t = subs(dLdalphadot, [alpha, alphadot], [x0t, x0tdot]);
@@ -76,8 +76,8 @@ Dx0t = sym( zeros(p,1) );        % x0dot written in gross way, e.g. x0dot = diff
 Dx0tdot = sym( zeros(p,1) );     % x0ddot written in gross way, e.g. x0ddot = diff(x0dot(t), t)
 for i = 1:p
    istr = num2str(i);
-   Dx0t(i,1) = sym(strcat( 'diff(x0t', istr, '(t), t)' )); 
-   Dx0tdot(i,1) = sym(strcat( 'diff(x0tdot', istr, '(t), t)' )); 
+   Dx0t(i,1) = str2sym(strcat( 'diff(x0t', istr, '(t), t)' )); 
+   Dx0tdot(i,1) = str2sym(strcat( 'diff(x0tdot', istr, '(t), t)' )); 
 end
 
 EOM = subs(EOM_raw, [x0t; x0tdot; Dx0t; Dx0tdot], [alpha; alphadot; alphadot; alphaddot]);      % replace all instances of 't'

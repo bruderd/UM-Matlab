@@ -7,7 +7,7 @@ clc
 
 params = struct;
 
-p = 32;
+p = 3;
 n = [2]';
 params.p = p;      % total number of spine segments
 params.n = n;     % numer of actuators in each module (a vector)
