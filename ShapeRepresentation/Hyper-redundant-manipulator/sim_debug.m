@@ -7,7 +7,7 @@ params = sys.params;
 
 %% set constant input and initial conditions
 
-u = pi/6 * [1 -2 1 2]' ; %3 * ones( params.Nmods , 1);
+u = pi/6 * [2 1 -1 -2 -1 1]' ; %3 * ones( params.Nmods , 1);
 
 a0 = zeros( params.Nlinks , 1 );
 adot0 = zeros( params.Nlinks , 1 );
@@ -63,7 +63,7 @@ for i = 1:totFrames
     x = [0; X(1:2:end)];
     y = [0; X(2:2:end)];
     marker = sys.get_markers( alpha(index,:) );   % get mocap sensor location
-    [shape , ~ ] = sys.get_shape( alpha(index,:) , 3); % get polynomial approx of shape (3rd order)
+    [shape , ~ ] = sys.get_shape( alpha(index,:) , 5); % get polynomial approx of shape (3rd order)
     
     hold on;
     p1 = plot(x, y, 'b-o');

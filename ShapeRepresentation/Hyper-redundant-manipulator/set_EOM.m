@@ -44,11 +44,9 @@ Lagrangian = KE - PE;
 %% derive equations of motion
 
 % save mass matrix as a function
-% EOM.fcns.get_massMatrix = matlabFunction(Dq, 'File', 'get_massMatrix', 'Vars', { alpha }, 'Optimize', false);
 EOM.fcns.get_massMatrix = matlabFunction(Dq, 'Vars', { alpha }, 'Optimize', false);
 
 % derive non-inertial part of dynamics
-
 % creata a variable alpha that is a function of t
 syms t
 alpha_t = zeros( params.Nlinks , 1 );
@@ -76,26 +74,21 @@ Dq_dt = subs( Dq_dt , [ alpha_t , alpha_dt ] , [ alpha , alphadot ] ); % replace
 dLdalpha = jacobian(Lagrangian, alpha)';
 
 % include damping and input terms
-
 % damping
 damp = params.d * alphadot;
-% EOM.fcns.get_damp = matlabFunction(damp, 'File', 'get_damp', 'Vars', { alphadot }, 'Optimize', false);
 EOM.fcns.get_damp = matlabFunction(damp, 'Vars', { alphadot }, 'Optimize', false);
 
 % input
 u = sym('u', [params.Nmods,1], 'real'); % input. Desired joint angle for all joints in each module
 input = -params.ku * ( kron( u , ones( params.nlinks , 1) ) - alpha );   % vector of all joint torques
-% EOM.fcns.get_input = matlabFunction(input, 'File', 'get_input', 'Vars', { alpha , u }, 'Optimize', false);
 EOM.fcns.get_input = matlabFunction(input, 'Vars', { alpha , u }, 'Optimize', false);
 
 % save damping and input as a function
 dampNinput = damp + input;
-% EOM.fcns.get_dampNinput = matlabFunction(dampNinput, 'File', 'get_dampNinput', 'Vars', { alpha , alphadot , u }, 'Optimize', false);
 EOM.fcns.get_dampNinput = matlabFunction(dampNinput, 'Vars', { alpha , alphadot , u }, 'Optimize', false);
 
 % save non-inertial part of dynamics as a function
 nonInert = Dq_dt * alphadot - dLdalpha + damp + input;
-% EOM.fcns.get_nonInert = matlabFunction(nonInert, 'File', 'get_nonInert', 'Vars', { alpha , alphadot , u }, 'Optimize', false);
 EOM.fcns.get_nonInert = matlabFunction(nonInert, 'Vars', { alpha , alphadot , u }, 'Optimize', false);
 
 

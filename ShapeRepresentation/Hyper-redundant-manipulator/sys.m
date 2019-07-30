@@ -61,8 +61,26 @@ classdef sys
             dampNinput = obj.fcns.get_dampNinput( alpha , alphadot , u );
         end
         
-%         % dynamics as vector field
-%         function  vf = 
+        % vf (dynamics as vector field)
+        function Alphadot = vf( obj , t , Alpha , u )
+            %vf: Explicit dynamics for robot
+            %   Alpha = [ alpha ; alphadot ];
+            %   Alphadot = [ alphadot ; alphaddot ];
+            
+            params = obj.params;
+            
+            alpha = Alpha( 1 : params.Nlinks );
+            alphadot = Alpha( params.Nlinks+1 : end );
+            
+            Dq = sys.get_massMatrix( alpha );
+            nonInert = sys.get_nonInert( alpha , alphadot , u );
+            
+            % solve for acceleration terms
+            alphaddot = - Dq \ nonInert;
+            
+            % define output
+            Alphadot = [ alphadot ; alphaddot ];
+        end
         
         %% sensing
         % get_markers (simulated mocap)
