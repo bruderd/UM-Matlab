@@ -10,10 +10,10 @@
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm_3-mods_4-links';
+params.sysName = 'arm_6-mods_1-links';
 
-params.Nmods = 3;   % number of modules (actuated sections)
-params.nlinks = 4;      % number of links in each module
+params.Nmods = 6;   % number of modules (actuated sections)
+params.nlinks = 1;      % number of links in each module
 params.Nlinks = params.Nmods * params.nlinks;   % total number of links in robot
 
 % manipulator parameters

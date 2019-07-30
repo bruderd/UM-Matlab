@@ -72,8 +72,8 @@ classdef sys
             alpha = Alpha( 1 : params.Nlinks );
             alphadot = Alpha( params.Nlinks+1 : end );
             
-            Dq = sys.get_massMatrix( alpha );
-            nonInert = sys.get_nonInert( alpha , alphadot , u );
+            Dq = obj.get_massMatrix( alpha );
+            nonInert = obj.get_nonInert( alpha , alphadot , u );
             
             % solve for acceleration terms
             alphaddot = - Dq \ nonInert;

@@ -89,7 +89,7 @@ EOM.fcns.get_dampNinput = matlabFunction(dampNinput, 'Vars', { alpha , alphadot 
 
 % save non-inertial part of dynamics as a function
 nonInert = Dq_dt * alphadot - dLdalpha + damp + input;
-EOM.fcns.get_nonInert = matlabFunction(nonInert, 'Vars', { alpha , alphadot , u }, 'Optimize', false);
+EOM.fcns.get_nonInert = matlabFunction(nonInert, 'Vars', { alpha , alphadot , u });
 
 
 %% set output
