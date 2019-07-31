@@ -10,10 +10,10 @@
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm_6-mods_1-links';
+params.sysName = 'arm_3-mods_3-links_taylor';
 
-params.Nmods = 6;   % number of modules (actuated sections)
-params.nlinks = 1;      % number of links in each module
+params.Nmods = 3;   % number of modules (actuated sections)
+params.nlinks = 3;      % number of links in each module
 params.Nlinks = params.Nmods * params.nlinks;   % total number of links in robot
 
 % manipulator parameters
@@ -26,7 +26,7 @@ params.i = (1/3) * params.m * params.l^2;   % inertia of each link
 params.g = 9.81;    % gravity constant (m/s^2)
 
 % mocap parameters
-params.markerPos = ( ( 0 : params.Nmods ) * params.l ) / params.L;  % position of mocap markers along the arm
+params.markerPos = ( ( 0 : params.Nmods ) * params.l * params.nlinks ) / params.L;  % position of mocap markers along the arm
 
 % input parameters
 params.ku = 1e-3; % effective input stiffness
