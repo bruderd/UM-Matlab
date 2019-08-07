@@ -8,11 +8,11 @@ classdef arm
     end
     
     methods
-        function obj = arm( params , fcns )
+        function obj = arm( params )
             %Construct an instance of EOM class
             %   Detailed explanation goes here
             obj.params = params;
-            obj.fcns = fcns;
+            obj.fcns = obj.set_EOM;
         end
         
         %% transformations
@@ -33,7 +33,7 @@ classdef arm
         end
         
         % alpha2xvec (gives x vectorized)
-        function [ x , xcm ] = alpha2xvec( obj , alpha )
+        function [ x , x_cm ] = alpha2xvec( obj , alpha )
             %alpha2xvec: Converts relative joint angles (alpha) to coordinates of joints (x)
             %   and the coordinates of the links' centers of mass (x_cm).
             %   x = [ x_0 ; y_0 ; x_1 ; y_1 ; ... ]
@@ -61,14 +61,14 @@ classdef arm
         % alpha2x (gives x where rows are x,y coordinate pairs)
         function [ x , xcm ] = alpha2x( obj , alpha )
             % alpha2x: (gives x where rows are x,y coordinate pairs)
-            [ x_vec ,xcm_vec ] = obj.alpha2xvec( alpha , obj.params);
+            [ x_vec ,xcm_vec ] = obj.alpha2xvec( alpha );
             x = reshape( x_vec , [ 2 , obj.params.Nlinks+1 ] )';
             xcm = reshape( xcm_vec , [ 2 , obj.params.Nlinks ] )';
         end
         
-        %
-        function complex = theta2complex(theta)
-            %angle2complex: Converts an angle relative to z-axis to a point on the complex unit circle
+        % theta2complex (converts an angle to a complex number)
+        function complex = theta2complex( obj , theta )
+            %theta2complex: Converts an angle relative to z-axis to a point on the complex unit circle
             %   Note that the answer is an array [a b] for the complex number a+ib
             
             a = sin( theta );
@@ -89,6 +89,103 @@ classdef arm
         
         
         %% equations of motion
+        
+        % set_EOM
+        function fcns = set_EOM(obj)
+            %setEOM: Find symbolic expression of the equations of motion
+            %   Also saves a function for evaluating the equations of motion
+            
+            %% define symbolic variables
+            alpha = sym('alpha', [obj.params.Nlinks,1], 'real');
+            alphadot = sym('alphadot', [obj.params.Nlinks,1], 'real');
+            alphaddot = sym('alphaddot', [obj.params.Nlinks,1], 'real');
+            
+            theta = obj.alpha2theta(alpha);
+            thetadot = obj.alpha2theta(alphadot);
+            
+            [ x , xcm ]= obj.alpha2xvec(alpha);
+            
+            %% define Jacobians
+            
+            J_theta_alpha = jacobian( theta , alpha );
+            
+            J_xcm_alpha = jacobian( xcm , alpha );
+            xcmdot = J_xcm_alpha * alphadot;    % velocity of link COMs
+            
+            %% define useful matrices
+            
+            % mass matrix
+            M = eye(obj.params.Nlinks) * obj.params.m;
+            I = eye(obj.params.Nlinks) * obj.params.i;
+            K = ones(1 , obj.params.Nlinks) * obj.params.k;
+            D = eye(obj.params.Nlinks) * obj.params.d;
+            
+            %% define Lagrangian (L = KE - PE)
+            
+            % mass matrix
+            Dq = obj.params.m * J_xcm_alpha' * J_xcm_alpha + obj.params.i * J_theta_alpha' * J_theta_alpha;
+            
+            % kinetic energy
+            KE = (1/2) * alphadot' * Dq * alphadot;
+            
+            % potential energy (needs minus sign since "down" is positive)
+            PE = - obj.params.m * obj.params.g * ones(1 , length(xcm)/2) * xcm(2:2:end) + ...
+                (1/2) * alpha' * obj.params.k * alpha;
+            
+            Lagrangian = KE - PE;
+            
+            %% derive equations of motion
+            
+            % save mass matrix as a function
+            fcns.get_massMatrix = matlabFunction(Dq, 'Vars', { alpha }, 'Optimize', false);
+            
+            % derive non-inertial part of dynamics
+            % creata a variable alpha that is a function of t
+            syms t
+            alpha_t = zeros( obj.params.Nlinks , 1 );
+            alpha_t = sym(alpha_t);
+            for i = 1 : obj.params.Nlinks
+                istr = num2str(i);
+                alpha_t(i) = str2sym(strcat('alpha_t', istr, '(t)'));
+            end
+            
+            % write mass matrix as a function of t
+            Dq_t = subs( Dq , alpha , alpha_t );
+            
+            % differentiate mass matrix wrt t
+            Dq_dt = diff( Dq_t , t );
+            
+            % character substitutions to get rid of all the 'diff(x(t), t)' stuff
+            alpha_dt = zeros( obj.params.Nlinks , 1 );
+            alpha_dt = sym(alpha_dt);
+            for i = 1 : obj.params.Nlinks
+                istr = num2str(i);
+                alpha_dt(i) = str2sym(strcat( 'diff(alpha_t', istr, '(t), t)' ));
+            end
+            Dq_dt = subs( Dq_dt , [ alpha_t , alpha_dt ] , [ alpha , alphadot ] ); % replace all t's
+            
+            dLdalpha = jacobian(Lagrangian, alpha)';
+            
+            % include damping and input terms
+            % damping
+            damp = obj.params.d * alphadot;
+            fcns.get_damp = matlabFunction(damp, 'Vars', { alphadot }, 'Optimize', false);
+            
+            % input
+            u = sym('u', [obj.params.Nmods,1], 'real'); % input. Desired joint angle for all joints in each module
+            input = -obj.params.ku * ( kron( u , ones( obj.params.nlinks , 1) ) - alpha );   % vector of all joint torques
+            fcns.get_input = matlabFunction(input, 'Vars', { alpha , u }, 'Optimize', false);
+            
+            % save damping and input as a function
+            dampNinput = damp + input;
+            fcns.get_dampNinput = matlabFunction(dampNinput, 'Vars', { alpha , alphadot , u }, 'Optimize', false);
+            
+            % save non-inertial part of dynamics as a function
+            nonInert = Dq_dt * alphadot - dLdalpha + damp + input;
+            nonInert = taylor( nonInert , alpha , 'Order' , 3);  % use taylor series approximation for speed
+            nonInert = taylor( nonInert , alphadot , 'Order' , 3);
+            fcns.get_nonInert = matlabFunction(nonInert, 'Vars', { alpha , alphadot , u });
+        end
         
         % get_massMatrix
         function Dq = get_massMatrix( obj , alpha )
