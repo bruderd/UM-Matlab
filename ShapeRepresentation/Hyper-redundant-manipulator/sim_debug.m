@@ -20,7 +20,7 @@ nsteps = 1500;
 tspan = linspace( 0 , tf , nsteps );
 % [ t , y ] = ode45( @(t,x) vf_sym(t,x,u) , tspan , [ a0 ; adot0 ] );  % with symbolic inversion
 % [ t , y ] = ode45( @(t,x) vf_sys(t,x,u,sys) , tspan , [ a0 ; adot0 ] );  % with numerical inversion
-[ y ] = ode5( @(t,x) sys.vf(t,x,u) , tspan , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
+[ y ] = ode5( @(t,x) arm.vf(t,x,u) , tspan , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
 t = tspan';
 
 simTime = toc;  % measure time for the simulation
@@ -63,8 +63,8 @@ for i = 1:totFrames
     [ X , ~ ] = alpha2x( alpha(index,:)', params );
     x = [0; X(1:2:end)];
     y = [0; X(2:2:end)];
-    marker = sys.get_markers( alpha(index,:) );   % get mocap sensor location
-    [shape , ~ ] = sys.get_shape( alpha(index,:) , 3); % get polynomial approx of shape (3rd order)
+    marker = arm.get_markers( alpha(index,:) );   % get mocap sensor location
+    [shape , ~ ] = arm.get_shape( alpha(index,:) , 3); % get polynomial approx of shape (3rd order)
     
     hold on;
     p1 = plot(x, y, 'b-o');

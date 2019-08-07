@@ -1,5 +1,5 @@
-classdef sys
-    %sys: Class with system properties and equations of motion inside
+classdef arm
+    %arm: Class with system properties and equations of motion inside
     %   This is for a planar manipulator arm specifically.
     
     properties
@@ -8,7 +8,7 @@ classdef sys
     end
     
     methods
-        function obj = sys( params , fcns )
+        function obj = arm( params , fcns )
             %Construct an instance of EOM class
             %   Detailed explanation goes here
             obj.params = params;
@@ -18,19 +18,73 @@ classdef sys
         %% transformations
         % alpha2theta
         function theta = alpha2theta( obj , alpha )
-            theta = alpha2theta( alpha );
+            %alpha2theta: Converts relative joint angles (alpha) to absolute joint angles (theta).
+            
+            theta = zeros( size(alpha) );
+            
+            % if input is symbolic, so should output
+            if isa( alpha , 'sym' )
+                theta = sym(theta);
+            end
+            
+            for i = 1 : length(alpha)
+                theta(i) =  sum(alpha(1:i));
+            end
         end
         
         % alpha2xvec (gives x vectorized)
         function [ x , xcm ] = alpha2xvec( obj , alpha )
-            [ x ,xcm ] = alpha2x( alpha , obj.params);
+            %alpha2xvec: Converts relative joint angles (alpha) to coordinates of joints (x)
+            %   and the coordinates of the links' centers of mass (x_cm).
+            %   x = [ x_0 ; y_0 ; x_1 ; y_1 ; ... ]
+            
+            x = zeros( ( obj.params.Nlinks + 1 ) * 2 ,  1 );
+            x_cm = zeros( obj.params.Nlinks * 2 , 1 );
+            
+            % if input is symbolic, so should output
+            if isa( alpha , 'sym' )
+                x = sym(x);
+                x_cm = sym(x_cm);
+            end
+            
+            % convert to absolute joint angles (wrt vertical)
+            theta = obj.alpha2theta(alpha);
+            
+            % convert to coordinates of each joint (note there is 1 more joint than link)
+            for i = 1 : length(alpha)
+                xim1 = x(2*(i-1)+1 : 2*i, 1);
+                x_cm(2*(i-1)+1 : 2*i, 1) = xim1 + obj.params.l/2 * [ sin( theta(i) ) ; cos( theta(i) ) ];
+                x(2*i+1 : 2*(i+1), 1) = xim1 + obj.params.l * [ sin( theta(i) ) ; cos( theta(i) ) ];
+            end
         end
         
         % alpha2x (gives x where rows are x,y coordinate pairs)
         function [ x , xcm ] = alpha2x( obj , alpha )
-            [ x_vec ,xcm_vec ] = alpha2x( alpha , obj.params);
+            % alpha2x: (gives x where rows are x,y coordinate pairs)
+            [ x_vec ,xcm_vec ] = obj.alpha2xvec( alpha , obj.params);
             x = reshape( x_vec , [ 2 , obj.params.Nlinks+1 ] )';
             xcm = reshape( xcm_vec , [ 2 , obj.params.Nlinks ] )';
+        end
+        
+        %
+        function complex = theta2complex(theta)
+            %angle2complex: Converts an angle relative to z-axis to a point on the complex unit circle
+            %   Note that the answer is an array [a b] for the complex number a+ib
+            
+            a = sin( theta );
+            b = cos( theta );
+            
+            complex = [ a , b ];
+        end
+        
+        % complex_mult (multiply two complex numbers)
+        function product = complex_mult( obj , z1 , z2 )
+            %complex_mult: Multiply two complex numbers specified as vectors
+            
+            real = z1(1) * z1(1) - z1(2) * z2(1);
+            im = z1(1) * z2(2) + z1(2) * z2(1);
+            
+            product = [ real , im ];
         end
         
         
@@ -90,13 +144,61 @@ classdef sys
             markers = x( 1 : obj.params.nlinks : end , : );
         end
         
+        function [coeffs, obs_matrix] = points2poly(obj, degree, points, positions, orient)
+            %points2poly: Finds polynomial that best goes through a set of points.
+            % Polynomial starts at the origin, and its domain is [0,1].
+            % "Resting configuration" is along the yaxis (2d) or zaxis (3d)
+            %   degree - scalar, maximum degree of the polynomial
+            %   points - matrix, rows are xy(z) coordinates of points
+            %   positions - scaler [0,1], position of point on the arm.
+            %   orient - vector, orientation of the the end effector (complex number for 2d case, quaternion for 3d case)
+            %   coeffs - matrix, rows are the coefficients of the polynomial in each
+            %            coordinate where [a b c ...] -> ax^1 + bx^2 + cx^2 + ...
+            %   obs_matrix - matrix that converts from state vector to coefficients
+            
+            % for the 2d case (will consider the 3d case later)
+            if size(points,2) == 2
+                if all( size(orient) ~= [1,2] )
+                    error('orientation for 2d system must be a complex number specified as [1x2] vector');
+                end
+                
+                % generate virtual points to provide slope constraint at the base & end
+                startpoint = [ 0 , 1e-2 ];
+                endpoint = obj.complex_mult( orient/norm(orient) , [ 0 , 1 ] )*1e-2 + points(end,:);
+                points_supp = [0 , 0 ; startpoint ; points ; endpoint];
+                %     points_supp = points;   % remove the slope constraints
+                
+                % generate A matrix for least squares problem
+                positions_supp = [ 0 , 1e-2 , positions , 1+1e-2 ];
+                %     positions_supp = positions;   % remove the slope constraints
+                A = zeros( length(positions_supp) , degree );
+                for i = 1 : degree
+                    A(:,i) = reshape( positions_supp , [] , 1) .^ i;
+                end
+                
+                % separate x and y corrdinates of points
+                points_x = points_supp(:,1);
+                points_y = points_supp(:,2);
+                
+                % find polynomial coefficients
+                obs_matrix = pinv(A);
+                coeffs_vec_x = obs_matrix * points_x;
+                coeffs_vec_y = obs_matrix * points_y;
+                
+                % make coeffs a matrix to where each row is coeffs for one dimension
+                coeffs = [ coeffs_vec_x' ; coeffs_vec_y' ];
+            else
+                error('points matrix must be nx2');
+            end
+        end
+        
         % get_shape
         function [ shape , coeffs ] = get_shape( obj , alpha , degree)
             points = get_markers( obj , alpha );   % coordinates of mocap markers
             positions = obj.params.markerPos;    % relative location of markers on arm [0,1]
-            theta = alpha2theta( alpha );
-            orient = theta2complex( theta );    % orientaton of end effector
-            coeffs = points2poly( degree , points , positions , orient );    % convert points of a polynomial
+            theta = obj.alpha2theta( alpha );
+            orient = obj.theta2complex( theta );    % orientaton of end effector
+            coeffs = obj.points2poly( degree , points , positions , orient );    % convert points of a polynomial
             
             % get the shape
             px = fliplr( [ 0 , coeffs(1,:) ] );
@@ -114,7 +216,7 @@ classdef sys
         
         % def_fig (defines a default figure for plotting arm
         function fig = def_fig( obj )
-            % set up figure
+            %def_fig: set up a figure for plotting
             fig = figure;
             axis([-obj.params.L, obj.params.L, -0.5*obj.params.L, 1.5*obj.params.L])
             set(gca,'Ydir','reverse')
@@ -223,7 +325,7 @@ classdef sys
         
         % simulate system under random "ramp and hold" inputs
         function [ t , y , u ] = simulate_arm( obj , tf , Tramp )
-            %simulate: simulate system under random "ramp and hold" inputs
+            %simulate_arm: simulate system under random "ramp and hold" inputs
             %   tf - length of simulation(s)
             %   Tramp - ramp period length
             

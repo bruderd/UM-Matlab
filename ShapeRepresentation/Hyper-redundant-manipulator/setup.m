@@ -10,10 +10,10 @@
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm_3-mods_3-links_taylor';
+params.sysName = 'arm_3-mods_1-links_taylor';
 
 params.Nmods = 3;   % number of modules (actuated sections)
-params.nlinks = 3;      % number of links in each module
+params.nlinks = 1;      % number of links in each module
 params.Nlinks = params.Nmods * params.nlinks;   % total number of links in robot
 
 % manipulator parameters
@@ -31,6 +31,10 @@ params.markerPos = ( ( 0 : params.Nmods ) * params.l * params.nlinks ) / params.
 % input parameters
 params.ku = 1e-3; % effective input stiffness
 
+% simulation parameters
+params.Ts = 1e-3;   % sampling time
+params.umax = pi/2; % maximum input value (scalar for all modules, vector for different limits per module)
+
 %% Derive the equations of motion
 EOM = set_EOM(params);
 
@@ -39,10 +43,10 @@ fcns = EOM.fcns;
 
 %% Create class for this system
 
-sys = sys( params , fcns );
+arm = arm( params , fcns );
 
 % save this system for later use
 fname = [ 'systems' , filesep , params.sysName , '.mat' ];
 unique_fname = auto_rename( fname , '(0)' );
-save( unique_fname , 'sys' );
+save( unique_fname , 'arm' );
 

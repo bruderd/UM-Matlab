@@ -61,10 +61,29 @@ classdef sys
             dampNinput = obj.fcns.get_dampNinput( alpha , alphadot , u );
         end
         
-%         % dynamics as vector field
-%         function  vf = 
+        % vf (dynamics as vector field)
+        function Alphadot = vf( obj , t , Alpha , u )
+            %vf: Explicit dynamics for robot
+            %   Alpha = [ alpha ; alphadot ];
+            %   Alphadot = [ alphadot ; alphaddot ];
+            
+            params = obj.params;
+            
+            alpha = Alpha( 1 : params.Nlinks );
+            alphadot = Alpha( params.Nlinks+1 : end );
+            
+            Dq = obj.get_massMatrix( alpha );
+            nonInert = obj.get_nonInert( alpha , alphadot , u );
+            
+            % solve for acceleration terms
+            alphaddot = - Dq \ nonInert;
+            
+            % define output
+            Alphadot = [ alphadot ; alphaddot ];
+        end
         
         %% sensing
+        
         % get_markers (simulated mocap)
         function markers = get_markers( obj , alpha )
             [ x , ~ ] = obj.alpha2x( alpha );
@@ -105,12 +124,6 @@ classdef sys
         
         % plot_arm
         function ph = plot_arm( obj , alpha )
-            if nargin < 3   % use default axes if no hande provided
-                fig = obj.def_fig;
-            else
-                fig = varargin{1};
-            end
-            
             % convert to xy-coordinates
             [ X , ~ ] = alpha2x(alpha, obj.params);
             x = [0; X(1:2:end)];
@@ -120,24 +133,16 @@ classdef sys
             markers = obj.get_markers( alpha );
             
             % plot it
-            figure(fig);
             hold on
             ph(1) = plot( x, y, '-o' );
             ph(2) = plot( markers(:,1) , markers(:,2) , 'r*');
             hold off
-            
         end
         
         % plot_arm_shape
-        function ph = plot_arm_shape( obj , alpha , degree , varargin)
-            if nargin < 4   % use default axes if no hande provided
-                fig = obj.def_fig;
-            else
-                fig = varargin;
-            end
-            
+        function ph = plot_arm_shape( obj , alpha , degree )
             % plot the arm
-            ph = obj.plot_arm( alpha , fig );
+            ph = obj.plot_arm( alpha );
             
             % get the shape
             [ shape , ~ ] = obj.get_shape( alpha , degree );
@@ -147,7 +152,84 @@ classdef sys
             ph(3) = plot( shape(:,1) , shape(:,2) , 'r');
             hold off
         end
+        
+        % animate_arm
+        function animate_arm( obj, t , y , degree )
+            %animate_arm: Animate a simualtion of the arm
+            %   t - time vector from simula
             
+            alpha = y(: , 1:obj.params.Nlinks );   % joint angles over time
+            
+            fig = figure;   % create figure for the animation
+            axis([-obj.params.L, obj.params.L, -0.5*obj.params.L, 1.5*obj.params.L])
+            set(gca,'Ydir','reverse')
+            xlabel('x(m)')
+            ylabel('y(m)')
+            
+            % Prepare the new file.
+            vidObj = VideoWriter( ['animations' , filesep , obj.params.sysName , '.mp4'] , 'MPEG-4' );
+            vidObj.FrameRate = 30;
+            open(vidObj);
+            
+            set(gca,'nextplot','replacechildren', 'FontUnits' , 'normalized');
+            
+            totTime = t(end);    % total time for animation (s)
+            nsteps = length(t); % total steps in the simulation
+            totFrames = 30 * totTime;   % total frames in 30 fps video
+            
+            % run animation fram by frame
+            for i = 1:totFrames
+                
+                index = (i-1) * floor( nsteps / totFrames ) + 1;   % skips points between frames
+                
+                [ X , ~ ] = obj.alpha2x( alpha(index,:)' );
+                x = X(:,1);
+                y = X(:,2);
+                marker = obj.get_markers( alpha(index,:) );   % get mocap sensor location
+                [shape , ~ ] = obj.get_shape( alpha(index,:) , degree); % get polynomial approx of shape (3rd order)
+                
+                hold on;
+                p1 = plot(x, y, 'b-o');
+                p2 = plot( marker(:,1) , marker(:,2) , 'r*');
+                p3 = plot( shape(:,1) , shape(:,2) , 'r');
+                hold off;
+                
+                % write each frame to the file
+                currFrame = getframe(fig);
+                writeVideo(vidObj,currFrame);
+                
+                delete(p1); delete(p2); delete(p3);
+            end
+            
+            close(vidObj);
+        end
+            
+        %% simulation
+        
+        % simulate system under random "ramp and hold" inputs
+        function [ t , y , u ] = simulate_arm( obj , tf , Tramp )
+            %simulate: simulate system under random "ramp and hold" inputs
+            %   tf - length of simulation(s)
+            %   Tramp - ramp period length
+            
+            % time steps
+            t = ( 0 : obj.params.Ts : tf )';    % all timesteps
+            tswitch = ( 0 : Tramp : tf )';  % input switching points
+            
+            % table of inputs
+            numPeriods = ceil( length(tswitch) / 2 );
+            inputs_nohold = obj.params.umax .* ( 2*rand( numPeriods , obj.params.Nmods ) - 1 );  % table of random inputs
+            inputs_hold = reshape([inputs_nohold(:) inputs_nohold(:)]',2*size(inputs_nohold,1), []); % repeats rows of inputs so that we get a hold between ramps
+            u = interp1( tswitch , inputs_hold( 1:length(tswitch) , : ) , t );
+            
+            % initial condition (resting)
+            a0 = zeros( obj.params.Nlinks , 1 );
+            adot0 = zeros( obj.params.Nlinks , 1 );
+            
+            % simulate system
+            [ y ] = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , t , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
+        end
+           
         
     end
 end
