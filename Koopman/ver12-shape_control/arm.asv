@@ -12,7 +12,7 @@ classdef arm
             %Construct an instance of EOM class
             %   Detailed explanation goes here
             obj.params = params;
-            obj.fcns = set_EOM;
+            obj.fcns = obj.set_EOM;
         end
         
         %% transformations
@@ -33,7 +33,7 @@ classdef arm
         end
         
         % alpha2xvec (gives x vectorized)
-        function [ x , xcm ] = alpha2xvec( obj , alpha )
+        function [ x , x_cm ] = alpha2xvec( obj , alpha )
             %alpha2xvec: Converts relative joint angles (alpha) to coordinates of joints (x)
             %   and the coordinates of the links' centers of mass (x_cm).
             %   x = [ x_0 ; y_0 ; x_1 ; y_1 ; ... ]
@@ -61,7 +61,7 @@ classdef arm
         % alpha2x (gives x where rows are x,y coordinate pairs)
         function [ x , xcm ] = alpha2x( obj , alpha )
             % alpha2x: (gives x where rows are x,y coordinate pairs)
-            [ x_vec ,xcm_vec ] = obj.alpha2xvec( alpha , obj.params);
+            [ x_vec ,xcm_vec ] = obj.alpha2xvec( alpha );
             x = reshape( x_vec , [ 2 , obj.params.Nlinks+1 ] )';
             xcm = reshape( xcm_vec , [ 2 , obj.params.Nlinks ] )';
         end
@@ -91,7 +91,7 @@ classdef arm
         %% equations of motion
         
         % set_EOM
-        function obj = set_EOM(obj)
+        function fcns = set_EOM(obj)
             %setEOM: Find symbolic expression of the equations of motion
             %   Also saves a function for evaluating the equations of motion
             
@@ -137,7 +137,7 @@ classdef arm
             %% derive equations of motion
             
             % save mass matrix as a function
-            obj.fcns.get_massMatrix = matlabFunction(Dq, 'Vars', { alpha }, 'Optimize', false);
+            fcns.get_massMatrix = matlabFunction(Dq, 'Vars', { alpha }, 'Optimize', false);
             
             % derive non-inertial part of dynamics
             % creata a variable alpha that is a function of t
@@ -169,22 +169,22 @@ classdef arm
             % include damping and input terms
             % damping
             damp = obj.params.d * alphadot;
-            obj.fcns.get_damp = matlabFunction(damp, 'Vars', { alphadot }, 'Optimize', false);
+            fcns.get_damp = matlabFunction(damp, 'Vars', { alphadot }, 'Optimize', false);
             
             % input
             u = sym('u', [obj.params.Nmods,1], 'real'); % input. Desired joint angle for all joints in each module
             input = -obj.params.ku * ( kron( u , ones( obj.params.nlinks , 1) ) - alpha );   % vector of all joint torques
-            obj.fcns.get_input = matlabFunction(input, 'Vars', { alpha , u }, 'Optimize', false);
+            fcns.get_input = matlabFunction(input, 'Vars', { alpha , u }, 'Optimize', false);
             
             % save damping and input as a function
             dampNinput = damp + input;
-            obj.fcns.get_dampNinput = matlabFunction(dampNinput, 'Vars', { alpha , alphadot , u }, 'Optimize', false);
+            fcns.get_dampNinput = matlabFunction(dampNinput, 'Vars', { alpha , alphadot , u }, 'Optimize', false);
             
             % save non-inertial part of dynamics as a function
             nonInert = Dq_dt * alphadot - dLdalpha + damp + input;
             nonInert = taylor( nonInert , alpha , 'Order' , 3);  % use taylor series approximation for speed
             nonInert = taylor( nonInert , alphadot , 'Order' , 3);
-            obj.fcns.get_nonInert = matlabFunction(nonInert, 'Vars', { alpha , alphadot , u });
+            fcns.get_nonInert = matlabFunction(nonInert, 'Vars', { alpha , alphadot , u });
         end
         
         % get_massMatrix
@@ -421,10 +421,20 @@ classdef arm
         %% simulation
         
         % simulate system under random "ramp and hold" inputs
-        function [ t , y , u ] = simulate_arm( obj , tf , Tramp )
+        function sim = simulate_arm( obj , tf , Tramp , varargin)
             %simulate_arm: simulate system under random "ramp and hold" inputs
             %   tf - length of simulation(s)
             %   Tramp - ramp period length
+            %   Alpha - joint angles and velocities at each timestep
+            %   markers - marker position at each time step [x0,y0,...,xn,yn ; ...]
+            %   varargin - save on? (true/false)
+            
+            % save simulation results? Default is no
+            if length(varargin) == 1
+                saveon = varargin;
+            else
+                saveon = false;
+            end
             
             % time steps
             t = ( 0 : obj.params.Ts : tf )';    % all timesteps
@@ -441,7 +451,31 @@ classdef arm
             adot0 = zeros( obj.params.Nlinks , 1 );
             
             % simulate system
-            [ y ] = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , t , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
+            y = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , t , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
+            Alpha = y;
+            
+            % get locations of the markers at each time step
+            markers = zeros( length(t) , 2 * ( obj.params.Nmods+1 ) );
+            for i = 1 : size(y,1)
+                alpha = y( i , 1 : obj.params.Nlinks );
+                temp = obj.get_markers( alpha );
+                markers(i,:) = reshape( temp' , [ 1 , 2 * ( obj.params.Nmods+1 ) ] );
+            end
+            
+            % define output
+            sim.t = t;  % time vector
+            sim.x = Alpha;  % internal state of the system
+            sim.alpha = Alpha( : , 1 : obj.params.Nlinks+1 );   % joint angles
+            sim.alphadot = Alpha( : , obj.params.Nlinks+2 : end );  % joint velocities
+            sim.y = markers;    % output based on available observations
+            sim.u = u;  % input
+            
+            % save results
+            if saveon
+                fname = [ 'systems' , filesep , obj.params.sysName ,  '.mat' ];
+                unique_fname = auto_rename
+                save()
+            end
         end
            
         

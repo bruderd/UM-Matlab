@@ -241,6 +241,7 @@ classdef arm
             markers = x( 1 : obj.params.nlinks : end , : );
         end
         
+        % points2poly (convert marker points into a polynomial)
         function [coeffs, obs_matrix] = points2poly(obj, degree, points, positions, orient)
             %points2poly: Finds polynomial that best goes through a set of points.
             % Polynomial starts at the origin, and its domain is [0,1].
@@ -421,10 +422,20 @@ classdef arm
         %% simulation
         
         % simulate system under random "ramp and hold" inputs
-        function [ t , y , u ] = simulate_arm( obj , tf , Tramp )
+        function sim = simulate_arm( obj , tf , Tramp , varargin)
             %simulate_arm: simulate system under random "ramp and hold" inputs
             %   tf - length of simulation(s)
             %   Tramp - ramp period length
+            %   Alpha - joint angles and velocities at each timestep
+            %   markers - marker position at each time step [x0,y0,...,xn,yn ; ...]
+            %   varargin - save on? (true/false)
+            
+            % save simulation results? Default is no
+            if length(varargin) == 1
+                saveon = varargin{1};
+            else
+                saveon = false;
+            end
             
             % time steps
             t = ( 0 : obj.params.Ts : tf )';    % all timesteps
@@ -441,7 +452,31 @@ classdef arm
             adot0 = zeros( obj.params.Nlinks , 1 );
             
             % simulate system
-            [ y ] = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , t , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
+            y = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , t , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
+            Alpha = y;
+            
+            % get locations of the markers at each time step
+            markers = zeros( length(t) , 2 * ( obj.params.Nmods+1 ) );
+            for i = 1 : size(y,1)
+                alpha = y( i , 1 : obj.params.Nlinks );
+                temp = obj.get_markers( alpha );
+                markers(i,:) = reshape( temp' , [ 1 , 2 * ( obj.params.Nmods+1 ) ] );
+            end
+            
+            % define output
+            sim.t = t;  % time vector
+            sim.x = Alpha;  % internal state of the system
+            sim.alpha = Alpha( : , 1 : obj.params.Nlinks+1 );   % joint angles
+            sim.alphadot = Alpha( : , obj.params.Nlinks+2 : end );  % joint velocities
+            sim.y = markers;    % output based on available observations
+            sim.u = u;  % input
+            
+            % save results
+            if saveon
+                fname = [ 'systems' , filesep , obj.params.sysName , filesep , 'simulations' , filesep , 'tf_', num2str(tf) , 's_ramp_' , num2str(Tramp) , 's.mat' ];
+                unique_fname = auto_rename( fname , '(0)' );
+                save( unique_fname , 'sim' );
+            end
         end
            
         

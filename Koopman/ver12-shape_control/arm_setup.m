@@ -49,9 +49,11 @@ arm = arm( params );
 % save this system for later use
 dirname = [ 'systems' , filesep , params.sysName ];
 unique_dirname = auto_rename( dirname , '(0)' );
+arm.params.sysName = erase( unique_dirname , ['systems', filesep] ) ;    % modify the system name parameter    
 
 % create directory for the system, and save the class
-mkdir(unique_dirname);
+mkdir( unique_dirname );
+mkdir( [ unique_dirname , filesep , 'simulations' ] );  % make simulation subfolder
 fname = [ unique_dirname , filesep , params.sysName, '.mat' ];
 save( fname , 'arm' );
 
