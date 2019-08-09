@@ -32,12 +32,6 @@ classdef sysid
             obj.basis = struct; % initialize basis struct
         end
         
-        function outputArg = method1(obj,inputArg)
-            %METHOD1 Summary of this method goes here
-            %   Detailed explanation goes here
-            outputArg = obj.Property1 + inputArg;
-        end
-        
         % resample (resamples data with a desired time step)
         function data_resampled = resample( obj , data , Ts )
             % get query points
