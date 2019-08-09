@@ -56,9 +56,14 @@ classdef sysid
             % def_observables: Defines the set of nonlinear observable
             % functions that will act as basis of Koopman subspace
             %   type - Type of functions, [vector of strings].
+            %       'armshape' - coefficients of shape polynomial
+            %       'poly'  - monomials
             %   degree - Maximum degree/complexity of functions, [vector].
             
             % check that the type and degree have same dimension
+            if size(type) ~= size(degree)
+                error('inputs must be of the same size');
+            end
             
             % define the low dimensional state with delays, called zeta
             x = sym('x', [obj.params.n, 1] , 'real');   % state variable x
@@ -69,6 +74,13 @@ classdef sysid
             obj.params.zeta = zeta;
             
             % construct the observables
+            basis = [];
+            for i = 1 : length(degree)
+                if strcmp( type(i) , 'armshape' )
+                    obj = def_armshapeLift( degree(i) );
+                    basis = [ basis ; obj.basis.poly ];
+                elseif strcmp( type(i) )
+            
             
             % define outputs
             
@@ -146,7 +158,7 @@ classdef sysid
                 zeta = obj.params.zeta;
                 x = zeta( 1 : 2 : obj.params.n - 3 );   % x-coordinates of markers
                 y = zeta( 2 : 2 : obj.params.n - 2 );    % y-coordinates of markers
-                orient = zeta( end-1 : end );   % unit vector pointin in direction of end effector
+                orient = zeta( obj.params.n-1 : obj.params.n );   % unit vector pointin in direction of end effector
                 
                 % define intermediate variables
                 points = [ x , y ]; % matrix of marker coordinates. Each row is coords of a marker
@@ -154,7 +166,7 @@ classdef sysid
                 
                 % generate virtual points to provide slope constraint at the base & end
                 startpoint = [ 0 , 1e-2 ];
-                endpoint = ( orient'/norm(orient) )*1e-2 + points(end,:);    % add point extended from last link
+                endpoint = ( orient' )*1e-2 + points(end,:);    % add point extended from last link
                 points_supp = [0 , 0 ; startpoint ; points ; endpoint];
                 
                 % generate A matrix for least squares problem
@@ -173,14 +185,12 @@ classdef sysid
                 coeffs_vec_x = obs_matrix * points_x;
                 coeffs_vec_y = obs_matrix * points_y;
                 
-%                 % make coeffs a matrix to where each row is coeffs for one dimension
-%                 coeffs = [ coeffs_vec_x' ; coeffs_vec_y' ];
-                
                 % define output
-                obj.basis.armshape = [coeffs_vec_x ; coeffs_vec_y ];
+                armshapeBasis = [coeffs_vec_x ; coeffs_vec_y ];
+                obj.basis.armshape = armshapeBasis;
                 
                 % create the lifting function: zeta -> p(zeta)
-                obj.lift.armshape = matlabFunction(armshape, 'Vars', {zeta});
+                obj.lift.armshape = matlabFunction(armshapeBasis, 'Vars', {zeta});
             else
                 error('Number of marker postions must be number of modules (for now)');
             end

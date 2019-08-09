@@ -55,10 +55,16 @@ classdef sysid
         function obj = def_observables( obj , type , degree )
             % def_observables: Defines the set of nonlinear observable
             % functions that will act as basis of Koopman subspace
-            %   type - Type of functions, [vector of strings].
+            %   type - Type of functions, [cell array of strings].
+            %       'armshape' - coefficients of shape polynomial
+            %       'poly'  - monomials
+            %       ... more to be added over time
             %   degree - Maximum degree/complexity of functions, [vector].
             
             % check that the type and degree have same dimension
+            if size(type) ~= size(degree)
+                error('inputs must be of the same size');
+            end
             
             % define the low dimensional state with delays, called zeta
             x = sym('x', [obj.params.n, 1] , 'real');   % state variable x
@@ -69,9 +75,20 @@ classdef sysid
             obj.params.zeta = zeta;
             
             % construct the observables
+            fullBasis = [];
+            for i = 1 : length(degree)
+                if strcmp( type{i} , 'armshape' )
+                    obj = obj.def_armshapeLift( degree(i) );
+                    fullBasis = [ fullBasis ; obj.basis.armshape ];
+                elseif strcmp( type{i} , 'poly' )
+                    obj = obj.def_polyLift( degree(i) );
+                    fullBasis = [ fullBasis ; obj.basis.poly ];
+                end
+            end
             
             % define outputs
-            
+            obj.basis.full = fullBasis;
+            obj.lift.full = matlabFunction( fullBasis , 'Vars' , {zeta} );
         end
         
         % def_polyLift (defines polynomial basis functions)
@@ -83,6 +100,7 @@ classdef sysid
             
             zeta = obj.params.zeta; % get the symbolic unlifted state
             nzeta = length(zeta);
+            maxDegree = degree;
             
             % Number of mononials, i.e. dimenstion of p(x)
             N = factorial(nzeta + maxDegree) / ( factorial(nzeta) * factorial(maxDegree) );
