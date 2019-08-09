@@ -68,7 +68,7 @@ classdef arm
         
         % theta2complex (converts an angle to a complex number)
         function complex = theta2complex( obj , theta )
-            %theta2complex: Converts an angle relative to z-axis to a point on the complex unit circle
+            %theta2complex: Converts an angle relative to y-axis to a point on the complex unit circle
             %   Note that the answer is an array [a b] for the complex number a+ib
             
             a = sin( theta );
@@ -248,8 +248,8 @@ classdef arm
             % "Resting configuration" is along the yaxis (2d) or zaxis (3d)
             %   degree - scalar, maximum degree of the polynomial
             %   points - matrix, rows are xy(z) coordinates of points
-            %   positions - scaler [0,1], position of point on the arm.
-            %   orient - vector, orientation of the the end effector (complex number for 2d case, quaternion for 3d case)
+            %   positions - (row) vector of [0,1] positions of points on the arm.
+            %   orient - (row) vector, orientation of the the end effector (complex number for 2d case, quaternion for 3d case)
             %   coeffs - matrix, rows are the coefficients of the polynomial in each
             %            coordinate where [a b c ...] -> ax^1 + bx^2 + cx^2 + ...
             %   obs_matrix - matrix that converts from state vector to coefficients
@@ -262,7 +262,8 @@ classdef arm
                 
                 % generate virtual points to provide slope constraint at the base & end
                 startpoint = [ 0 , 1e-2 ];
-                endpoint = obj.complex_mult( orient/norm(orient) , [ 0 , 1 ] )*1e-2 + points(end,:);
+%                 endpoint = obj.complex_mult( orient/norm(orient) , [ 0 , 1 ] )*1e-2 + points(end,:);  
+                endpoint = ( orient/norm(orient) )*1e-2 + points(end,:);    % add point extended from last link
                 points_supp = [0 , 0 ; startpoint ; points ; endpoint];
                 %     points_supp = points;   % remove the slope constraints
                 
@@ -295,8 +296,8 @@ classdef arm
             points = get_markers( obj , alpha );   % coordinates of mocap markers
             positions = obj.params.markerPos;    % relative location of markers on arm [0,1]
             theta = obj.alpha2theta( alpha );
-            orient = obj.theta2complex( theta );    % orientaton of end effector
-            coeffs = obj.points2poly( degree , points , positions , orient );    % convert points of a polynomial
+            orient = obj.theta2complex( theta(end) );    % orientaton of end effector
+            coeffs = obj.points2poly( degree , points(2:end,:) , positions(2:end) , orient );    % convert points of a polynomial (skip the origin)
             
             % get the shape
             px = fliplr( [ 0 , coeffs(1,:) ] );
@@ -325,9 +326,9 @@ classdef arm
         % plot_arm
         function ph = plot_arm( obj , alpha )
             % convert to xy-coordinates
-            [ X , ~ ] = alpha2x(alpha, obj.params);
-            x = [0; X(1:2:end)];
-            y = [0; X(2:2:end)];
+            [ X , ~ ] = obj.alpha2x( alpha );
+            x = X(:,1);
+            y = X(:,2);
             
             % add markers
             markers = obj.get_markers( alpha );
@@ -452,24 +453,27 @@ classdef arm
             adot0 = zeros( obj.params.Nlinks , 1 );
             
             % simulate system
-            y = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , t , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
-            Alpha = y;
+            Alpha = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , t , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
             
             % get locations of the markers at each time step
             markers = zeros( length(t) , 2 * ( obj.params.Nmods+1 ) );
-            for i = 1 : size(y,1)
-                alpha = y( i , 1 : obj.params.Nlinks );
+            orient = zeros( length(t) , 2 );
+            for i = 1 : size(Alpha,1)
+                alpha = Alpha( i , 1 : obj.params.Nlinks );
+                theta = obj.alpha2theta( alpha );
                 temp = obj.get_markers( alpha );
                 markers(i,:) = reshape( temp' , [ 1 , 2 * ( obj.params.Nmods+1 ) ] );
+                orient(i,:) = obj.theta2complex( theta(end) ); 
             end
             
             % define output
             sim.t = t;  % time vector
             sim.x = Alpha;  % internal state of the system
-            sim.alpha = Alpha( : , 1 : obj.params.Nlinks+1 );   % joint angles
-            sim.alphadot = Alpha( : , obj.params.Nlinks+2 : end );  % joint velocities
-            sim.y = markers;    % output based on available observations
+            sim.alpha = Alpha( : , 1 : obj.params.Nlinks );   % joint angles
+            sim.alphadot = Alpha( : , obj.params.Nlinks+1 : end );  % joint velocities
+            sim.y = [ markers( : , 3:end ) , orient ];    % output based on available observations (remove 0th marker position because it is always at the origin)
             sim.u = u;  % input
+            sim.params = obj.params;    % parameters associated with the system
             
             % save results
             if saveon
