@@ -83,6 +83,7 @@ classdef sysid
             % define outputs
             obj.basis.full = fullBasis;
             obj.lift.full = matlabFunction( fullBasis , 'Vars' , {zeta} );
+            obj.params.N = length( fullBasis ); % the dimension of the lefted state
         end
         
         % def_polyLift (defines polynomial basis functions)
@@ -254,10 +255,90 @@ classdef sysid
             s = RandStream('mlfg6331_64'); 
             index = datasample(s , 1:total, num , 'Replace' , false);
             
-            snapshotPairs.zeta_pre = before.zeta( index , : ); 
-            snapshotPairs.zeta_post = after.zeta( index , : );
+            snapshotPairs.alpha = before.zeta( index , : ); 
+            snapshotPairs.beta = after.zeta( index , : );
             snapshotPairs.u = u( index , : );
+        end
+        
+        % get_Koopman
+        function [ U , koopData ] = get_Koopman( obj ,  snapshotPairs , varargin )
+            %get_KoopmanConstGen: Find the best possible koopman operator given
+            %snapshot pairs using constraint generation to deal with large data sets.
+            %   varargin = lasso weighting parameter. lasso >> 1 approaches least squares solution 
             
+            if length(varargin) == 1
+                lasso = varargin{1};
+            else
+                lasso = 100 * obj.params.N;   % defualt value of the lasso parameter (should emulate least squares)
+            end
+            
+            disp('Finding Koopman operator approximation...');
+            
+            % Extract snapshot pairs
+            [x,y,u] = deal( snapshotPairs.alpha , snapshotPairs.beta , snapshotPairs.u );
+            
+            % Build matrices
+            [n, m] = deal( obj.params.n , obj.params.m );
+            Nm = obj.params.N + m;   % dimension of zeta plus input
+            
+            Px = zeros(length(x), Nm);
+            Py = zeros(length(x), Nm);
+            for i = 1:length(x)
+                psix = obj.lift.full( x(i,:)' )';   
+                psiy = obj.lift.full( y(i,:)' )';
+                Px(i,:) = [ psix , u(i,:) ];
+                Py(i,:) = [ psiy , zeros(1,m) ];     % exclude u from Py (could also use same u as Px)
+            end
+            
+            % Store useful data that can be used outside this function
+%             koopData.Px = Px( : , 1 : obj.params.N );   % only want state, not input
+%             koopData.Py = Py( : , 1 : obj.params.N );
+%             koopData.x = snapshotPairs.x;
+%             koopData.u = u;
+%             koopData.zeta_x = snapshotPairs.zeta_x;
+            
+            % Call function that solves QP problem
+            Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
+            U = reshape(Uvec, [Nm,Nm]); % Koopman operator matrix
+        end
+        
+        function Uvec = solve_KoopmanQP( obj , Px , Py , lasso )
+            %solve_KoopmanQP: Finds the Koopman operator for a given set of
+            %data using the lasso regression method.
+            %   Lasso method
+            %   x is vectorized Koopman operator, decomposed into positive and negative parts of each entry x = [u11+, ..., uNN+, u11-, ... , uNN-]';
+            %   Uvec = M * x, where M subtracts the + and - parts of each entry: uij+ - uij-
+
+            nx = obj.params.N^2;
+            Nm = obj.params.N + obj.params.m;
+            
+            M = [speye(Nm^2) , -speye(Nm^2)];
+            
+            PxTPx = Px' * Px;
+            PxTPy = Px' * Py;
+            ATA = kron(speye(Nm) , PxTPx);  % repeat blocks diagonally N times
+            ATb = reshape(PxTPy, [Nm^2 , 1]);
+            
+            % L2 error as cost function
+            preH = ATA * M;
+            H = M' * preH;
+            f = -M' * ATb;
+            
+            % L1 regularization enforced as constraint
+            t = lasso;
+            Aq = [ -speye(2*Nm^2) ; ones(1 , 2*Nm^2) ];
+            bq = [ zeros(2*Nm^2 , 1) ; t ];
+            
+            % Solve the quadratic program
+            [x , results] = quadprog_gurobi( H , f , Aq , bq );       % use gurobi to solve
+            % options = optimoptions('quadprog', 'Display', 'iter');
+            % [ x, fval, exitflag ] = quadprog(H, f, Aq, bq, [], [], [], [], [],options);      % use matlab to solve
+            
+            % Recover Uvec from the optimization variable
+            xout = M * x;
+            
+            % Set output
+            Uvec = xout;
         end
         
         
