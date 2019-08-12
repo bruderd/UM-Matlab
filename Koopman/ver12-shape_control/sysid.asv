@@ -32,12 +32,6 @@ classdef sysid
             obj.basis = struct; % initialize basis struct
         end
         
-        function outputArg = method1(obj,inputArg)
-            %METHOD1 Summary of this method goes here
-            %   Detailed explanation goes here
-            outputArg = obj.Property1 + inputArg;
-        end
-        
         % resample (resamples data with a desired time step)
         function data_resampled = resample( obj , data , Ts )
             % get query points
@@ -55,9 +49,10 @@ classdef sysid
         function obj = def_observables( obj , type , degree )
             % def_observables: Defines the set of nonlinear observable
             % functions that will act as basis of Koopman subspace
-            %   type - Type of functions, [vector of strings].
+            %   type - Type of functions, [cell array of strings].
             %       'armshape' - coefficients of shape polynomial
             %       'poly'  - monomials
+            %       ... more to be added over time
             %   degree - Maximum degree/complexity of functions, [vector].
             
             % check that the type and degree have same dimension
@@ -74,16 +69,20 @@ classdef sysid
             obj.params.zeta = zeta;
             
             % construct the observables
-            basis = [];
+            fullBasis = [];
             for i = 1 : length(degree)
-                if strcmp( type(i) , 'armshape' )
-                    obj = def_armshapeLift( degree(i) );
-                    basis = [ basis ; obj.basis.poly ];
-                elseif strcmp( type(i) )
-            
+                if strcmp( type{i} , 'armshape' )
+                    obj = obj.def_armshapeLift( degree(i) );
+                    fullBasis = [ fullBasis ; obj.basis.armshape ];
+                elseif strcmp( type{i} , 'poly' )
+                    obj = obj.def_polyLift( degree(i) );
+                    fullBasis = [ fullBasis ; obj.basis.poly ];
+                end
+            end
             
             % define outputs
-            
+            obj.basis.full = fullBasis;
+            obj.lift.full = matlabFunction( fullBasis , 'Vars' , {zeta} );
         end
         
         % def_polyLift (defines polynomial basis functions)
@@ -95,6 +94,7 @@ classdef sysid
             
             zeta = obj.params.zeta; % get the symbolic unlifted state
             nzeta = length(zeta);
+            maxDegree = degree;
             
             % Number of mononials, i.e. dimenstion of p(x)
             N = factorial(nzeta + maxDegree) / ( factorial(nzeta) * factorial(maxDegree) );
@@ -195,6 +195,72 @@ classdef sysid
                 error('Number of marker postions must be number of modules (for now)');
             end
         end
+        
+        %% fitting Koopman operator and A,B,C system matrices
+        
+        % get_zeta (adds a zeta field to a test data struct)
+        function data_out = get_zeta( obj , data_in )
+            %get_zeta: Adds a zeta field to a test data struct
+            %   data_in - struct with t , x , y , u fields
+            %   zeta - [ y , yd1 , yd2 , ... , ud1 , ud2 , ... ]
+            
+            data_out = data_in;
+            
+            % add the zeta field
+            for i = obj.params.nd + 1 : length( data_in.t )
+                ind = i - obj.params.nd;    % current timestep index
+                y = data_in.y( i , : );
+                ydel = zeros( 1 , obj.params.nd * obj.params.n );
+                udel = zeros( 1 , obj.params.nd * obj.params.m );
+                for j = 1 : obj.params.nd
+                    fillrange_y = obj.params.n * (j - 1) + 1 : obj.params.n * j;
+                    fillrange_u = obj.params.m * (j - 1) + 1 : obj.params.m * j;
+                    ydel(1 , fillrange_y) = data_in.y( i - j + 1 , : );
+                    udel(1 , fillrange_u) = data_in.u( i - j + 1, : );
+                end
+                zeta = [ y , ydel , udel ];
+                data_out.zeta( ind , : ) = zeta;
+                data_out.uzeta( ind , : ) = data.u( i , : );    % current timestep with zeta (same as first delayed input)
+            end
+        end
+        
+        % get_snapshotPairs (convert time-series data into snapshot pairs)
+        function snapshotPairs = get_snapshotPairs( obj , data , varargin )
+            %get_snapshotPairs: Convert time-series data into a set of num
+            %snapshot pairs.
+            %   data - struct with fields x , y , u , t , zeta
+            %   varargin = num - number of snapshot pairs to be taken
+            
+            % set the number of snapshot pairs to be taken
+            num_max = size( data.zeta , 1 ) - 1; % maximum number of snapshot pairs
+            if length(varargin) == 1
+                num = varargin{1};
+                if num > num_max - 1
+                    message = [ 'Number of snapshot pairs cannot exceed ' , num2str(num_max) , '. Taking ' , num2str(num_max) , ' pairs instead.' ];
+                    disp(message);
+                    num = num_max;
+                end
+            else
+                num = num_max;
+            end
+            
+            % separate data into 'before' and 'after' time step
+            before.zeta = data.zeta(1:end-1 , :);
+            after.zeta = data.zeta(2:end , :);
+
+            u = data.uzeta(1:end-1);    % input that happens between before.zeta and after.zeta
+            
+            % randomly select num snapshot pairs
+            total = length( before.t );
+            s = RandStream('mlfg6331_64'); 
+            index = datasample(s , 1:total, num , 'Replace' , false);
+            
+            snapshotPairs.zeta_pre = before.zeta( index , : ); 
+            snapshotPairs.zeta_post = after.zeta( index , : );
+            snapshotPairs.u = u( index , : );
+            
+        end
+        
         
     end
 end

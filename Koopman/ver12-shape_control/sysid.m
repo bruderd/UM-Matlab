@@ -196,6 +196,71 @@ classdef sysid
             end
         end
         
+        %% fitting Koopman operator and A,B,C system matrices
+        
+        % get_zeta (adds a zeta field to a test data struct)
+        function data_out = get_zeta( obj , data_in )
+            %get_zeta: Adds a zeta field to a test data struct
+            %   data_in - struct with t , x , y , u fields
+            %   zeta - [ y , yd1 , yd2 , ... , ud1 , ud2 , ... ]
+            
+            data_out = data_in;
+            
+            % add the zeta field
+            for i = obj.params.nd + 1 : length( data_in.t )
+                ind = i - obj.params.nd;    % current timestep index
+                y = data_in.y( i , : );
+                ydel = zeros( 1 , obj.params.nd * obj.params.n );
+                udel = zeros( 1 , obj.params.nd * obj.params.m );
+                for j = 1 : obj.params.nd
+                    fillrange_y = obj.params.n * (j - 1) + 1 : obj.params.n * j;
+                    fillrange_u = obj.params.m * (j - 1) + 1 : obj.params.m * j;
+                    ydel(1 , fillrange_y) = data_in.y( i - j , : );
+                    udel(1 , fillrange_u) = data_in.u( i - j , : );
+                end
+                zeta = [ y , ydel , udel ];
+                data_out.zeta( ind , : ) = zeta;
+                data_out.uzeta( ind , : ) = data_in.u( i , : );    % current timestep with zeta (input starting at current timestep)
+            end
+        end
+        
+        % get_snapshotPairs (convert time-series data into snapshot pairs)
+        function snapshotPairs = get_snapshotPairs( obj , data , varargin )
+            %get_snapshotPairs: Convert time-series data into a set of num
+            %snapshot pairs.
+            %   data - struct with fields x , y , u , t , zeta
+            %   varargin = num - number of snapshot pairs to be taken
+            
+            % set the number of snapshot pairs to be taken
+            num_max = size( data.zeta , 1 ) - 1; % maximum number of snapshot pairs
+            if length(varargin) == 1
+                num = varargin{1};
+                if num > num_max - 1
+                    message = [ 'Number of snapshot pairs cannot exceed ' , num2str(num_max) , '. Taking ' , num2str(num_max) , ' pairs instead.' ];
+                    disp(message);
+                    num = num_max;
+                end
+            else
+                num = num_max;
+            end
+            
+            % separate data into 'before' and 'after' time step
+            before.zeta = data.zeta( 1:end-1 , : );
+            after.zeta = data.zeta( 2:end , : );
+            u = data.uzeta( 1:end-1 , : );    % input that happens between before.zeta and after.zeta
+            
+            % randomly select num snapshot pairs
+            total = num_max;
+            s = RandStream('mlfg6331_64'); 
+            index = datasample(s , 1:total, num , 'Replace' , false);
+            
+            snapshotPairs.zeta_pre = before.zeta( index , : ); 
+            snapshotPairs.zeta_post = after.zeta( index , : );
+            snapshotPairs.u = u( index , : );
+            
+        end
+        
+        
     end
 end
 
