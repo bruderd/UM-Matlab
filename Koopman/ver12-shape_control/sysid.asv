@@ -260,11 +260,17 @@ classdef sysid
             snapshotPairs.u = u( index , : );
         end
         
-        % get_Koopman
+        % get_Koopman (Find the best possible koopman operator from snapshot pairs)
         function [ U , koopData ] = get_Koopman( obj ,  snapshotPairs , varargin )
             %get_KoopmanConstGen: Find the best possible koopman operator given
             %snapshot pairs using constraint generation to deal with large data sets.
-            %   varargin = lasso weighting parameter. la 
+            %   varargin = lasso weighting parameter. lasso >> 1 approaches least squares solution 
+            
+            if length(varargin) == 1
+                lasso = varargin{1};
+            else
+                lasso = 100 * obj.params.N;   % defualt value of the lasso parameter (should emulate least squares)
+            end
             
             disp('Finding Koopman operator approximation...');
             
@@ -284,19 +290,19 @@ classdef sysid
                 Py(i,:) = [ psiy , zeros(1,m) ];     % exclude u from Py (could also use same u as Px)
             end
             
-            % Store useful data that can be used outside this function
-%             koopData.Px = Px( : , 1 : obj.params.N );   % only want state, not input
-%             koopData.Py = Py( : , 1 : obj.params.N );
-%             koopData.x = snapshotPairs.x;
-%             koopData.u = u;
-%             koopData.zeta_x = snapshotPairs.zeta_x;
-            
             % Call function that solves QP problem
-            Uvec = obj.solve_KoopmanQP( Px , Py );
+            Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
             U = reshape(Uvec, [Nm,Nm]); % Koopman operator matrix
+            
+            % other usefule outputs
+            koopData.Px = Px( : , 1 : obj.params.N );   % only want state, not input
+            koopData.Py = Py( : , 1 : obj.params.N );
+            koopData.u = u;
+            koopData.alpha = snapshotPairs.alpha;
         end
         
-        function Uvec = solve_KoopmanQP( obj , Px , Py )
+        % solve_KoopmanQP (Finds the Koopman operator using Lasso regression)
+        function Uvec = solve_KoopmanQP( obj , Px , Py , lasso )
             %solve_KoopmanQP: Finds the Koopman operator for a given set of
             %data using the lasso regression method.
             %   Lasso method
@@ -319,7 +325,7 @@ classdef sysid
             f = -M' * ATb;
             
             % L1 regularization enforced as constraint
-            t = params.t;
+            t = lasso;
             Aq = [ -speye(2*Nm^2) ; ones(1 , 2*Nm^2) ];
             bq = [ zeros(2*Nm^2 , 1) ; t ];
             
@@ -335,6 +341,47 @@ classdef sysid
             Uvec = xout;
         end
         
+        function out = get_ABC( U, params , koopData )
+            %get_ABC: Defines the A, B, and C matrices that describe the linear
+            %lifted system z+ = Az + Bu, x = Cz.
+            %   Detailed explanation goes here
+            
+            UT = U';    % transpose of koopman operator
+            
+            A = UT( 1 : params.N , 1 : params.N );
+            B = UT( 1 : params.N , params.N+1 : end );
+            
+            % if strcmp( params.basisID, 'poly' )
+            %     C = [zeros(params.ny , 1) , eye(params.ny) , zeros( params.ny , params.N - params.ny - 1 )];   % if poly we want to skip over first element of lifted state which is "1"
+            % else
+            Cy = [eye(params.ny), zeros(obj.params.n , obj.params.N - obj.params.n)];   % C selects the first ny entries of the lifted state (so output can be different than state)
+            % end
+            
+            % matrix to recover the state with delays, i.e. zeta
+            Cz = [eye(params.nzeta), zeros(params.nzeta , params.N - params.nzeta)];
+            
+            % % solve for C matrix that best recovers state from lifted state
+            % Ctranspose = koopData.Px \ koopData.x ;
+            % C = Ctranspose' ;
+            
+            %% find matrix that (approximately) projects a lifted point onto the subset of all legitimate lifted points in R^N
+            
+            L = get_L4M( A , B , koopData , params );
+            R = get_R4M( L , Cz , koopData, params );
+            Mtranspose = L \ R;
+            M = Mtranspose';
+            
+            %% define outputs
+            out.A = M*A;  % edited to include projection M, 12/11/2018
+            out.B = M*B;  % edited to include projection M, 12/11/2018
+            out.Asim = A;
+            out.Bsim = B;
+            out.C = C;
+            out.Cz = Cz;
+            out.M = M;
+            out.sys = ss(A,B,C,0, params.Ts);  % discrete state space system object
+            out.params = params;    % save system parameters as part of system struct    
+        end
         
     end
 end

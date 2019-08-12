@@ -25,7 +25,7 @@ Cz = [eye(params.nzeta), zeros(params.nzeta , params.N - params.nzeta)];
 
 L = get_L4M( A , B , koopData , params );
 R = get_R4M( L , Cz , koopData, params );
-Mtranspose = L \ R; % pinv(L) * R ;
+Mtranspose = L \ R;
 M = Mtranspose';
 
 %% define outputs

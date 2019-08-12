@@ -260,7 +260,7 @@ classdef sysid
             snapshotPairs.u = u( index , : );
         end
         
-        % get_Koopman
+        % get_Koopman (Find the best possible koopman operator from snapshot pairs)
         function [ U , koopData ] = get_Koopman( obj ,  snapshotPairs , varargin )
             %get_KoopmanConstGen: Find the best possible koopman operator given
             %snapshot pairs using constraint generation to deal with large data sets.
@@ -290,18 +290,18 @@ classdef sysid
                 Py(i,:) = [ psiy , zeros(1,m) ];     % exclude u from Py (could also use same u as Px)
             end
             
-            % Store useful data that can be used outside this function
-%             koopData.Px = Px( : , 1 : obj.params.N );   % only want state, not input
-%             koopData.Py = Py( : , 1 : obj.params.N );
-%             koopData.x = snapshotPairs.x;
-%             koopData.u = u;
-%             koopData.zeta_x = snapshotPairs.zeta_x;
-            
             % Call function that solves QP problem
             Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
             U = reshape(Uvec, [Nm,Nm]); % Koopman operator matrix
+            
+            % other usefule outputs
+            koopData.Px = Px( : , 1 : obj.params.N );   % only want state, not input
+            koopData.Py = Py( : , 1 : obj.params.N );
+            koopData.u = u;
+            koopData.alpha = snapshotPairs.alpha;
         end
         
+        % solve_KoopmanQP (Finds the Koopman operator using Lasso regression)
         function Uvec = solve_KoopmanQP( obj , Px , Py , lasso )
             %solve_KoopmanQP: Finds the Koopman operator for a given set of
             %data using the lasso regression method.
@@ -341,6 +341,55 @@ classdef sysid
             Uvec = xout;
         end
         
+        % get_ABC (Extracts the A,B,C matrices from Koopman matrix)
+        function out = get_ABC( obj , U , koopData )
+            %get_ABC: Defines the A, B, and C matrices that describe the linear
+            %lifted system z+ = Az + Bu, x = Cz.
+            %   Detailed explanation goes here
+            
+            UT = U';    % transpose of koopman operator
+            
+            A = UT( 1 : obj.params.N , 1 : obj.params.N );
+            B = UT( 1 : obj.params.N , obj.params.N+1 : end );
+            
+            % C selects the first ny entries of the lifted state (so output can be different than state)
+            Cy = [eye(obj.params.n), zeros(obj.params.n , obj.params.N - obj.params.n)];   
+
+            % matrix to recover the state with delays, i.e. zeta
+            nzeta = obj.params.n + obj.params.nd * ( obj.params.n + obj.params.m );
+            Cz = [eye( nzeta ), zeros( nzeta , obj.params.N - nzeta)];
+            
+            % % solve for C matrix that best recovers state from lifted state
+            % Ctranspose = koopData.Px \ koopData.x ;
+            % C = Ctranspose' ;
+            
+            % find M matrix that (approximately) projects a lifted point onto the subset of all legitimate lifted points in R^N
+            Px = koopData.Px; Py = koopData.Py;
+            U = koopData.u;
+            L = zeros( size(Px,1) , obj.params.N );
+            for i = 1 : size( Px , 1)
+                L(i,:) = ( A * Px(i,:)' + B * U(i,:)' )' ;        % with input
+                %     L(i,:) = ( A * Px(i,:)' )' ;        % without input
+            end
+            R = zeros( size(L,1) , obj.params.N );
+            for i = 1 : size( L , 1 )
+                %     R(i,:) = ( stateLift( Cz * L(1,:)' ) )' ;
+                R(i,:) = Py(i,:) ;  % debug. This should make M the identity
+            end
+            Mtranspose = L \ R;
+            M = Mtranspose';
+            
+            % define outputs
+            out.A = M*A;  % edited to include projection M, 12/11/2018
+            out.B = M*B;  % edited to include projection M, 12/11/2018
+            out.Asim = A;
+            out.Bsim = B;
+            out.C = Cy;
+            out.Cz = Cz;
+            out.M = M;
+            out.sys = ss( out.A , out.B , Cy , 0 , obj.params.Ts );  % discrete state space system object
+            out.params = obj.params;    % save system parameters as part of system struct    
+        end
         
     end
 end
