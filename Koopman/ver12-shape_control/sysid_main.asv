@@ -1,0 +1,53 @@
+% sysid_main
+%
+% Creates a sysid class and walks through all of the steps of building a
+% model from data, validating its performance, and saving it (if desired)
+
+%% gather training data
+
+% load in data file(s)
+[ datafile_name , datafile_path ] = uigetfile( '*.mat' , 'multiselect' , 'on' );
+data = load( [datafile_path , datafile_name] );
+
+% create sysid class from data
+sysid = sysid( data.train , data.params );
+
+% scale data to be in range [-1 , 1]
+
+% chop data into validation trials
+
+
+traindata = ;
+valdata = ;
+
+%% define a set of observables
+
+% USER EDIT HERE
+type = [ 'armshape' , 'poly' ]; % types of functions to include
+degree = [ 3 , 1 ]; % degree/complexity of each type of function
+
+sysid = sysid.def_observables( type , degree );
+
+
+%% learn a Koopman model
+
+% USER EDIT HERE
+numPairs = Inf;  % number of snapshot pairs to be taken (Inf will take maximum amount)
+lasso = []; % lasso L1 regularization parameter. ( empty array for default value, which gives least-squares solution basically )
+
+snapshotPairs = sysid.get_snapshtoPairs( traindata , numPairs );
+[ koopData , K ] = sysid.get_Koopman( snapshotPairs , lasso );
+[ model , sysid ] = sysid.get_model( koopData );
+
+%% validate model
+
+results = cell( size(valdata) );    % store results in a cell array
+err = cell( size(valdata) );    % store error in a cell array 
+for i = 1 : length(valdata)
+    results{i} = sysid.val_model( model , valdata{i} );
+    err{i} = sysid.get_error( results{i}.sim , results{i}.real );
+    sysid.plot_comparison( results{i}.sim , results{i}.real );
+end
+
+
+%% save (or don't save) sysid class, model, and training data

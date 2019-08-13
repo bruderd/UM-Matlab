@@ -89,6 +89,40 @@ classdef sysid
            
         end
         
+        % chop (chop data into several trials)
+        function data_chopped = chop( obj , data , num , len )
+            %chop: chop data into num trials of lenght len
+            %   data - struct with fields t , y , (x)
+            %   data_chopped - cell array containing the chopped datas
+            
+            % determine length of timestep
+            Ts = mean( data.t(2:end) - data.t(1:end-1) ); % take mean in case they're not quite uniform
+            
+            % find maximum length of each chop for given num
+            maxlen = data.t(end) / num;
+            if len > maxlen
+                len = maxlen;
+                disp([ 'Maximum trial length is ' , num2str(maxlen) , 's. Using this value instead.' ]);
+            end
+            
+            % set length of the chops in terms of time steps
+            lenk = length( find( data.t < len ) );
+            maxlenk = length( find( data.t < maxlen ) );
+            
+            data_chopped = cell( 1 , num );
+            for i = 1 : num
+                index = (i-1) * maxlenk + ( 1 : lenk );
+                
+                % chop the data
+                data_chopped{i}.t = ( ( 1 : lenk ) - 1 ) * Ts;
+                data_chopped{i}.y = data.y( index , : );
+                data_chopped{i}.u = data.u( index , : );
+                if ismember( 'x' , fields(data) )
+                    data_chopped{i}.x = data.x( index , : );
+                end
+            end  
+        end
+        
         %% save the class object
         
         % save_class
@@ -323,8 +357,13 @@ classdef sysid
         function snapshotPairs = get_snapshotPairs( obj , data , varargin )
             %get_snapshotPairs: Convert time-series data into a set of num
             %snapshot pairs.
-            %   data - struct with fields x , y , u , t , zeta
+            %   data - struct with fields x , y , u , t , (zeta)
             %   varargin = num - number of snapshot pairs to be taken
+            
+            % check if data has a zeta field, create one if not
+            if ~ismember( 'zeta' , fields(data) )
+                data = obj.get_zeta( data );
+            end
             
             % set the number of snapshot pairs to be taken
             num_max = size( data.zeta , 1 ) - 1; % maximum number of snapshot pairs
@@ -355,13 +394,17 @@ classdef sysid
         end
         
         % get_Koopman (Find the best possible koopman operator from snapshot pairs)
-        function [ U , koopData ] = get_Koopman( obj ,  snapshotPairs , varargin )
+        function [ koopData , K ] = get_Koopman( obj ,  snapshotPairs , varargin )
             %get_KoopmanConstGen: Find the best possible koopman operator given
             %snapshot pairs using constraint generation to deal with large data sets.
             %   varargin = lasso weighting parameter. lasso >> 1 approaches least squares solution 
             
             if length(varargin) == 1
-                lasso = varargin{1};
+                if isempty( varargin{1} )
+                    lasso = 100 * obj.params.N;   % defualt value of the lasso parameter (should emulate least squares)
+                else
+                    lasso = varargin{1};
+                end
             else
                 lasso = 100 * obj.params.N;   % defualt value of the lasso parameter (should emulate least squares)
             end
@@ -386,12 +429,14 @@ classdef sysid
             
             % Call function that solves QP problem
             Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
-            U = reshape(Uvec, [Nm,Nm]); % Koopman operator matrix
+            Umtx = reshape(Uvec, [Nm,Nm]); % Koopman operator matrix
+            K = Umtx;   % switching to K convention to not confused with input
             
             % other usefule outputs
+            koopData.K = K; % Koopman operator matrix (note the switch to K)
             koopData.Px = Px( : , 1 : obj.params.N );   % only want state, not input
             koopData.Py = Py( : , 1 : obj.params.N );
-            koopData.u = u;
+            koopData.u = u; % input
             koopData.alpha = snapshotPairs.alpha;
         end
         
@@ -435,14 +480,14 @@ classdef sysid
             Uvec = xout;
         end
         
-        % get_ABC (Extracts the A,B,C matrices from Koopman matrix)
-        function [ out , obj ] = get_ABC( obj , U , koopData )
+        % get_model (Extracts the A,B,C matrices from Koopman matrix)
+        function [ out , obj ] = get_model( obj , koopData )
             %get_ABC: Defines the A, B, and C matrices that describe the linear
             %lifted system z+ = Az + Bu, x = Cz.
             %   out - struct with fields A, B, C, sys, params, ...
             %   obj.model - property of struct which stores the model
             
-            UT = U';    % transpose of koopman operator
+            UT = koopData.K';    % transpose of koopman operator
             
             A = UT( 1 : obj.params.N , 1 : obj.params.N );
             B = UT( 1 : obj.params.N , obj.params.N+1 : end );
@@ -450,9 +495,9 @@ classdef sysid
             % C selects the first ny entries of the lifted state (so output can be different than state)
             Cy = [eye(obj.params.n), zeros(obj.params.n , obj.params.N - obj.params.n)];   
 
-            % matrix to recover the state with delays, i.e. zeta
-            nzeta = obj.params.n + obj.params.nd * ( obj.params.n + obj.params.m );
-            Cz = [eye( nzeta ), zeros( nzeta , obj.params.N - nzeta)];
+%             % matrix to recover the state with delays, i.e. zeta
+%             nzeta = obj.params.n + obj.params.nd * ( obj.params.n + obj.params.m );
+%             Cz = [eye( nzeta ), zeros( nzeta , obj.params.N - nzeta)];
             
             % % solve for C matrix that best recovers state from lifted state
             % Ctranspose = koopData.Px \ koopData.x ;
@@ -480,10 +525,11 @@ classdef sysid
             out.Asim = A;
             out.Bsim = B;
             out.C = Cy;
-            out.Cz = Cz;
+%             out.Cz = Cz;    % recovers state with delays (i.e.zeta)---doesn't work because zeta is not embeded in lifted state, only y is
             out.M = M;
             out.sys = ss( out.A , out.B , Cy , 0 , obj.params.Ts );  % discrete state space system object
             out.params = obj.params;    % save system parameters as part of system struct    
+            out.K = koopData.K; % save the Koopman operator matrix just in case
             
             % add model substruct to the class
             obj.model = out;
@@ -491,9 +537,9 @@ classdef sysid
         
         %% validate performance of a fitted model
         
-        % val_liftedSys (compares model simulation to real data)
-        function results = val_liftedSys( obj , liftedSys , valdata )
-            %val_liftedSys: Compares a model simulation to real data
+        % val_model (compares model simulation to real data)
+        function results = val_model( obj , model , valdata )
+            %val_model: Compares a model simulation to real data
             %   liftedSys - struct with fields A, B, C, sys, ...
             %   valdata - struct with fields t, y, u (at least)
             %   results - struct with simulation results and error calculations
@@ -510,7 +556,7 @@ classdef sysid
             z0 = obj.lift.full( zeta0 );    % initial lifted state
             
             % simulate lifted linear model
-            [ ysim , tsim , zsim ] = lsim(liftedSys.sys, ureal , treal , z0);
+            [ ysim , tsim , zsim ] = lsim(model.sys, ureal , treal , z0);
             
             % save simulations in output struct
             results = struct;

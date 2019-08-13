@@ -1,4 +1,4 @@
-% setup.m
+% arm_setup.m
 %
 % Sets the values of parameters and derives equations of motion for a 
 % hyper-redundant planar manipulator with the following properties:
