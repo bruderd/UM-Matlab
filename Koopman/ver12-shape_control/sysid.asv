@@ -6,6 +6,7 @@ classdef sysid
         params struct;  % sysid parameters
         lift struct;    % contains matlab generated lifting functions
         basis struct;   % contains the observables for the system
+        model struct;   % contains lifted system model of system
     end
     
     methods
@@ -33,7 +34,10 @@ classdef sysid
             
             obj.lift = struct;  % initialize lift struct
             obj.basis = struct; % initialize basis struct
+            obj.model = struct; % initialize model struct
         end
+        
+        %% operations on simulation/experimental data
         
         % resample (resamples data with a desired time step)
         function data_resampled = resample( obj , data , Ts )
@@ -116,7 +120,7 @@ classdef sysid
             obj.params.zeta = zeta;
             
             % construct the observables
-            fullBasis = [];
+            fullBasis = x;  % first n observables should always be the measured state
             for i = 1 : length(degree)
                 if strcmp( type{i} , 'armshape' )
                     obj = obj.def_armshapeLift( degree(i) );
@@ -393,10 +397,11 @@ classdef sysid
         end
         
         % get_ABC (Extracts the A,B,C matrices from Koopman matrix)
-        function out = get_ABC( obj , U , koopData )
+        function [ out , obj ] = get_ABC( obj , U , koopData )
             %get_ABC: Defines the A, B, and C matrices that describe the linear
             %lifted system z+ = Az + Bu, x = Cz.
-            %   Detailed explanation goes here
+            %   out - struct with fields A, B, C, sys, params, ...
+            %   obj.model - property of struct which stores the model
             
             UT = U';    % transpose of koopman operator
             
@@ -440,6 +445,9 @@ classdef sysid
             out.M = M;
             out.sys = ss( out.A , out.B , Cy , 0 , obj.params.Ts );  % discrete state space system object
             out.params = obj.params;    % save system parameters as part of system struct    
+            
+            % add model substruct to the class
+            obj.model = out;
         end
         
         %% validate performance of a fitted model
@@ -459,7 +467,7 @@ classdef sysid
             
             % set initial condition
             valdata_wzeta = get_zeta( obj , valdata );
-            zeta0 = valdata_wzeta(1,:)';    % initial state with delays
+            zeta0 = valdata_wzeta.zeta(1,:)';    % initial state with delays
             z0 = obj.lift.full( zeta0 );    % initial lifted state
             
             % simulate lifted linear model
@@ -468,7 +476,9 @@ classdef sysid
             % save simulations in output struct
             results = struct;
             results.t = treal; 
+            results.sim.t = tsim;
             results.sim.y = ysim;
+            results.real.t = treal;
             results.real.y = yreal;
             
             % save error info
@@ -477,15 +487,33 @@ classdef sysid
             results.error.rmse = sqrt( sum( (ysim - yreal).^2 , 1 ) ./ length(treal) );
         end
         
+        % get_error (computes the error between real and simulated data)
+        function err = get_error( obj , simdata , realdata )
+            %get_error: Computes the error between real and simulated data.
+            
+            % save error info
+            err.abs = abs( ysim - yreal );
+            err.mean = mean( results.error.abs , 1 );
+            err.rmse = sqrt( sum( (simdata.y - realdata.y).^2 , 1 ) ./ length(realdata.t) ); % RMSE
+            err.nrmse = err.rmse ./ abs( max( realdata.y ) - min( realdata.y ) );   % RMSE normalized by total range of real data values
+        end
+        
         % plot_comparison (plots a comparison between simulation and real data)
         function plot_comparison( obj , simdata , realdata )
             %plot_comparison: plots a comparison between simulation and real data.
             
-            fig = figure;   % create new figure
+            % quantify the error
+            err = obj.get_error( simdata , realdata );
             
+            fig = figure;   % create new figure
             for i = 1 : obj.params.n
                 subplot( obj.params.n , 1 , i );
-                hold on
+                ylabel( [ 'y' , num2str(i) ] );
+                title( [ 'NRMSE = ' , num2str( err.nrmse(i) ) ] );
+                hold on;
+                plot( realdata.t , realdata.y( : , i ) , 'b' );
+                plot( simdata.t , simdata.y( : , i ) , 'r' );
+                hold off;
             end
         end
         

@@ -120,7 +120,7 @@ classdef sysid
             obj.params.zeta = zeta;
             
             % construct the observables
-            fullBasis = [];
+            fullBasis = x;  % first n observables should always be the measured state
             for i = 1 : length(degree)
                 if strcmp( type{i} , 'armshape' )
                     obj = obj.def_armshapeLift( degree(i) );
@@ -481,19 +481,32 @@ classdef sysid
             results.real.t = treal;
             results.real.y = yreal;
             
-            % save error info
-            results.error.abs = abs( ysim - yreal );
-            results.error.mean = mean( results.error.abs , 1 );
-            results.error.rmse = sqrt( sum( (ysim - yreal).^2 , 1 ) ./ length(treal) );
+            % save error info (optional, could get rid of this)
+            results.error = obj.get_error( results.sim , results.real );
+        end
+        
+        % get_error (computes the error between real and simulated data)
+        function err = get_error( obj , simdata , realdata )
+            %get_error: Computes the error between real and simulated data.
+            
+            err.abs = abs( simdata.y - realdata.y );  % absolute error over time
+            err.mean = mean( err.abs , 1 );   % average absolute error over time
+            err.rmse = sqrt( sum( (simdata.y - realdata.y).^2 , 1 ) ./ length(realdata.t) ); % RMSE (over each state)
+            err.nrmse = err.rmse ./ abs( max( realdata.y ) - min( realdata.y ) );   % RMSE normalized by total range of real data values
         end
         
         % plot_comparison (plots a comparison between simulation and real data)
         function plot_comparison( obj , simdata , realdata )
             %plot_comparison: plots a comparison between simulation and real data.
             
+            % quantify the error
+            err = obj.get_error( simdata , realdata );
+            
             fig = figure;   % create new figure
             for i = 1 : obj.params.n
                 subplot( obj.params.n , 1 , i );
+                ylabel( [ 'y' , num2str(i) ] );
+                title( [ 'NRMSE = ' , num2str( err.nrmse(i) ) ] );
                 hold on;
                 plot( realdata.t , realdata.y( : , i ) , 'b' );
                 plot( simdata.t , simdata.y( : , i ) , 'r' );
