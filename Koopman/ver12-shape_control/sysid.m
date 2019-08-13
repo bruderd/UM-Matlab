@@ -6,6 +6,7 @@ classdef sysid
         params struct;  % sysid parameters
         lift struct;    % contains matlab generated lifting functions
         basis struct;   % contains the observables for the system
+        model struct;   % contains lifted system model of system
     end
     
     methods
@@ -26,11 +27,17 @@ classdef sysid
             % load in system parameters if any are provided
             if length(varargin) == 1
                 obj.params.sysParams = varargin{1};
+                obj.params.isfake = 1; % indicates whether class is built from a simulated system or real data
+            else
+                obj.params.isfake = 0;
             end
             
             obj.lift = struct;  % initialize lift struct
             obj.basis = struct; % initialize basis struct
+            obj.model = struct; % initialize model struct
         end
+        
+        %% operations on simulation/experimental data
         
         % resample (resamples data with a desired time step)
         function data_resampled = resample( obj , data , Ts )
@@ -41,6 +48,50 @@ classdef sysid
             data_resampled.x = interp1( data.t , data.x , tq );
             data_resampled.u = interp1( data.t , data.u , tq );
             data_resampled.y = interp1( data.t , data.y , tq );
+        end
+        
+        %% save the class object
+        
+        % save_class
+        function obj = save_class( obj , varargin)
+            %save_class: Saves the class as a .mat file
+            %   If class is from a simulated system, it is saved in the
+            %   subfolder corresponding to that system.
+            %   If class if from a real system, it is saved in the generic
+            %   folder /systems/fromData/.
+            %   varargin = isupdate - indicates whether this is an update of a
+            %   previously saved class (1) or a new class (0).
+            
+            % assume this is a new class file (not update) by default
+            if length(varargin) == 1
+                isupdate = varargin{1};
+            else
+                isupdate = 0;
+            end
+            
+            % set the class name based on its parameters
+            if isupdate
+                classname = obj.params.classname;
+            else
+                dateString = datestr(now , 'yyyy-mm-dd_HH-MM'); % current date/time
+                classname = [ 'n-' , num2str( obj.params.n ) , '_m-' , num2str( obj.params.m ) , '_del-' , num2str( obj.params.nd ) , '_' , dateString ];
+                obj.params.classname = classname;   % create classname parameter
+            end
+    
+            % save the class file
+            model = obj;
+            if obj.params.isfake    % check if class was created from simulated system
+                dirname = [ 'systems' , filesep , obj.params.sysParams.sysName , filesep , 'models'];
+                if ~isupdate
+                    mkdir( dirname );
+                end
+                fname = [ dirname , filesep , classname, '.mat' ];
+                save( fname , 'model' );
+            else
+                dirname = [ 'systems' , filesep , 'fromData' ];
+                fname = [ dirname , filesep , classname, '.mat' ];
+                save( fname , 'model' );
+            end
         end
         
         %% defining observables
@@ -84,6 +135,9 @@ classdef sysid
             obj.basis.full = fullBasis;
             obj.lift.full = matlabFunction( fullBasis , 'Vars' , {zeta} );
             obj.params.N = length( fullBasis ); % the dimension of the lefted state
+            
+%             % save the sysid class object (may not want to include this here, better done externally)
+%             obj = obj.save_class( 0 );
         end
         
         % def_polyLift (defines polynomial basis functions)
@@ -200,7 +254,7 @@ classdef sysid
         %% fitting Koopman operator and A,B,C system matrices
         
         % get_zeta (adds a zeta field to a test data struct)
-        function data_out = get_zeta( obj , data_in )
+        function [ data_out , zeta ] = get_zeta( obj , data_in )
             %get_zeta: Adds a zeta field to a test data struct
             %   data_in - struct with t , x , y , u fields
             %   zeta - [ y , yd1 , yd2 , ... , ud1 , ud2 , ... ]
@@ -219,10 +273,11 @@ classdef sysid
                     ydel(1 , fillrange_y) = data_in.y( i - j , : );
                     udel(1 , fillrange_u) = data_in.u( i - j , : );
                 end
-                zeta = [ y , ydel , udel ];
-                data_out.zeta( ind , : ) = zeta;
+                zetak = [ y , ydel , udel ];
+                data_out.zeta( ind , : ) = zetak;
                 data_out.uzeta( ind , : ) = data_in.u( i , : );    % current timestep with zeta (input starting at current timestep)
             end
+            zeta = data_out.zeta;
         end
         
         % get_snapshotPairs (convert time-series data into snapshot pairs)
@@ -342,10 +397,11 @@ classdef sysid
         end
         
         % get_ABC (Extracts the A,B,C matrices from Koopman matrix)
-        function out = get_ABC( obj , U , koopData )
+        function [ out , obj ] = get_ABC( obj , U , koopData )
             %get_ABC: Defines the A, B, and C matrices that describe the linear
             %lifted system z+ = Az + Bu, x = Cz.
-            %   Detailed explanation goes here
+            %   out - struct with fields A, B, C, sys, params, ...
+            %   obj.model - property of struct which stores the model
             
             UT = U';    % transpose of koopman operator
             
@@ -389,6 +445,60 @@ classdef sysid
             out.M = M;
             out.sys = ss( out.A , out.B , Cy , 0 , obj.params.Ts );  % discrete state space system object
             out.params = obj.params;    % save system parameters as part of system struct    
+            
+            % add model substruct to the class
+            obj.model = out;
+        end
+        
+        %% validate performance of a fitted model
+        
+        % val_liftedSys (compares model simulation to real data)
+        function results = val_liftedSys( obj , liftedSys , valdata )
+            %val_liftedSys: Compares a model simulation to real data
+            %   liftedSys - struct with fields A, B, C, sys, ...
+            %   valdata - struct with fields t, y, u (at least)
+            %   results - struct with simulation results and error calculations
+            
+            % shift real data so delays can be accounted for
+            index0 = obj.params.nd + 1;  % index of the first state
+            treal = valdata.t(index0 : end);    % start simulation late so delays can be taken into account
+            yreal = valdata.y(index0 : end , :);
+            ureal = valdata.u(index0 : end , :);
+            
+            % set initial condition
+            valdata_wzeta = get_zeta( obj , valdata );
+            zeta0 = valdata_wzeta.zeta(1,:)';    % initial state with delays
+            z0 = obj.lift.full( zeta0 );    % initial lifted state
+            
+            % simulate lifted linear model
+            [ ysim , tsim , zsim ] = lsim(liftedSys.sys, ureal , treal , z0);
+            
+            % save simulations in output struct
+            results = struct;
+            results.t = treal; 
+            results.sim.t = tsim;
+            results.sim.y = ysim;
+            results.real.t = treal;
+            results.real.y = yreal;
+            
+            % save error info
+            results.error.abs = abs( ysim - yreal );
+            results.error.mean = mean( results.error.abs , 1 );
+            results.error.rmse = sqrt( sum( (ysim - yreal).^2 , 1 ) ./ length(treal) );
+        end
+        
+        % plot_comparison (plots a comparison between simulation and real data)
+        function plot_comparison( obj , simdata , realdata )
+            %plot_comparison: plots a comparison between simulation and real data.
+            
+            fig = figure;   % create new figure
+            for i = 1 : obj.params.n
+                subplot( obj.params.n , 1 , i );
+                hold on;
+                plot( realdata.t , realdata.y( : , i ) , 'b' );
+                plot( simdata.t , simdata.y( : , i ) , 'r' );
+                hold off;
+            end
         end
         
     end
