@@ -41,13 +41,52 @@ classdef sysid
         
         % resample (resamples data with a desired time step)
         function data_resampled = resample( obj , data , Ts )
+            %resample: resamples sim/exp data with a desired timestep
+            %   data - struct with fields t, y, x (optional)
+            %   Ts - the desired sampling period
+            
             % get query points
             tq = ( data.t(1) : Ts : data.t(end) )';
             
             data_resampled.t = tq;
-            data_resampled.x = interp1( data.t , data.x , tq );
             data_resampled.u = interp1( data.t , data.u , tq );
             data_resampled.y = interp1( data.t , data.y , tq );
+            if ismember( 'x' , fields(data) )
+                data_resampled.x = interp1( data.t , data.x , tq );
+            end
+        end
+        
+        % get_scale (scale sim/exp data to be in range [-1 , 1])
+        function [ data_scaled , obj ] = get_scale( obj , data )
+           %scale: Scale sim/exp data to be in range [-1 , 1]
+           %    Also creates scaleup/scaledown matrices and saves as params
+           %    data - struct containing fields t , y , u (at least)
+           %    data_scaled - struct containing t , y , u , x (optional)
+           
+           % get max absolute values in each dimension
+           y_maxabs = max( abs( data.y ) );
+           u_maxabs = max( abs( data.u ) );
+           
+           % scale the data
+           data_scaled = struct;    % initialize
+           data_scaled.t = data.t;  % time is not scaled
+           data_scaled.y = data.y ./ y_maxabs;
+           data_scaled.u = data.u ./ u_maxabs;
+           
+           % save the scaling matrices (note, these are meant to premultiply column vectors or postmultiply row vectors)
+           obj.params.scaleup.y = diag( y_maxabs );
+           obj.params.scaleup.u = diag( u_maxabs );
+           obj.params.scaledown.y = diag( y_maxabs .^ (-1) );
+           obj.params.scaledown.u = diag( u_maxabs .^ (-1) );
+           
+           % do same for x if it is part of data struct
+           if ismember( 'x' , fields(data) )
+               x_maxabs = max( abs( data.x ) );
+               data_scaled.x = data.x ./ x_maxabs;
+               obj.params.scaleup.x = diag( x_maxabs );
+               obj.params.scaledown.x = diag( x_maxabs .^ (-1) );
+           end
+           
         end
         
         %% save the class object
