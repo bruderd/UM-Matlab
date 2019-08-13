@@ -3,7 +3,10 @@
 % Creates a sysid class and walks through all of the steps of building a
 % model from data, validating its performance, and saving it (if desired)
 
-%% gather training data
+% (USER EDIT HERE)
+isupdate = false; % put true if this should overwrite existing model, false otherwise
+
+%% gather training data (SHOULD OFFLOAD THIS SECTION TO A DATA CLASS, THEN JUST CHOOSE A SINGLE DATA FILE HERE)
 
 % load in data file(s)
 [ datafile_name , datafile_path ] = uigetfile( '*.mat' , 'Choose data file(s) for training...' , 'multiselect' , 'on' );
@@ -11,6 +14,11 @@ data4train = load( [datafile_path , datafile_name] );
 
 [ datafile_name , datafile_path ] = uigetfile( '*.mat' , 'Choose data file(s) for validation...' , 'multiselect' , 'on' );
 data4val = load( [datafile_path , datafile_name] );
+
+% NEED TO DEAL WITH MERGING MULTIPLE DATA FILES HERE
+%
+%
+%
 
 % create sysid class from data
 sysid = sysid( data4train , data4train.params );
@@ -23,6 +31,7 @@ valdata_full = sysid.get_scale( data4val );
 numVals = 4;
 lenVals = 1;    % length of the validation trials (in seconds)
 valdata = sysid.chop( valdata_full , numVals , lenVals );
+
 
 %% define a set of observables
 
@@ -54,9 +63,6 @@ for i = 1 : length(valdata)
 end
 
 %% save (or don't save) sysid class, model, and training data
-
-% (USER EDIT HERE)
-isupdate = false; % put true if this should overwrite existing model, false otherwise
 
 saveModel = questdlg('Would you like to save this model?');
 if strcmp( saveModel , 'Yes' )
