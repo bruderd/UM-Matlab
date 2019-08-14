@@ -233,6 +233,42 @@ classdef arm
             Alphadot = [ alphadot ; alphaddot ];
         end
         
+        % vf_RHS (dynamics as vector field)
+        function RHS = vf_RHS( obj , t , Alpha , u )
+            %vf_RHS: RHS of EoM, Dq(x) * xddot = C(x,xdot) * xdot + g(x)
+            %   Alpha = [ alpha ; alphadot ];
+            %   Alphadot = [ alphadot ; alphaddot ];
+            %   note: to use with ode45, need to include the mass matrix in
+            %         the call to ode45
+            
+            params = obj.params;
+            
+            alpha = Alpha( 1 : params.Nlinks );
+            alphadot = Alpha( params.Nlinks+1 : end );
+            
+            nonInert = obj.get_nonInert( alpha , alphadot , u );
+            
+            RHS = -[ alphadot ; nonInert ];
+        end
+        
+        % vf_RHS (dynamics as vector field)
+        function D = vf_massMatrix( obj , t , Alpha , u )
+            %vf_massMatrix: RHS of EoM, Dq(x) * xddot = C(x,xdot) * xdot + g(x)
+            %   Alpha = [ alpha ; alphadot ];
+            %   Alphadot = [ alphadot ; alphaddot ];
+            %   note: to use with ode45, need to include the mass matrix in
+            %         the call to ode45
+            
+            params = obj.params;
+            
+            alpha = Alpha( 1 : params.Nlinks );
+            alphadot = Alpha( params.Nlinks+1 : end );
+            
+            Dq = obj.get_massMatrix( alpha );
+            
+            D = blkdiag( eye(param.Nlinks) , Dq );
+        end
+        
         %% sensing
         
         % get_markers (simulated mocap)
@@ -453,7 +489,9 @@ classdef arm
             adot0 = zeros( obj.params.Nlinks , 1 );
             
             % simulate system
-            Alpha = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , t , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
+%             Alpha = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , t , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
+            options = odeset( 'Mass' , @(x) obj.get_massMatrix( x(1:obj.params.Nlinks) ) );
+            Alpha = ode45( @(t,x) obj.vf_RHS( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , t , [ a0 ; adot0 ] , options );    % with mass matrix, variable time step
             
             % get locations of the markers at each time step
             markers = zeros( length(t) , 2 * ( obj.params.Nmods+1 ) );
@@ -479,7 +517,7 @@ classdef arm
             if saveon
                 fname = [ 'systems' , filesep , obj.params.sysName , filesep , 'simulations' , filesep , 'tf_', num2str(tf) , 's_ramp_' , num2str(Tramp) , 's.mat' ];
                 unique_fname = auto_rename( fname , '(0)' );
-                save( unique_fname , , ,'sim' );
+                save( unique_fname , '-struct' ,'sim' );
             end
         end
            

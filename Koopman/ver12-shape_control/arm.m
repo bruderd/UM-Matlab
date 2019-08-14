@@ -233,6 +233,44 @@ classdef arm
             Alphadot = [ alphadot ; alphaddot ];
         end
         
+        % vf_RHS (dynamics as vector field)
+        function RHS = vf_RHS( obj , t , Alpha , u )
+            %vf_RHS: RHS of EoM, Dq(x) * xddot = C(x,xdot) * xdot + g(x)
+            % with appropriate dimension to work in state space formulation
+            %   Alpha = [ alpha ; alphadot ];
+            %   Alphadot = [ alphadot ; alphaddot ];
+            %   note: to use with ode45, need to include the mass matrix in
+            %         the call to ode45
+            
+            params = obj.params;
+            
+            alpha = Alpha( 1 : params.Nlinks );
+            alphadot = Alpha( params.Nlinks+1 : end );
+            
+            nonInert = obj.get_nonInert( alpha , alphadot , u );
+            
+            RHS = -[ -alphadot ; nonInert ];
+        end
+        
+        % vf_massMatrix (dynamics as vector field)
+        function D = vf_massMatrix( obj , t , Alpha , u )
+            %vf_massMatrix: mass matrix with appropriate dimension to work 
+            % in state space formulation 
+            %   Alpha = [ alpha ; alphadot ];
+            %   Alphadot = [ alphadot ; alphaddot ];
+            %   note: to use with ode45, need to include the mass matrix in
+            %         the call to ode45
+            
+            params = obj.params;
+            
+            alpha = Alpha( 1 : params.Nlinks );
+            alphadot = Alpha( params.Nlinks+1 : end );
+            
+            Dq = obj.get_massMatrix( alpha );
+            
+            D = blkdiag( eye(params.Nlinks) , Dq );
+        end
+        
         %% sensing
         
         % get_markers (simulated mocap)
@@ -439,21 +477,23 @@ classdef arm
             end
             
             % time steps
-            t = ( 0 : obj.params.Ts : tf )';    % all timesteps
+            tsteps = ( 0 : obj.params.Ts : tf )';    % all timesteps
             tswitch = ( 0 : Tramp : tf )';  % input switching points
             
             % table of inputs
             numPeriods = ceil( length(tswitch) / 2 );
             inputs_nohold = obj.params.umax .* ( 2*rand( numPeriods , obj.params.Nmods ) - 1 );  % table of random inputs
             inputs_hold = reshape([inputs_nohold(:) inputs_nohold(:)]',2*size(inputs_nohold,1), []); % repeats rows of inputs so that we get a hold between ramps
-            u = interp1( tswitch , inputs_hold( 1:length(tswitch) , : ) , t );
+            u = interp1( tswitch , inputs_hold( 1:length(tswitch) , : ) , tsteps );
             
             % initial condition (resting)
             a0 = zeros( obj.params.Nlinks , 1 );
             adot0 = zeros( obj.params.Nlinks , 1 );
             
             % simulate system
-            Alpha = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , t , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
+%             Alpha = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , tsteps , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
+            options = odeset( 'Mass' , @(t,x) obj.vf_massMatrix( t , x , u ) );
+            [ t , Alpha ] = ode45( @(t,x) obj.vf_RHS( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , tsteps , [ a0 ; adot0 ] , options );    % with mass matrix, variable time step
             
             % get locations of the markers at each time step
             markers = zeros( length(t) , 2 * ( obj.params.Nmods+1 ) );
