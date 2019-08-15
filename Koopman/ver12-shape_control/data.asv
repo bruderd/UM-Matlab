@@ -68,22 +68,24 @@ classdef data
         end
         
         % merge (merge several data files into single file)
-        function data_merged = merge
-            %merge: Merge several data files into single file
+        function data_merged = merge_files
+            %merge_files: Merge several data files into single file
             %   data_merged: cell array containing the contents of all of
             %     the data filed selected
             
             % select data file(s)
-            [ datafile_name , datafile_path ] = uigetfile( '*.mat' , 'Choose data file(s) for training...' , 'multiselect' , 'on' );
+            [ datafile_name , datafile_path ] = uigetfile( '*.mat' , 'Choose data file(s) for merging...' , 'multiselect' , 'on' );
             
             % load in the data files
-            if iscell( datafile_name )
+            if iscell( datafile_name )  % check if it's cell array
                 data_merged = cell( 1 , length(datafile_name) );
                 for i = 1 : length(datafile_name)
                     data_merged{i} = load( [datafile_path , datafile_name{i}] );
                 end
-            else
-                disp('You must select more than one data file!');
+            else    % if not a cell array, turn it into 1x1 cell array
+                data_merged = cell(1,1);
+                data_merged{1} = load( [datafile_path , datafile_name] );
+                disp('FYI, you only selected one file so your output cell array will have dimension 1.');
             end   
         end
         
@@ -92,11 +94,13 @@ classdef data
             %get_data4sysid: Create a data structure with 'train' and 'val'
             % fields, which are requred to perform sysid.
             %   train - cell array containing training data (should get it
-            %    from data.merge). Use [] if you want to select files.
+            %      from data.merge). Use [] if you want to select files.
             %   val - cell array containing validation data (should get it
-            %    from data.merge). Use [] if you want to select files.
+            %      from data.chop). Use [] if you want to select files.
             %   saveon - (optional) if true, will save the output as a .mat 
-            %       file in the 'datafiles' folder. False by default.
+            %      file in the 'datafiles' folder. False by default.
+            %   name - string. Will be preappended to filedname if saveon
+            %       is true.
             %   data4sysid - struct with fields 'train' and 'val', which
             %       are themselves cell arrays containing data for individual
             %       trials
@@ -124,7 +128,7 @@ classdef data
             % save output
             if saveon
                 dateString = datestr(now , 'yyyy-mm-dd_HH-MM'); % current date/time
-                fname = [ 'datafiles' , filesep , name , 'train-', num2str(tf) , '_val-' , num2str(Tramp) , '_' , dateString , '.mat' ];
+                fname = [ 'datafiles' , filesep , name , 'train-', num2str( length(train) ) , '_val-' , num2str( length(val) ) , '_' , dateString , '.mat' ];
                 unique_fname = auto_rename( fname , '(0)' );
                 save( unique_fname , '-struct' ,'data4sysid' );
             end

@@ -68,8 +68,8 @@ classdef data
         end
         
         % merge (merge several data files into single file)
-        function data_merged = merge
-            %merge: Merge several data files into single file
+        function data_merged = merge_files
+            %merge_files: Merge several data files into single file
             %   data_merged: cell array containing the contents of all of
             %     the data filed selected
             
@@ -77,12 +77,12 @@ classdef data
             [ datafile_name , datafile_path ] = uigetfile( '*.mat' , 'Choose data file(s) for merging...' , 'multiselect' , 'on' );
             
             % load in the data files
-            if iscell( datafile_name )
+            if iscell( datafile_name )  % check if it's cell array
                 data_merged = cell( 1 , length(datafile_name) );
                 for i = 1 : length(datafile_name)
                     data_merged{i} = load( [datafile_path , datafile_name{i}] );
                 end
-            else
+            else    % if not a cell array, turn it into 1x1 cell array
                 data_merged = cell(1,1);
                 data_merged{1} = load( [datafile_path , datafile_name] );
                 disp('FYI, you only selected one file so your output cell array will have dimension 1.');
@@ -116,9 +116,17 @@ classdef data
             % go get training and validation files if none provided
             if isempty( train )
                 train = data.merge; % get training data
+            elseif ~iscell( train ) % if 'train' is not a cell array, make it a 1x1 cell array
+                train_temp = train;
+                train = cell(1,1);
+                train{1} = train_temp;
             end
             if isempty( val )
                 val = data.merge;   % get validation data
+            elseif ~iscell( val ) % if 'val' is not a cell array, make it a 1x1 cell array
+                val_temp = val;
+                val = cell(1,1);
+                val{1} = val_temp;
             end
             
             % set output

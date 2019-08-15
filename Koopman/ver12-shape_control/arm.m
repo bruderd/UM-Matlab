@@ -182,8 +182,8 @@ classdef arm
             
             % save non-inertial part of dynamics as a function
             nonInert = Dq_dt * alphadot - dLdalpha + damp + input;
-            nonInert = taylor( nonInert , alpha , 'Order' , 3);  % use taylor series approximation for speed
-            nonInert = taylor( nonInert , alphadot , 'Order' , 3);
+%             nonInert = taylor( nonInert , alpha , 'Order' , 3);  % use taylor series approximation for speed
+%             nonInert = taylor( nonInert , alphadot , 'Order' , 3);
             fcns.get_nonInert = matlabFunction(nonInert, 'Vars', { alpha , alphadot , u });
         end
         

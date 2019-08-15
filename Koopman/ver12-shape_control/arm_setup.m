@@ -10,7 +10,7 @@
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm_3-mods_1-links_taylor';
+params.sysName = 'arm_3-mods_1-links';
 
 params.Nmods = 3;   % number of modules (actuated sections)
 params.nlinks = 1;      % number of links in each module
