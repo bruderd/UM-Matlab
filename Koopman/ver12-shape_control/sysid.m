@@ -37,7 +37,7 @@ classdef sysid
             obj.model = struct; % initialize model struct
         end
         
-        %% operations on simulation/experimental data
+        %% operations on simulation/experimental data (some are redundant and found in the data class)
         
         % resample (resamples data with a desired time step)
         function data_resampled = resample( obj , data , Ts )
@@ -563,8 +563,16 @@ classdef sysid
             A = UT( 1 : obj.params.N , 1 : obj.params.N );
             B = UT( 1 : obj.params.N , obj.params.N+1 : end );
             
-            % C selects the first ny entries of the lifted state (so output can be different than state)
-            Cy = [eye(obj.params.n), zeros(obj.params.n , obj.params.N - obj.params.n)];   
+            % Cy selects the first n entries of the lifted state
+            Cy = [eye(obj.params.n), zeros(obj.params.n , obj.params.N - obj.params.n)]; 
+            
+            % Cshape selects the observables related to shape (assumes they come right after observed state y)
+            if isfield( obj.basis , 'armshape' )
+                nshape = length( obj.basis.armshape );
+                Cshape = [ zeros( nshape , obj.params.n ) , eye( nshape ) , zeros( nshape , obj.params.N - obj.params.n - nshape ) ];
+            else
+                Cshape = [];
+            end
 
 %             % matrix to recover the state with delays, i.e. zeta
 %             nzeta = obj.params.n + obj.params.nd * ( obj.params.n + obj.params.m );
@@ -596,6 +604,7 @@ classdef sysid
             out.Asim = A;
             out.Bsim = B;
             out.C = Cy;
+            out.Cshape = Cshape;
 %             out.Cz = Cz;    % recovers state with delays (i.e.zeta)---doesn't work because zeta is not embeded in lifted state, only y is
             out.M = M;
             out.sys = ss( out.A , out.B , Cy , 0 , obj.params.Ts );  % discrete state space system object
