@@ -6,10 +6,10 @@
 % (USER EDIT HERE)
 isupdate = false; % put true if this should overwrite existing model, false otherwise
 
-%% gather training data (SHOULD OFFLOAD THIS SECTION TO A DATA CLASS, THEN JUST CHOOSE A SINGLE DATA FILE HERE)
+%% gather training data (need to prepare data file before running this)
 
 % load in data file(s)
-[ datafile_name , datafile_path ] = uigetfile( '/datafiles/*.mat' , 'Choose data file(s) for sysid...' , 'multiselect' , 'on' );
+[ datafile_name , datafile_path ] = uigetfile( 'datafiles/*.mat' , 'Choose data file for sysid...' );
 data4sysid = load( [datafile_path , datafile_name] );
 
 % separate into training and validation data
