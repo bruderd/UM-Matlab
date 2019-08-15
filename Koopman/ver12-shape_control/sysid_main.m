@@ -29,12 +29,6 @@ for i = 1 : length( data4val )
     valdata{i} = sysid.scale_data( data4val{i} );
 end
 
-% % chop data into validation trials (USER EDIT HERE)
-% numVals = 4;
-% lenVals = 1;    % length of the validation trials (in seconds)
-% valdata = sysid.chop( valdata_full , numVals , lenVals );
-
-
 %% define a set of observables
 
 % (USER EDIT HERE)

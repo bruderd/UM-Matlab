@@ -523,6 +523,21 @@ classdef arm
             end
         end
            
+        % simulate_Ts (simulate system over a single time step)
+        function [ x_kp1 ] = simulate_Ts( obj , x_k , u )
+            %simulate_Ts: Simulate system over a single time step
+            %   x_k - current value of state (full state Alpha = [alpha ; alphadot])
+            %   u_k - input over next time step
+            
+            tstep = [ 0 , obj.params.Ts ];
+            
+            % simulate system
+            options = odeset( 'Mass' , @(t,x) obj.vf_massMatrix( t , x , u ) );
+            [ t , Alpha ] = ode45( @(t,x) obj.vf_RHS( t , x , u_k ) , tstep , x_k , options );    % with mass matrix, variable time step
+            
+            % set output, the state after one time step
+            x_kp1 = Alpha;
+        end
         
     end
 end
