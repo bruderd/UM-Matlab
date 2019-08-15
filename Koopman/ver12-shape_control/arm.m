@@ -491,9 +491,9 @@ classdef arm
             adot0 = zeros( obj.params.Nlinks , 1 );
             
             % simulate system
-%             Alpha = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , tsteps , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
             options = odeset( 'Mass' , @(t,x) obj.vf_massMatrix( t , x , u ) );
             [ t , Alpha ] = ode45( @(t,x) obj.vf_RHS( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , tsteps , [ a0 ; adot0 ] , options );    % with mass matrix, variable time step
+%             Alpha = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , tsteps , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
             
             % get locations of the markers at each time step
             markers = zeros( length(t) , 2 * ( obj.params.Nmods+1 ) );
@@ -517,7 +517,7 @@ classdef arm
             
             % save results
             if saveon
-                fname = [ 'systems' , filesep , obj.params.sysName , filesep , 'simulations' , filesep , 'tf_', num2str(tf) , 's_ramp_' , num2str(Tramp) , 's.mat' ];
+                fname = [ 'systems' , filesep , obj.params.sysName , filesep , 'simulations' , filesep , 'tf-', num2str(tf) , 's_ramp-' , num2str(Tramp) , 's.mat' ];
                 unique_fname = auto_rename( fname , '(0)' );
                 save( unique_fname , '-struct' ,'sim' );
             end

@@ -86,11 +86,51 @@ classdef sysid
                obj.params.scaleup.x = diag( x_maxabs );
                obj.params.scaledown.x = diag( x_maxabs .^ (-1) );
            end
-           
+        end
+        
+        % scale_data (scale sim/exp data to be in range [-1 , 1])
+        function [ data_scaled , obj ] = scale_data( obj , data , down )
+            %scale: Scale sim/exp data based on the scalefactors set in
+            % get_scale.
+            %    data - struct containing fields t , y , u (at least)
+            %    data_scaled - struct containing t , y , u , x (optional)
+            %    down - boolean. true to scale down, false to scale up.
+            
+            if nargin < 3
+                down = true; % default is to scale down
+            end
+            
+            % scale the data
+            if down
+                data_scaled = struct;    % initialize
+                data_scaled.t = data.t;  % time is not scaled
+                data_scaled.y = data.y * obj.params.scaledown.y;
+                data_scaled.u = data.u * obj.params.scaledown.u;
+            else
+                data_scaled = struct;    % initialize
+                data_scaled.t = data.t;  % time is not scaled
+                data_scaled.y = data.y * obj.params.scaleup.y;
+                data_scaled.u = data.u * obj.params.scaleup.u;
+            end
+            
+            % save the scaling matrices (note, these are meant to premultiply column vectors or postmultiply row vectors)
+            obj.params.scaleup.y = diag( y_maxabs );
+            obj.params.scaleup.u = diag( u_maxabs );
+            obj.params.scaledown.y = diag( y_maxabs .^ (-1) );
+            obj.params.scaledown.u = diag( u_maxabs .^ (-1) );
+            
+            % do same for x if it is part of data struct
+            if ismember( 'x' , fields(data) )
+                x_maxabs = max( abs( data.x ) );
+                data_scaled.x = data.x ./ x_maxabs;
+                obj.params.scaleup.x = diag( x_maxabs );
+                obj.params.scaledown.x = diag( x_maxabs .^ (-1) );
+            end
+            
         end
         
         % chop (chop data into several trials)
-        function data_chopped = chop( data , num , len )
+        function data_chopped = chop( obj , data , num , len )
             %chop: chop data into num trials of lenght len
             %   data - struct with fields t , y , (x)
             %   data_chopped - cell array containing the chopped datas
@@ -99,7 +139,7 @@ classdef sysid
             Ts = mean( data.t(2:end) - data.t(1:end-1) ); % take mean in case they're not quite uniform
             
             % find maximum length of each chop for given num
-            maxlen = floor( length( data.t ) / num );
+            maxlen = data.t(end) / num;
             if len > maxlen
                 len = maxlen;
                 disp([ 'Maximum trial length is ' , num2str(maxlen) , 's. Using this value instead.' ]);
@@ -113,12 +153,39 @@ classdef sysid
             for i = 1 : num
                 index = (i-1) * maxlenk + ( 1 : lenk );
                 
-                data_choppped{i}.t = ( ( 1 : lenk ) - 1 ) * Ts;
-                data_chopped{}
-            end
-            
+                % chop the data
+                data_chopped{i}.t = ( ( 1 : lenk ) - 1 ) * Ts;
+                data_chopped{i}.y = data.y( index , : );
+                data_chopped{i}.u = data.u( index , : );
+                if ismember( 'x' , fields(data) )
+                    data_chopped{i}.x = data.x( index , : );
+                end
+            end  
         end
         
+        % merge_trials (merge cell array containing several sim/exp trials into one data struct)
+        function data_merged = merge_trials( obj , data )
+            %merge_trials: Merge cell array containing several sim/exp trials into one data struct
+            %   data - cell array where each cell is a data struct with
+            %   fields t, y, u, (x), (params), ...
+            %   data_merged: data struct with the same fields
+            
+            % confirm that data is a cell array (i.e. contains several trials)
+            % If so, concatenate all trials into a single data struct 
+            if iscell( data )
+                data_merged = data{1};  % initialize the merged data struct
+                for i = 2 : length( data )
+                    data_fields = fields( data{i} );
+                    for j = 1 : length( data_fields )
+                        if isa( data{i}.( data_fields{j} ) , 'numeric' )
+                            data_merged.( data_fields{j} ) = [ data_merged.( data_fields{j} ) ; data{i}.( data_fields{j} ) ];
+                        end
+                    end
+                end
+            else
+                data_merged = data; % if not a cell array, do nothing
+            end
+        end
         
         %% save the class object
         
@@ -354,8 +421,21 @@ classdef sysid
         function snapshotPairs = get_snapshotPairs( obj , data , varargin )
             %get_snapshotPairs: Convert time-series data into a set of num
             %snapshot pairs.
-            %   data - struct with fields x , y , u , t , (zeta)
+            %   data - struct with fields x , y , u , t , (zeta) OR cell
+            %     array containing cells which contain those fields
             %   varargin = num - number of snapshot pairs to be taken
+            
+            % check wheter data is a cell array (i.e. contains several trials)
+            % If so, concatenate all trials into a single data struct 
+            if iscell( data )
+                data_merged = obj.merge_trials( data );
+            end
+            data = data_merged; % replace cell array with merged data struct
+            
+            % check if data has a zeta field, create one if not
+            if ~ismember( 'zeta' , fields(data) )
+                data = obj.get_zeta( data );
+            end
             
             % set the number of snapshot pairs to be taken
             num_max = size( data.zeta , 1 ) - 1; % maximum number of snapshot pairs
@@ -370,15 +450,16 @@ classdef sysid
                 num = num_max;
             end
             
-            % check if data has a zeta field, create one if not
-            if ~ismember( 'zeta' , fields(data) )
-                data = get_zeta( data );
-            end
-            
             % separate data into 'before' and 'after' time step
             before.zeta = data.zeta( 1:end-1 , : );
             after.zeta = data.zeta( 2:end , : );
             u = data.uzeta( 1:end-1 , : );    % input that happens between before.zeta and after.zeta
+            
+            % remove pairs that fall at the boundary between sim/exp trials
+            goodpts = find( data.t( 1:end-1 , : ) < data.t( 2:end , : ) );
+            before.zeta = before.zeta( goodpts , : );
+            after.zeta = after.zeta( goodpts , : );
+            u = u( goodpts , : );
             
             % randomly select num snapshot pairs
             total = num_max;

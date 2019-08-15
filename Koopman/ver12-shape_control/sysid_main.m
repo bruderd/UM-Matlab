@@ -9,28 +9,30 @@ isupdate = false; % put true if this should overwrite existing model, false othe
 %% gather training data (SHOULD OFFLOAD THIS SECTION TO A DATA CLASS, THEN JUST CHOOSE A SINGLE DATA FILE HERE)
 
 % load in data file(s)
-[ datafile_name , datafile_path ] = uigetfile( '*.mat' , 'Choose data file(s) for training...' , 'multiselect' , 'on' );
-data4train = load( [datafile_path , datafile_name] );
+[ datafile_name , datafile_path ] = uigetfile( '/datafiles/*.mat' , 'Choose data file(s) for sysid...' , 'multiselect' , 'on' );
+data4sysid = load( [datafile_path , datafile_name] );
 
-[ datafile_name , datafile_path ] = uigetfile( '*.mat' , 'Choose data file(s) for validation...' , 'multiselect' , 'on' );
-data4val = load( [datafile_path , datafile_name] );
-
-% NEED TO DEAL WITH MERGING MULTIPLE DATA FILES HERE
-%
-%
-%
+% separate into training and validation data
+data4train = data4sysid.train;
+data4val = data4sysid.val;
 
 % create sysid class from data
-sysid = sysid( data4train , data4train.params );
+sysid = sysid( data4train{1} , data4train{1}.params );
+
+% merge the training data into a single big file
+data4train_merged = sysid.merge_trials( data4train );
 
 % scale data to be in range [-1 , 1]
-[ traindata , sysid ] = sysid.get_scale( data4train );
-valdata_full = sysid.get_scale( data4val );
+[ traindata , sysid ] = sysid.get_scale( data4train_merged );
+valdata = cell( size( data4val ) );  
+for i = 1 : length( data4val )
+    valdata{i} = sysid.scale_data( data4val{i} );
+end
 
-% chop data into validation trials (USER EDIT HERE)
-numVals = 4;
-lenVals = 1;    % length of the validation trials (in seconds)
-valdata = sysid.chop( valdata_full , numVals , lenVals );
+% % chop data into validation trials (USER EDIT HERE)
+% numVals = 4;
+% lenVals = 1;    % length of the validation trials (in seconds)
+% valdata = sysid.chop( valdata_full , numVals , lenVals );
 
 
 %% define a set of observables

@@ -86,7 +86,38 @@ classdef sysid
                obj.params.scaleup.x = diag( x_maxabs );
                obj.params.scaledown.x = diag( x_maxabs .^ (-1) );
            end
-           
+        end
+        
+        % scale_data (scale sim/exp data to be in range [-1 , 1])
+        function data_scaled = scale_data( obj , data , down )
+            %scale: Scale sim/exp data based on the scalefactors set in
+            % get_scale.
+            %    data - struct containing fields t , y , u (at least)
+            %    data_scaled - struct containing t , y , u , x (optional)
+            %    down - boolean. true to scale down, false to scale up.
+            
+            if nargin < 3
+                down = true; % default is to scale down
+            end
+            
+            % scale the data
+            if down
+                data_scaled = struct;    % initialize
+                data_scaled.t = data.t;  % time is not scaled
+                data_scaled.y = data.y * obj.params.scaledown.y;
+                data_scaled.u = data.u * obj.params.scaledown.u;
+                if ismember( 'x' , fields(data) )
+                    data_scaled.x = data.x * obj.params.scaledown.x;
+                end
+            else
+                data_scaled = struct;    % initialize
+                data_scaled.t = data.t;  % time is not scaled
+                data_scaled.y = data.y * obj.params.scaleup.y;
+                data_scaled.u = data.u * obj.params.scaleup.u;
+                if ismember( 'x' , fields(data) )
+                    data_scaled.x = data.x * obj.params.scaleup.x;
+                end
+            end
         end
         
         % chop (chop data into several trials)
@@ -121,6 +152,30 @@ classdef sysid
                     data_chopped{i}.x = data.x( index , : );
                 end
             end  
+        end
+        
+        % merge_trials (merge cell array containing several sim/exp trials into one data struct)
+        function data_merged = merge_trials( obj , data )
+            %merge_trials: Merge cell array containing several sim/exp trials into one data struct
+            %   data - cell array where each cell is a data struct with
+            %   fields t, y, u, (x), (params), ...
+            %   data_merged: data struct with the same fields
+            
+            % confirm that data is a cell array (i.e. contains several trials)
+            % If so, concatenate all trials into a single data struct 
+            if iscell( data )
+                data_merged = data{1};  % initialize the merged data struct
+                for i = 2 : length( data )
+                    data_fields = fields( data{i} );
+                    for j = 1 : length( data_fields )
+                        if isa( data{i}.( data_fields{j} ) , 'numeric' )
+                            data_merged.( data_fields{j} ) = [ data_merged.( data_fields{j} ) ; data{i}.( data_fields{j} ) ];
+                        end
+                    end
+                end
+            else
+                data_merged = data; % if not a cell array, do nothing
+            end
         end
         
         %% save the class object
@@ -357,16 +412,37 @@ classdef sysid
         function snapshotPairs = get_snapshotPairs( obj , data , varargin )
             %get_snapshotPairs: Convert time-series data into a set of num
             %snapshot pairs.
-            %   data - struct with fields x , y , u , t , (zeta)
+            %   data - struct with fields x , y , u , t , (zeta) OR cell
+            %     array containing cells which contain those fields
             %   varargin = num - number of snapshot pairs to be taken
+            
+            % check wheter data is a cell array (i.e. contains several trials)
+            % If so, concatenate all trials into a single data struct 
+            if iscell( data )
+                data_merged = obj.merge_trials( data );
+                data = data_merged; % replace cell array with merged data struct
+            end
             
             % check if data has a zeta field, create one if not
             if ~ismember( 'zeta' , fields(data) )
                 data = obj.get_zeta( data );
             end
             
+            % separate data into 'before' and 'after' time step
+            before.t = data.t( obj.params.nd + 1 : end-1 );
+            before.zeta = data.zeta( 1:end-1 , : );
+            after.t = data.t( obj.params.nd + 2 : end );
+            after.zeta = data.zeta( 2:end , : );
+            u = data.uzeta( 1:end-1 , : );    % input that happens between before.zeta and after.zeta
+            
+            % remove pairs that fall at the boundary between sim/exp trials
+            goodpts = find( before.t < after.t );
+            before.zeta = before.zeta( goodpts , : );
+            after.zeta = after.zeta( goodpts , : );
+            u = u( goodpts , : );
+            
             % set the number of snapshot pairs to be taken
-            num_max = size( data.zeta , 1 ) - 1; % maximum number of snapshot pairs
+            num_max = size( before.zeta , 1 ) - 1; % maximum number of snapshot pairs
             if length(varargin) == 1
                 num = varargin{1};
                 if num > num_max - 1
@@ -377,11 +453,6 @@ classdef sysid
             else
                 num = num_max;
             end
-            
-            % separate data into 'before' and 'after' time step
-            before.zeta = data.zeta( 1:end-1 , : );
-            after.zeta = data.zeta( 2:end , : );
-            u = data.uzeta( 1:end-1 , : );    % input that happens between before.zeta and after.zeta
             
             % randomly select num snapshot pairs
             total = num_max;
@@ -597,6 +668,7 @@ classdef sysid
                 plot( simdata.t , simdata.y( : , i ) , 'r' );
                 hold off;
             end
+            legend({'Real' , 'Koopman'});
         end
         
     end
