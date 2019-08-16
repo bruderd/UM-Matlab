@@ -20,6 +20,7 @@ classdef mpc
     end
     
     methods
+        % CLASS CONSTRUCTOR
         function obj = mpc( sysid_class , varargin )
             %mpc: Construct an instance of this class
             %   sysid_class - sysid class object with a model and params
@@ -32,10 +33,10 @@ classdef mpc
             
             % define default values of properties
             obj.horizon = floor( 1 / obj.params.Ts );
-            obj.input_bounds = [ -Inf , Inf ];
-            obj.input_slopeConst = Inf;
-            obj.input_smoothConst = Inf;
-            obj.state_bounds = [ -Inf , Inf ];
+            obj.input_bounds = [];  % [min,max] can be 1x2 or mx2
+            obj.input_slopeConst = [];
+            obj.input_smoothConst = [];
+            obj.state_bounds = []; % [min,max] can be 1x2 or nx2 
             obj.state_shapeConst = 'off';
             obj.cost_running = 0.1;
             obj.cost_terminal = 100;
@@ -46,6 +47,12 @@ classdef mpc
             
             % replace default values with user input values
             obj = obj.parse_args( varargin{:} );
+            
+            % resize some properties if they aren't full size already
+            obj = obj.expand_props;
+            
+            % get cost matrices
+            obj = obj.get_costMatrices; 
         end
         
         % parse_args: Parses the Name, Value pairs in varargin
@@ -57,11 +64,28 @@ classdef mpc
             end
         end
         
-        % get_matrices: Contructs the matrices for the mpc optim. problem
+        % expand_props: Converts props from shorthand to fully defined
+        function obj = expand_props( obj )
+            %expand_props: Converts props from shorthand to fully defined
+            %   e.g. input_bounds = [ -Inf , Inf ] but params.m = 3,
+            %   ==> [ -Inf , Inf ; -Inf , Inf ; -Inf , Inf ]
+            
+            % input_bounds
+            if ~isempty( obj.input_bounds ) && size( obj.input_bounds , 1 ) ~= obj.params.m
+                obj.input_bounds = kron( ones( obj.params.m , 1 ) , obj.input_bounds );
+            end
+            
+            % state_bounds
+            if ~isempty( obj.state_bounds ) && size( obj.state_bounds , 1 ) ~= obj.params.n
+                obj.state_bounds = kron( ones( obj.params.n , 1 ) , obj.state_bounds );
+            end     
+        end
+        
+        % get_costMatrices: Contructs the matrices for the mpc optim. problem
         function obj = get_costMatrices( obj )
-            %get_costMatrices: Constructs the matrices for the mpc optimization
-            % problem.
-            %   obj.cost has fields H, G, D, L, M, c, A, B, C, Q, R
+            %get_costMatrices: Constructs cost the matrices for the mpc 
+            % optimization problem.
+            %   obj.cost has fields H, G, D, A, B, C, Q, R
             
             %% define cost function matrices
             % Cost function is defined: U'HU + ( z0'G + Yr'D )U
@@ -110,12 +134,48 @@ classdef mpc
             D = -2 * Q * C * B;
             
             % set outputs
-            obj.cost.H = H; obj.cost.G = G; obj.cost.D = D;
-            obj.cost.A = A; obj.cost.B = B; obj.cost.C = C; obj.cost.Q = Q; obj.cost.R = R;
+            obj.cost.H = H; obj.cost.G = G; obj.cost.D = D; % constructed matrices
+            obj.cost.A = A; obj.cost.B = B; obj.cost.C = C; obj.cost.Q = Q; obj.cost.R = R; % component matrices
+        end
+        
+        % get_constraintMatrices
+        function obj = get_constraintMatrices( obj )
+            %get_constraintMatrices: Constructs the constraint matrices for
+            % the mpc optimization problem.
+            %   obj.constraints has fields L, M, (c?)
             
+            Np = obj.horizon;     % steps in horizon
+            input_bounds = obj.params.scaledown.u * obj.input_bounds;   % scaled down the input bounds
+            
+            % F : for input constraints
+            
+            % E : for state constraints
+            
+            % BUILD F AND E SIMULTANEOUSLY GOING THROUGH THE DIFFERENT
+            % CONSTRAINT TYPES ONE AT A TIME. TODO!!!!!!!!!!!
             
         end
         
     end
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
