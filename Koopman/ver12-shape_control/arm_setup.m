@@ -10,11 +10,16 @@
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm_3-mods_1-links';
+params.sysName = 'arm_3-mods_1-links_01-Ts';
 
 params.Nmods = 3;   % number of modules (actuated sections)
 params.nlinks = 1;      % number of links in each module
 params.Nlinks = params.Nmods * params.nlinks;   % total number of links in robot
+
+% general system parameters (make sure to include these an any system class)
+params.nx = params.Nlinks * 2;   % dimension of the full state (joint angles and joing velocities)
+param.ny = 2 * (params.Nlinks ) + 2;   % dimension of measured output (mocap coordinates + end effector orientation)
+params.nu = params.Nlinks;  % dimension of the input (reference angle at each joint)
 
 % manipulator parameters
 params.L = 0.3;    % total length of robot (m)
@@ -32,7 +37,7 @@ params.markerPos = ( ( 0 : params.Nmods ) * params.l * params.nlinks ) / params.
 params.ku = 1e-3; % effective input stiffness
 
 % simulation parameters
-params.Ts = 1e-3;   % sampling time
+params.Ts = 1e-2;   % sampling time
 params.umax = pi/2; % maximum input value (scalar for all modules, vector for different limits per module)
 
 %% Derive the equations of motion

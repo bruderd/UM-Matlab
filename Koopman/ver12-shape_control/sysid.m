@@ -390,7 +390,7 @@ classdef sysid
             data_out = data_in;
             
             % add the zeta field
-            for i = obj.params.nd + 1 : length( data_in.t )
+            for i = obj.params.nd + 1 : size( data_in.y , 1 )
                 ind = i - obj.params.nd;    % current timestep index
                 y = data_in.y( i , : );
                 ydel = zeros( 1 , obj.params.nd * obj.params.n );

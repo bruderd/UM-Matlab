@@ -329,6 +329,33 @@ classdef arm
             end
         end
         
+        % get_y (extracts the measured output from the full state)
+        function y = get_y( obj , x )
+            %get_y: Gets the output (in this case marker positions
+            % vectorized) from the state (in this case Alpha)
+            %   x - array containing one or more state values. Each row
+            %    should be a state.
+            %   y - array containing the corresponding output values. Each
+            %    row is an output.
+            
+            % check that input is the correct size
+            if size( x , 2 ) ~= obj.params.Nlinks * 2
+                error(['Input state matrix has wrong dimension. ' ,...
+                    'Its width should be ' , num2str(obj.params.Nlinks*2) ,...
+                    ' You may need to take its transpose.']);
+            end
+            
+            y = zeros( size(x,1) , 2 * ( obj.params.Nlinks ) + 2 );
+            for i = 1 : size(x,1)
+                alpha = x( i , 1 : obj.params.Nlinks );
+                theta = obj.alpha2theta( alpha );
+                temp = obj.get_markers( alpha );
+                markers = reshape( temp' , [ 1 , 2 * ( obj.params.Nmods+1 ) ] );
+                orient = obj.theta2complex( theta(end) );
+                y(i,:) = [ markers( : , 3:end ) , orient ]; % (remove 0th marker position because it is always at the origin)
+            end
+        end
+        
         % get_shape
         function [ shape , coeffs ] = get_shape( obj , alpha , degree)
             points = get_markers( obj , alpha );   % coordinates of mocap markers
@@ -524,7 +551,7 @@ classdef arm
         end
            
         % simulate_Ts (simulate system over a single time step)
-        function [ x_kp1 ] = simulate_Ts( obj , x_k , u )
+        function [ x_kp1 ] = simulate_Ts( obj , x_k , u_k )
             %simulate_Ts: Simulate system over a single time step
             %   x_k - current value of state (full state Alpha = [alpha ; alphadot])
             %   u_k - input over next time step
@@ -532,11 +559,11 @@ classdef arm
             tstep = [ 0 , obj.params.Ts ];
             
             % simulate system
-            options = odeset( 'Mass' , @(t,x) obj.vf_massMatrix( t , x , u ) );
+            options = odeset( 'Mass' , @(t,x) obj.vf_massMatrix( t , x , u_k ) );
             [ t , Alpha ] = ode45( @(t,x) obj.vf_RHS( t , x , u_k ) , tstep , x_k , options );    % with mass matrix, variable time step
             
             % set output, the state after one time step
-            x_kp1 = Alpha;
+            x_kp1 = Alpha(end,:)';
         end
         
     end

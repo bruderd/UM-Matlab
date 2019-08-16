@@ -1,0 +1,111 @@
+classdef mpcsim
+    %mpcsim: Class for performing simulations of fake systems
+    %   Build from a system class (like arm) and an mpc class
+    
+    properties
+        sys;
+        mpc;
+    end
+    
+    methods
+        function obj = mpcsim( system_class , mpc_class )
+            %CLASS CONSTRUCTOR
+            %   Detailed explanation goes here
+            
+            obj.sys = system_class; % hold onto entire class
+            obj.mpc = mpc_class;    % hold onto entire class
+        end
+        
+        %% Define reference trajectories and state constraints
+        
+%         % def_ref: Define a reference trajectory
+%         function ref = def_ref( obj , )
+%            
+%         end
+        
+        %% Simulate a the system with mpc controller
+        
+        % run_trial: Runs a simulation of system under mpc controller
+        function results = run_trial( obj , ref , shape_bounds )
+            %run_trial: Runs a simulation of system under mpc controller.
+            %   Tries to follow the trajectory in ref and impose the
+            %   shape constraints in shape_bounds.
+            %   Assume ref has same sampling frequency as sytem.
+            
+            % shorthand
+            nd = obj.mpc.params.nd;
+            Np = obj.mpc.horizon;
+            
+            % set initial condition (may add an inpur armument for this later)
+            x0 = zeros( nd+1 , obj.sys.params.nx );
+            y0 = obj.sys.get_y( x0 );   % get corresponding outputs
+            u0 = zeros( obj.mpc.params.nd+1 , obj.sys.params.nu );
+            initial.y = y0; initial.u = u0;
+            [ initial , zeta0 ] = obj.mpc.get_zeta( initial );
+            
+            % initialize results struct
+            results = struct;
+            results.T = [ 0 ];
+            results.U = [ u0( end , : ) ];
+            results.Y = [ y0( end , : ) ];
+            results.K = [ 0 ];
+            results.Yr = [ ref(1,:) ];
+            results.X = [ x0( end , : ) ];
+            
+            k = 1;
+            while k < size( ref , 1 )
+                
+                % current time
+                t = k * obj.mpc.params.Ts;
+                
+                % get current state and input with delays
+                if k == 1
+                    current.y = y0;
+                    current.u = u0;
+                elseif k < nd + 1
+                    y = [ y0( k : end-1 , : ) ; results.Y ];
+                    u = [ u0( k : end-1 , : ) ; results.U ];
+                    current.y = y;
+                    current.u = u;
+                else
+                    y = results.Y( end - nd : end , : );
+                    u = results.U( end - nd : end , : );
+                    current.y = y;
+                    current.u = u;
+                end
+                
+                % isolate the reference trajectory over the horizon
+                if k + Np <= size( ref , 1 )
+                    refhor = ref( k : k + Np , :);
+                else
+                    refhor = ref( k : end , : );
+                end
+                    
+                % isolate the shape_bounds over the horizon (TODO)
+%                 shape_bounds
+
+                % get optimal input over horizon
+                U = obj.mpc.get_mpcInput( current , refhor , shape_bounds );
+                
+                % isolate input for this step
+                u_k = U( 2 , : )';
+                
+                % simulate the system over one time-step
+                x_k = results.X( end , : )';
+                x_kp1 = obj.sys.simulate_Ts( x_k , u_k );
+                y_kp1 = obj.sys.get_y( x_kp1' );
+                
+                % record updated results
+                results.T = [ results.T ; t ];
+                results.U = [ results.U ; u_k' ];
+                results.Y = [ results.Y ; y_kp1 ];
+                results.K = [ results.K ; k ];
+                results.Yr = [ results.Yr ; ref( k , : ) ];
+                results.X = [ results.X ; x_kp1' ];
+                
+                k = k + 1;  % increment step counter
+            end
+        end
+    end
+end
+

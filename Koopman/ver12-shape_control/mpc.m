@@ -304,7 +304,7 @@ classdef mpc
             nd = obj.params.nd;     % number of delays
             
             % construct the current value of zeta
-            zeta_temp = obj.get_zeta( traj );
+            [ ~ , zeta_temp ] = obj.get_zeta( traj );
             zeta = zeta_temp( end , : )';   % want most recent points
             
             % lift zeta
@@ -325,7 +325,7 @@ classdef mpc
             Yr = reshape( ref' , [ ( Np + 1 ) * size(ref,2) , 1 ] );
             
             % get the RHS of the inequality constraints
-            c = obj.get_constRHS( shape_bounds );
+            c = obj.set_constRHS( shape_bounds );
             
             % setup matrices for gurobi solver
             H = obj.cost.H;      % removed factor of 2 on 12/10/2018
