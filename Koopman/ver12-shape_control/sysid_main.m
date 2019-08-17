@@ -4,7 +4,7 @@
 % model from data, validating its performance, and saving it (if desired)
 
 % (USER EDIT HERE)
-isupdate = false; % put true if this should overwrite existing model, false otherwise
+isupdate = false; % put c
 
 %% gather training data (need to prepare data file before running this)
 
@@ -33,7 +33,7 @@ end
 
 % (USER EDIT HERE)
 type = { 'armshape' , 'poly' }; % types of functions to include
-degree = [ 3 , 1 ]; % degree/complexity of each type of function
+degree = [ 1 , 3 ]; % degree/complexity of each type of function
 
 sysid = sysid.def_observables( type , degree );
 

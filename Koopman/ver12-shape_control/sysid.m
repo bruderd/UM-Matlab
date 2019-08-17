@@ -7,37 +7,126 @@ classdef sysid
         lift struct;    % contains matlab generated lifting functions
         basis struct;   % contains the observables for the system
         model struct;   % contains lifted system model of system
+        
+        isupdate;   % true if this should overwrite an existing model, false otherwise
+        obs_type;   % cell array of the types of observables to include in model
+        obs_degree; % array of the degree/complexity of each type of observable
+        snapshots;  % number of snapshot pairs to use in training
+        lasso;      % lasso L1 regularization penalty weight 
+        
+        traindata;  % scaled exp/sim data for training the model
+        valdata;    % scaled exp/sim data for validating the model
     end
     
     methods
-        function obj = sysid( data , varargin )
-            %sysid: Construct an instance of this class
+        function obj = sysid( data4sysid , varargin )
+            %CLASS CONSTRUCTOR
             %   data - struct with fields t,x,u,y. Contains results of a
             %   simuation or experiment of the system to be identified
             %   (note: this is not necessarily the same data to be used for
             %   sysid, it just provides the dimensions of the state, input,
             %   etc.)
             
+            % verify that data4sysid has required fields
+            if ~isfield( data4sysid , 'train' ) || ~isfield( data4sysid , 'val' )
+                error('Input must have *train* and *val* fields of type cell array');
+            end
+            
+            % isolate one trial to extract some model parameters
+            data = data4sysid.train{1};
+            data4train = data4sysid.train;
+            data4val = data4sysid.val;
+            
+            % set param values based on the data
             obj.params = struct;    % initialize params struct
             obj.params.n = size( data.y , 2 );  % dimension of measured state
             obj.params.m = size( data.u , 2 );  % dimension of input
             obj.params.Ts = mean( data.t(2:end) - data.t(1:end-1) );    % sampling time
             obj.params.nd = 1;  % number of delays (defaults to 1) 
             
-            % load in system parameters if any are provided
-            if length(varargin) == 1
-                obj.params.sysParams = varargin{1};
-                obj.params.isfake = 1; % indicates whether class is built from a simulated system or real data
-            else
-                obj.params.isfake = 0;
+            % if data has a params field save it as sysParams
+            if isfield( data , 'params' )
+                obj.params.sysParams = data.params;
             end
             
+            % initialize structs
             obj.lift = struct;  % initialize lift struct
             obj.basis = struct; % initialize basis struct
             obj.model = struct; % initialize model struct
+            
+            % set defualt values of Name, Value optional arguments
+            obj.isupdate = false;
+            obj.obs_type = { 'poly' };
+            obj.obs_degree = [ 1 ];
+            obj.snapshots = Inf;
+            obj.lasso = []; % default is least squares solution
+            
+            % define the set of obzervables
+            obj = obj.def_observables( obj.obs_typ , obj.obs_degree );
+            
+            % merge the training data into a single big file (requred for training function to work)
+            data4train_merged = obj.merge_trials( data4train );
+            
+            % scale data to be in range [-1 , 1]
+            [ traindata , obj ] = obj.get_scale( data4train_merged );
+            valdata = cell( size( data4val ) );
+            for i = 1 : length( data4val )
+                valdata{i} = obj.scale_data( data4val{i} );
+            end
+            
+            
+            % REMOVED ON 8/17/2019. REMOVE LATER IF ALL WORKS OKAY
+%             % load in system parameters if any are provided
+%             if length(varargin) == 1
+%                 obj.params.sysParams = varargin{1};
+%                 obj.params.isfake = 1; % indicates whether class is built from a simulated system or real data
+%             else
+%                 obj.params.isfake = 0;
+%             end
+        end
+        
+        % parse_args: Parses the Name, Value pairs in varargin
+        function obj = parse_args( obj , varargin )
+            %parse_args: Parses the Name, Value pairs in varargin of the
+            % constructor, and assigns property values
+            for idx = 1:2:length(varargin)
+                obj.(varargin{idx}) = varargin{idx+1} ;
+            end
         end
         
         %% operations on simulation/experimental data (some are redundant and found in the data class)
+        
+        % get_scale (scale sim/exp data to be in range [-1 , 1])
+        function [ data_scaled , obj ] = get_scale( obj , data )
+            %scale: Scale sim/exp data to be in range [-1 , 1]
+            %    Also creates scaleup/scaledown matrices and saves as params
+            %    data - struct containing fields t , y , u (at least)
+            %    data_scaled - struct containing t , y , u , x (optional)
+            
+            % get max absolute values in each dimension
+            y_maxabs = max( abs( data.y ) );
+            u_maxabs = max( abs( data.u ) );
+            
+            % scale the data
+            data_scaled = struct;    % initialize
+            data_scaled.t = data.t;  % time is not scaled
+            data_scaled.y = data.y ./ y_maxabs;
+            data_scaled.u = data.u ./ u_maxabs;
+            
+            % save the scaling matrices (note, these are meant to premultiply column vectors or postmultiply row vectors)
+            obj.params.scaleup.y = diag( y_maxabs );
+            obj.params.scaleup.u = diag( u_maxabs );
+            obj.params.scaledown.y = diag( y_maxabs .^ (-1) );
+            obj.params.scaledown.u = diag( u_maxabs .^ (-1) );
+            
+            % do same for x if it is part of data struct
+            if ismember( 'x' , fields(data) )
+                x_maxabs = max( abs( data.x ) );
+                data_scaled.x = data.x ./ x_maxabs;
+                obj.params.scaleup.x = diag( x_maxabs );
+                obj.params.scaledown.x = diag( x_maxabs .^ (-1) );
+            end
+        end
         
         % resample (resamples data with a desired time step)
         function data_resampled = resample( obj , data , Ts )
@@ -54,38 +143,6 @@ classdef sysid
             if ismember( 'x' , fields(data) )
                 data_resampled.x = interp1( data.t , data.x , tq );
             end
-        end
-        
-        % get_scale (scale sim/exp data to be in range [-1 , 1])
-        function [ data_scaled , obj ] = get_scale( obj , data )
-           %scale: Scale sim/exp data to be in range [-1 , 1]
-           %    Also creates scaleup/scaledown matrices and saves as params
-           %    data - struct containing fields t , y , u (at least)
-           %    data_scaled - struct containing t , y , u , x (optional)
-           
-           % get max absolute values in each dimension
-           y_maxabs = max( abs( data.y ) );
-           u_maxabs = max( abs( data.u ) );
-           
-           % scale the data
-           data_scaled = struct;    % initialize
-           data_scaled.t = data.t;  % time is not scaled
-           data_scaled.y = data.y ./ y_maxabs;
-           data_scaled.u = data.u ./ u_maxabs;
-           
-           % save the scaling matrices (note, these are meant to premultiply column vectors or postmultiply row vectors)
-           obj.params.scaleup.y = diag( y_maxabs );
-           obj.params.scaleup.u = diag( u_maxabs );
-           obj.params.scaledown.y = diag( y_maxabs .^ (-1) );
-           obj.params.scaledown.u = diag( u_maxabs .^ (-1) );
-           
-           % do same for x if it is part of data struct
-           if ismember( 'x' , fields(data) )
-               x_maxabs = max( abs( data.x ) );
-               data_scaled.x = data.x ./ x_maxabs;
-               obj.params.scaleup.x = diag( x_maxabs );
-               obj.params.scaledown.x = diag( x_maxabs .^ (-1) );
-           end
         end
         
         % scale_data (scale sim/exp data to be in range [-1 , 1])

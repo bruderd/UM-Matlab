@@ -10,15 +10,15 @@
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm_3-mods_1-links_01-Ts';
+params.sysName = 'arm_1-mods_1-links_01-Ts';
 
-params.Nmods = 3;   % number of modules (actuated sections)
+params.Nmods = 1;   % number of modules (actuated sections)
 params.nlinks = 1;      % number of links in each module
 params.Nlinks = params.Nmods * params.nlinks;   % total number of links in robot
 
 % general system parameters (make sure to include these an any system class)
 params.nx = params.Nlinks * 2;   % dimension of the full state (joint angles and joing velocities)
-param.ny = 2 * (params.Nlinks ) + 2;   % dimension of measured output (mocap coordinates + end effector orientation)
+params.ny = 2 * (params.Nlinks ) + 2;   % dimension of measured output (mocap coordinates + end effector orientation)
 params.nu = params.Nlinks;  % dimension of the input (reference angle at each joint)
 
 % manipulator parameters
