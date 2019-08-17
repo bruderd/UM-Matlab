@@ -8,6 +8,7 @@ classdef sysid
         basis struct;   % contains the observables for the system
         model struct;   % contains lifted system model of system
         
+        % properties that can be set using Name,Value pair input to constructor
         isupdate;   % true if this should overwrite an existing model, false otherwise
         obs_type;   % cell array of the types of observables to include in model
         obs_degree; % array of the degree/complexity of each type of observable
@@ -63,8 +64,13 @@ classdef sysid
             obj.lasso = []; % default is least squares solution
             obj.delays = 1; % default 1 to ensure model is dynamic
             
-            % define the set of obzervables
-            obj = obj.def_observables( obj.obs_typ , obj.obs_degree );
+            % replace default values with user input values
+            obj = obj.parse_args( varargin{:} );
+            obj.params.nd = obj.delays;  % saves copy in params (for consistency with mpc class)
+            obj.params.nzeta = obj.params.n * ( obj.delays + 1 ) + obj.params.m * obj.delays;
+            
+            % define the set of observables
+            obj = obj.def_observables( obj.obs_type , obj.obs_degree );
             
             % merge the training data into a single big file (requred for training function to work)
             data4train_merged = obj.merge_trials( data4train );
@@ -79,7 +85,7 @@ classdef sysid
             obj.valdata = valdata;
             
             % get shapshot pairs from traindata
-            obj.snapshotPairs = sysid.get_snapshotPairs( obj.traindata , obj.snapshots );
+            obj.snapshotPairs = obj.get_snapshotPairs( obj.traindata , obj.snapshots );
             
             % REMOVED ON 8/17/2019. REMOVE LATER IF ALL WORKS OKAY
 %             % load in system parameters if any are provided
@@ -89,9 +95,6 @@ classdef sysid
 %             else
 %                 obj.params.isfake = 0;
 %             end
-
-            obj.params.nd = obj.delays;  % saves copy in params (for consistency with mpc class)
-            obj.params.nzeta = obj.params.n * ( obj.delays + 1 ) + obj.params.m * obj.delays;
         end
         
         % parse_args: Parses the Name, Value pairs in varargin
