@@ -13,9 +13,11 @@ classdef sysid
         obs_degree; % array of the degree/complexity of each type of observable
         snapshots;  % number of snapshot pairs to use in training
         lasso;      % lasso L1 regularization penalty weight 
+        delays;     % number of delays to include
         
         traindata;  % scaled exp/sim data for training the model
         valdata;    % scaled exp/sim data for validating the model
+        snapshotPairs;  % snapshot pairs extracted from training data
     end
     
     methods
@@ -42,7 +44,6 @@ classdef sysid
             obj.params.n = size( data.y , 2 );  % dimension of measured state
             obj.params.m = size( data.u , 2 );  % dimension of input
             obj.params.Ts = mean( data.t(2:end) - data.t(1:end-1) );    % sampling time
-            obj.params.nd = 1;  % number of delays (defaults to 1) 
             
             % if data has a params field save it as sysParams
             if isfield( data , 'params' )
@@ -60,6 +61,7 @@ classdef sysid
             obj.obs_degree = [ 1 ];
             obj.snapshots = Inf;
             obj.lasso = []; % default is least squares solution
+            obj.delays = 1; % default 1 to ensure model is dynamic
             
             % define the set of obzervables
             obj = obj.def_observables( obj.obs_typ , obj.obs_degree );
@@ -73,7 +75,11 @@ classdef sysid
             for i = 1 : length( data4val )
                 valdata{i} = obj.scale_data( data4val{i} );
             end
+            obj.traindata = traindata;
+            obj.valdata = valdata;
             
+            % get shapshot pairs from traindata
+            obj.snapshotPairs = sysid.get_snapshotPairs( obj.traindata , obj.snapshots );
             
             % REMOVED ON 8/17/2019. REMOVE LATER IF ALL WORKS OKAY
 %             % load in system parameters if any are provided
@@ -83,6 +89,9 @@ classdef sysid
 %             else
 %                 obj.params.isfake = 0;
 %             end
+
+            obj.params.nd = obj.delays;  % saves copy in params (for consistency with mpc class)
+            obj.params.nzeta = obj.params.n * ( obj.delays + 1 ) + obj.params.m * obj.delays;
         end
         
         % parse_args: Parses the Name, Value pairs in varargin
@@ -126,6 +135,22 @@ classdef sysid
                 obj.params.scaleup.x = diag( x_maxabs );
                 obj.params.scaledown.x = diag( x_maxabs .^ (-1) );
             end
+            
+            % define zeta scaling matrix
+            scaledown_ydelays = kron( eye(obj.delays+1) , obj.params.scaledown.y );
+            scaledown_udelays = kron( eye(obj.delays) , obj.params.scaledown.u );
+            obj.params.scaledown.zeta = blkdiag( scaledown_ydelays , scaledown_udelays );
+            scaleup_ydelays = kron( eye(obj.delays+1) , obj.params.scaleup.y );
+            scaleup_udelays = kron( eye(obj.delays) , obj.params.scaleup.u );
+            obj.params.scaleup.zeta = blkdiag( scaleup_ydelays , scaleup_udelays );
+            
+            % define z (lifted state) scaling matrix
+            zeta_scaledown = obj.params.scaledown.zeta * ones( obj.params.nzeta , 1);  % scaledown identity zeta vector
+            zeta_scaleup = obj.params.scaleup.zeta * ones( obj.params.nzeta , 1);  % scaleup identity zeta vector
+            zscales_down = obj.lift.full( zeta_scaledown ); % vector of scaling down factors
+            zscales_up = obj.lift.full( zeta_scaleup );     % vector of scaling up factors
+            obj.params.scaledown.z = diag( zscales_down );  % turn vector into scaling mtx
+            obj.params.scaleup.z = diag( zscales_up );     % turn vector into scaling mtx
         end
         
         % resample (resamples data with a desired time step)
@@ -319,7 +344,7 @@ classdef sysid
             % define outputs
             obj.basis.full = fullBasis;
             obj.lift.full = matlabFunction( fullBasis , 'Vars' , {zeta} );
-            obj.params.N = length( fullBasis ); % the dimension of the lefted state
+            obj.params.N = length( fullBasis ); % the dimension of the lifted state
             
 %             % save the sysid class object (may not want to include this here, better done externally)
 %             obj = obj.save_class( 0 );
