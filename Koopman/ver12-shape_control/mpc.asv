@@ -164,7 +164,6 @@ classdef mpc
             
             % input_bounds
             if ~isempty( obj.input_bounds )
-                input_bounds = params.scaledown.u * obj.input_bounds;   % scaled down the input bounds
                 num = 2*params.m;     % number of input bound constraints
                 
                 % F: input_bounds
@@ -178,6 +177,7 @@ classdef mpc
                 E = [ E ; Ebounds ];    % append matrix
                 
                 % c: input_bounds
+                input_bounds = params.scaledown.u * obj.input_bounds;   % scaled down the input bounds
                 cbounds_i = sym( [ -obj.input_bounds(:,1) ; obj.input_bounds(:,2) ] ); % [ -umin ; umax ]
                 cbounds = sym( zeros( num * (Np+1) , 1) );    % initialization
                 cbounds(1 : num*Np) = kron( ones( Np , 1 ) , cbounds_i );     % fill in nonzeros
@@ -304,7 +304,7 @@ classdef mpc
             nd = obj.params.nd;     % number of delays
             
             % construct the current value of zeta
-            zeta_temp = obj.get_zeta( traj );
+            [ ~ , zeta_temp ] = obj.get_zeta( traj );
             zeta = zeta_temp( end , : )';   % want most recent points
             
             % lift zeta
@@ -325,7 +325,7 @@ classdef mpc
             Yr = reshape( ref' , [ ( Np + 1 ) * size(ref,2) , 1 ] );
             
             % get the RHS of the inequality constraints
-            c = obj.get_constRHS( shape_bounds );
+            c = obj.set_constRHS( shape_bounds );
             
             % setup matrices for gurobi solver
             H = obj.cost.H;      % removed factor of 2 on 12/10/2018
@@ -337,10 +337,16 @@ classdef mpc
             Atack = [ [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - obj.params.m ) ];
 %             Atack_bot = [ sparse( 2*obj.params.m , obj.params.m) , [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - 2*obj.params.m ) ];
 %             Atack = [ Atack_top ; Atack_bot ];
-            btack = [ traj.u(end,:) ; -ulast(:,1) ];
+            btack = [ traj.u(end,:)' ; -traj.u(end,:)' ];
             A = [A ; Atack];    % tack on memory constraint
             b = [b ; btack];
             
+            % solve the MPC problem
+            Uvec = quadprog_gurobi( H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)
+            % U = quadprog( H , f , A , b );     % solve using matlab
+            
+            % reshape the output so each input will have one row (first row equals current input)
+            U = reshape( Uvec , [ obj.params.m , Np ] )';
         end
         
     end

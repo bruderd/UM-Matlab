@@ -164,7 +164,6 @@ classdef mpc
             
             % input_bounds
             if ~isempty( obj.input_bounds )
-                input_bounds = params.scaledown.u * obj.input_bounds;   % scaled down the input bounds
                 num = 2*params.m;     % number of input bound constraints
                 
                 % F: input_bounds
@@ -178,7 +177,8 @@ classdef mpc
                 E = [ E ; Ebounds ];    % append matrix
                 
                 % c: input_bounds
-                cbounds_i = sym( [ -obj.input_bounds(:,1) ; obj.input_bounds(:,2) ] ); % [ -umin ; umax ]
+                input_bounds_sc = params.scaledown.u * obj.input_bounds;   % scaled down the input bounds
+                cbounds_i = sym( [ -input_bounds_sc(:,1) ; input_bounds_sc(:,2) ] ); % [ -umin ; umax ]
                 cbounds = sym( zeros( num * (Np+1) , 1) );    % initialization
                 cbounds(1 : num*Np) = kron( ones( Np , 1 ) , cbounds_i );     % fill in nonzeros
                 c = [ c ; cbounds ];    % append vector
@@ -239,7 +239,8 @@ classdef mpc
                 F = [ F ; Fsbounds ];    % append matrix
                 
                 % c: state_bounds
-                csbounds_i = sym( [ -obj.state_bounds(:,1) ; obj.state_bounds(:,2) ] ); % [ -ymin ; ymax ]
+                state_bounds_sc = params.scaledown.y * obj.state_bounds;    % scaled down state bounds
+                csbounds_i = sym( [ -state_bounds_sc(:,1) ; state_bounds_sc(:,2) ] ); % [ -ymin ; ymax ]
                 csbounds = kron( ones( Np+1 , 1 ) , csbounds_i );     % fill in nonzeros
                 c = [ c ; csbounds ];    % append vector
             end

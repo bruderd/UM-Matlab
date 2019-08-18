@@ -8,6 +8,7 @@ classdef sysid
         basis struct;   % contains the observables for the system
         model struct;   % contains lifted system model of system
         
+        % properties that can be set using Name,Value pair input to constructor
         isupdate;   % true if this should overwrite an existing model, false otherwise
         obs_type;   % cell array of the types of observables to include in model
         obs_degree; % array of the degree/complexity of each type of observable
@@ -63,8 +64,13 @@ classdef sysid
             obj.lasso = []; % default is least squares solution
             obj.delays = 1; % default 1 to ensure model is dynamic
             
-            % define the set of obzervables
-            obj = obj.def_observables( obj.obs_typ , obj.obs_degree );
+            % replace default values with user input values
+            obj = obj.parse_args( varargin{:} );
+            obj.params.nd = obj.delays;  % saves copy in params (for consistency with mpc class)
+            obj.params.nzeta = obj.params.n * ( obj.delays + 1 ) + obj.params.m * obj.delays;
+            
+            % define the set of observables
+            obj = obj.def_observables( obj.obs_type , obj.obs_degree );
             
             % merge the training data into a single big file (requred for training function to work)
             data4train_merged = obj.merge_trials( data4train );
@@ -79,7 +85,7 @@ classdef sysid
             obj.valdata = valdata;
             
             % get shapshot pairs from traindata
-            obj.snapshotPairs = sysid.get_snapshotPairs( obj.traindata , obj.snapshots );
+            obj.snapshotPairs = obj.get_snapshotPairs( obj.traindata , obj.snapshots );
             
             % REMOVED ON 8/17/2019. REMOVE LATER IF ALL WORKS OKAY
 %             % load in system parameters if any are provided
@@ -89,9 +95,6 @@ classdef sysid
 %             else
 %                 obj.params.isfake = 0;
 %             end
-
-            obj.params.nd = obj.delays;  % saves copy in params (for consistency with mpc class)
-            obj.params.nzeta = obj.params.n * ( obj.delays + 1 ) + obj.params.m * obj.delays;
         end
         
         % parse_args: Parses the Name, Value pairs in varargin
@@ -145,10 +148,12 @@ classdef sysid
             obj.params.scaleup.zeta = blkdiag( scaleup_ydelays , scaleup_udelays );
             
             % define z (lifted state) scaling matrix
-            zeta_scaledown = obj.params.scaledown.zeta * ones( obj.nzeta , 1);
-            zeta_scaleup = obj.params.scaleup.zeta * ones( obj.nzeta , 1);
-            zscales = obj.lift.full( ones() )
-            
+            zeta_scaledown = obj.params.scaledown.zeta * ones( obj.params.nzeta , 1);  % scaledown identity zeta vector
+            zeta_scaleup = obj.params.scaleup.zeta * ones( obj.params.nzeta , 1);  % scaleup identity zeta vector
+            zscales_down = obj.lift.full( zeta_scaledown ); % vector of scaling down factors
+            zscales_up = obj.lift.full( zeta_scaleup );     % vector of scaling up factors
+            obj.params.scaledown.z = diag( zscales_down );  % turn vector into scaling mtx
+            obj.params.scaleup.z = diag( zscales_up );     % turn vector into scaling mtx
         end
         
         % resample (resamples data with a desired time step)
@@ -459,6 +464,43 @@ classdef sysid
             end
         end
         
+        % def_fourierLift (defines sin/cos basis functions)
+        function obj = def_fourierLift( obj , degree )
+            %def_fourierLift: Defines fourier basis functions
+            
+            % shorthand variable names
+            n = obj.params.n;
+            p = obj.params.m;
+            zeta = obj.params.zeta; % get the symbolic unlifted state
+            nzeta = length(zeta);
+            maxDegree = degree;
+            
+            % Number of basis elements, i.e. dimenstion of p(x)
+            Nfourier = nzeta + (1 + 2*maxDegree)^nzeta;
+            
+            % create sins of cosines of all the states
+            poop = sym( zeros(1+2*maxDegree , nzeta) );
+            for i = 1 : nzeta
+                poop(1,i) = 1;
+                for j = 1 : maxDegree
+                    poop(2*j,i)   = cos(2*pi*j*zeta(i));
+                    poop(2*j+1,i) = sin(2*pi*j*zeta(i));
+                end
+            end
+            
+            % define fourier basis vector
+            fourierBasis = poop(:,1);
+            for i = 2 : nzeta
+                fourierBasis = kron(fourierBasis, poop(:,i));
+            end
+            
+            % create the lifting function: zeta -> fourier(zeta)
+            obj.lift.fourier = matlabFunction(fourierBasis, 'Vars', {zeta});
+            
+            % output variables
+            obj.basis.pol = polyBasis;    % symbolic vector of basis monomials, p(x)           
+        end
+        
         %% fitting Koopman operator and A,B,C system matrices
         
         % get_zeta (adds a zeta field to a test data struct)
@@ -552,12 +594,12 @@ classdef sysid
             
             if length(varargin) == 1
                 if isempty( varargin{1} )
-                    lasso = 100 * obj.params.N;   % defualt value of the lasso parameter (should emulate least squares)
+                    lasso = 1e4 * obj.params.N;   % defualt value of the lasso parameter (should emulate least squares)
                 else
                     lasso = varargin{1};
                 end
             else
-                lasso = 100 * obj.params.N;   % defualt value of the lasso parameter (should emulate least squares)
+                lasso = 1e4 * obj.params.N;   % defualt value of the lasso parameter (should emulate least squares)
             end
             
             disp('Finding Koopman operator approximation...');

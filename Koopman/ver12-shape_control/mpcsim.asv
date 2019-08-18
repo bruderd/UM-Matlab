@@ -5,6 +5,8 @@ classdef mpcsim
     properties
         sys;
         mpc;
+        scaledown;  % for scaling data into range [-1 , 1]
+        scaleup;    % for unscaling data from range [-1 , 1]
     end
     
     methods
@@ -14,11 +16,25 @@ classdef mpcsim
             
             obj.sys = system_class; % hold onto entire class
             obj.mpc = mpc_class;    % hold onto entire class
+            
+            % copy the scaling matrices for easier access
+            obj.scaledown = mpc_class.params.scaledown;
+            obj.scaleup = mpc_class.params.scaleup;
+            obj = obj.get_refscale;   % get the scale matrix for reference traj.
         end
         
         %% Define reference trajectories and state constraints
         
-        % TODO
+        % get_refscale: creates matrices for scaling the reference trajectory
+        function obj = get_refscale( obj )
+            % get_refscale: creates matrices for scaling the reference trajectory
+            
+            scaledown_vec = obj.mpc.projmtx * diag( obj.scaledown.z );     % gets scalefactor for each element of the reference trajectory
+            scaleup_vec = obj.mpc.projmtx * diag( obj.scaleup.z );     % gets scalefactor for each element of the reference trajectory
+            
+            obj.scaledown.ref = diag( scaledown_vec );
+            obj.scaleup.ref = diag( scaleup_vec );
+        end
         
         %% Simulate a the system with mpc controller
         
@@ -32,6 +48,9 @@ classdef mpcsim
             % shorthand
             nd = obj.mpc.params.nd;
             Np = obj.mpc.horizon;
+            
+            % scale the reference trajectory
+            ref_sc = ref * obj.scaledown.ref;
             
             % set initial condition (may add an inpur armument for this later)
             x0 = zeros( nd+1 , obj.sys.params.nx );
@@ -48,7 +67,6 @@ classdef mpcsim
             results.K = [ 0 ];
             results.Yr = [ ref(1,:) ];
             results.X = [ x0( end , : ) ];
-            results.Zeta = [ zeta0 ];
             
             k = 1;
             while k < size( ref , 1 )
@@ -63,20 +81,20 @@ classdef mpcsim
                 elseif k < nd + 1
                     y = [ y0( k : end-1 , : ) ; results.Y ];
                     u = [ u0( k : end-1 , : ) ; results.U ];
-                    current.y = y;
-                    current.u = u;
+                    current.y = y * obj.scaledown.y;
+                    current.u = u * obj.scaledown.u;
                 else
                     y = results.Y( end - nd : end , : );
                     u = results.U( end - nd : end , : );
-                    current.y = y;
-                    current.u = u;
+                    current.y = y * obj.scaledown.y;
+                    current.u = u * objscaledown.u;
                 end
                 
                 % isolate the reference trajectory over the horizon
-                if k + Np <= size( ref , 1 )
-                    refhor = ref( k : k + Np , :);
+                if k + Np <= size( ref_sc , 1 )
+                    refhor = ref_sc( k : k + Np , :);
                 else
-                    refhor = ref( k : end , : );
+                    refhor = ref_sc( k : end , : );
                 end
                     
                 % isolate the shape_bounds over the horizon (TODO)
@@ -86,20 +104,25 @@ classdef mpcsim
                 U = obj.mpc.get_mpcInput( current , refhor , shape_bounds );
                 
                 % isolate input for this step
-                u_k = U( 2 , : );
+                u_k_sc = U( 2 , : )';
+                
+                % scaleup the input for the system simulation
+                u_k = obj.scaleup.u * u_k_sc;
                 
                 % simulate the system over one time-step
-                x_kp1 = obj.sys.simulate_Ts( obj , x_k , unow );
-                y_kp1 = obj.sys.get_y( x_kp1 );
+                x_k = results.X( end , : )';
+                x_kp1 = obj.sys.simulate_Ts( x_k , u_k );
+                y_kp1 = obj.sys.get_y( x_kp1' );
                 
                 % record updated results
                 results.T = [ results.T ; t ];
-                results.U = [ results.U ; u_k ];
+                results.U = [ results.U ; u_k' ];
                 results.Y = [ results.Y ; y_kp1 ];
                 results.K = [ results.K ; k ];
-                results.Yr = [ results.Yr ; refhor ];
-                results.X = [ x0( end , : ) ];
-                results.Zeta = [ zeta0 ];
+                results.Yr = [ results.Yr ; ref( k , : ) ];
+                results.X = [ results.X ; x_kp1' ];
+                
+                k = k + 1;  % increment step counter
             end
         end
     end

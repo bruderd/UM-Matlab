@@ -341,6 +341,12 @@ classdef sysid
                 elseif strcmp( type{i} , 'poly' )
                     obj = obj.def_polyLift( degree(i) );
                     fullBasis = [ fullBasis ; obj.basis.poly ];
+                elseif strcmp( type{i} , 'fourier' )
+                    obj = obj.def_fourierLift( degree(i) );
+                    fullBasis = [ fullBasis ; obj.basis.fourier ];
+                elseif strcmp( type{i} , 'fourier_sparser' )
+                    obj = obj.def_fourierLift_sparser( degree(i) );
+                    fullBasis = [ fullBasis ; obj.basis.fourier_sparser ];
                 end
             end
             
@@ -464,6 +470,98 @@ classdef sysid
             end
         end
         
+        % def_fourierLift (defines sin/cos basis functions)
+        function obj = def_fourierLift( obj , degree )
+            %def_fourierLift: Defines fourier basis functions
+            
+            % shorthand variable names
+            n = obj.params.n;
+            p = obj.params.m;
+            zeta = obj.params.zeta; % get the symbolic unlifted state
+            nzeta = length(zeta);
+            maxDegree = degree;
+            
+            % Number of basis elements, i.e. dimenstion of p(x)
+            Nfourier = nzeta + (1 + 2*maxDegree)^nzeta;
+            
+            % create sins of cosines of all the states
+            poop = sym( zeros(1+2*maxDegree , nzeta) );
+            for i = 1 : nzeta
+                poop(1,i) = 1;
+                for j = 1 : maxDegree
+                    poop(2*j,i)   = cos(2*pi*j*zeta(i));
+                    poop(2*j+1,i) = sin(2*pi*j*zeta(i));
+                end
+            end
+            
+            % define fourier basis vector
+            fourierBasis = poop(:,1);
+            for i = 2 : nzeta
+                fourierBasis = kron(fourierBasis, poop(:,i));
+            end
+            
+            % create the lifting function: zeta -> fourier(zeta)
+            obj.lift.fourier = matlabFunction(fourierBasis, 'Vars', {zeta});
+            
+            % output variables
+            obj.basis.fourier = fourierBasis;    % symbolic vector         
+        end
+        
+        % def_fourierLift_sparser (defines sin/cos basis functions)
+        function obj = def_fourierLift_sparser( obj , degree )
+            %def_fourierLift_sparser: Defines fourier basis functions, but
+            % not as many as def_fourierLift (i.e. not every combination of
+            % a suitable degree)
+        
+            % shorthand variable names
+            n = obj.params.n;
+            p = obj.params.m;
+            zeta = obj.params.zeta; % get the symbolic unlifted state
+            nzeta = length(zeta);
+            maxDegree = degree;
+            
+            % matrix of exponents (N x naug). Each row gives exponents for 1 monomial
+            multipliers = zeros(1,2*nzeta);
+            for i = 1:maxDegree
+                multipliers = [multipliers; partitions(i, ones(1, 2*nzeta))];
+            end
+            
+            % Number of basis elements, i.e. dimenstion of p(x)
+            N = nzeta + size(multipliers , 1);
+            
+            % create vector of sines and cosines with multipliers
+            fourierBasis = sym('fourierBasis', [N-nzeta,1]);
+            for i = 1:N-nzeta
+                fourierBasis(i,1) = obj.get_sinusoid(zeta, multipliers(i,:));
+            end
+            
+            % create the lifting function: zeta -> fourier_sparser(zeta)
+            obj.lift.fourier_sparser = matlabFunction(fourierBasis, 'Vars', {zeta});
+            
+            % output variables
+            obj.basis.fourier_sparser = fourierBasis;    % symbolic vector
+        end
+        
+        % get_sinusoid (builds a sinusoid from symbolic vector x and a vector of multipliers)
+        function [ sinusoid ] = get_sinusoid( obj , x , multiplier )
+            %get_sinusoid: builds a sinusoid from symbolic vector x and a vector of multipliers
+            %   e.g. x = []
+            
+            n = length(multiplier); % vector of multipliers
+            
+            sinusoid = sym(1);  % initialize as a symbolic variable
+            for i = 1 : n/2
+                if multiplier(i) ~= 0
+                    sinusoid = sinusoid * sin(2*pi*multiplier(i)*x(i));
+                end
+            end
+            for j = n/2 + 1 : n
+                if multiplier(j) ~= 0
+                    sinusoid = sinusoid * cos(2*pi*multiplier(j)*x(j - n/2));
+                end
+            end
+end
+            
         %% fitting Koopman operator and A,B,C system matrices
         
         % get_zeta (adds a zeta field to a test data struct)
@@ -557,12 +655,12 @@ classdef sysid
             
             if length(varargin) == 1
                 if isempty( varargin{1} )
-                    lasso = 100 * obj.params.N;   % defualt value of the lasso parameter (should emulate least squares)
+                    lasso = 1e4 * obj.params.N;   % defualt value of the lasso parameter (should emulate least squares)
                 else
                     lasso = varargin{1};
                 end
             else
-                lasso = 100 * obj.params.N;   % defualt value of the lasso parameter (should emulate least squares)
+                lasso = 1e4 * obj.params.N;   % defualt value of the lasso parameter (should emulate least squares)
             end
             
             disp('Finding Koopman operator approximation...');
