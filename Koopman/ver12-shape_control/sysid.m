@@ -560,7 +560,9 @@ classdef sysid
                     sinusoid = sinusoid * cos(2*pi*multiplier(j)*x(j - n/2));
                 end
             end
-end
+        end
+
+        
             
         %% fitting Koopman operator and A,B,C system matrices
         
