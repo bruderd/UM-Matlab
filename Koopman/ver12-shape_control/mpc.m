@@ -6,6 +6,7 @@ classdef mpc
         params; % paramaters of the system
         model;  % linear model of the system
         lift;   % lifting functions for system
+        basis;  % symbolic basis set of observables
         horizon;
         input_bounds;
         input_slopeConst;
@@ -34,6 +35,7 @@ classdef mpc
             obj.params = sysid_class.params;
             obj.model = sysid_class.model;
             obj.lift = sysid_class.lift;
+            obj.basis = sysid_class.basis;
             obj.get_zeta = @sysid_class.get_zeta;   % copies this method for convenience
             
             % define default values of properties
@@ -95,7 +97,7 @@ classdef mpc
             % optimization problem.
             %   obj.cost has fields H, G, D, A, B, C, Q, R
             
-            %% define cost function matrices
+            % define cost function matrices
             % Cost function is defined: U'HU + ( z0'G + Yr'D )U
             
             model = obj.model;

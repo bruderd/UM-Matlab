@@ -6,6 +6,7 @@ classdef mpc
         params; % paramaters of the system
         model;  % linear model of the system
         lift;   % lifting functions for system
+        basis;  % symbolic basis set of observables
         horizon;
         input_bounds;
         input_slopeConst;
@@ -34,6 +35,7 @@ classdef mpc
             obj.params = sysid_class.params;
             obj.model = sysid_class.model;
             obj.lift = sysid_class.lift;
+            obj.basis = sysid_class.basis;
             obj.get_zeta = @sysid_class.get_zeta;   % copies this method for convenience
             
             % define default values of properties
@@ -95,7 +97,7 @@ classdef mpc
             % optimization problem.
             %   obj.cost has fields H, G, D, A, B, C, Q, R
             
-            %% define cost function matrices
+            % define cost function matrices
             % Cost function is defined: U'HU + ( z0'G + Yr'D )U
             
             model = obj.model;
@@ -177,8 +179,8 @@ classdef mpc
                 E = [ E ; Ebounds ];    % append matrix
                 
                 % c: input_bounds
-                input_bounds = params.scaledown.u * obj.input_bounds;   % scaled down the input bounds
-                cbounds_i = sym( [ -obj.input_bounds(:,1) ; obj.input_bounds(:,2) ] ); % [ -umin ; umax ]
+                input_bounds_sc = params.scaledown.u * obj.input_bounds;   % scaled down the input bounds
+                cbounds_i = sym( [ -input_bounds_sc(:,1) ; input_bounds_sc(:,2) ] ); % [ -umin ; umax ]
                 cbounds = sym( zeros( num * (Np+1) , 1) );    % initialization
                 cbounds(1 : num*Np) = kron( ones( Np , 1 ) , cbounds_i );     % fill in nonzeros
                 c = [ c ; cbounds ];    % append vector
@@ -239,7 +241,8 @@ classdef mpc
                 F = [ F ; Fsbounds ];    % append matrix
                 
                 % c: state_bounds
-                csbounds_i = sym( [ -obj.state_bounds(:,1) ; obj.state_bounds(:,2) ] ); % [ -ymin ; ymax ]
+                state_bounds_sc = params.scaledown.y * obj.state_bounds;    % scaled down state bounds
+                csbounds_i = sym( [ -state_bounds_sc(:,1) ; state_bounds_sc(:,2) ] ); % [ -ymin ; ymax ]
                 csbounds = kron( ones( Np+1 , 1 ) , csbounds_i );     % fill in nonzeros
                 c = [ c ; csbounds ];    % append vector
             end

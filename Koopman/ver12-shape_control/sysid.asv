@@ -6,7 +6,8 @@ classdef sysid
         params struct;  % sysid parameters
         lift struct;    % contains matlab generated lifting functions
         basis struct;   % contains the observables for the system
-        model struct;   % contains lifted system model of system
+        model;   % contains lifted system model of system
+        koopData;   % info related to the training of koopman operator
         
         % properties that can be set using Name,Value pair input to constructor
         isupdate;   % true if this should overwrite an existing model, false otherwise
@@ -54,14 +55,14 @@ classdef sysid
             % initialize structs
             obj.lift = struct;  % initialize lift struct
             obj.basis = struct; % initialize basis struct
-            obj.model = struct; % initialize model struct
+%             obj.model = struct; % initialize model struct
             
             % set defualt values of Name, Value optional arguments
             obj.isupdate = false;
             obj.obs_type = { 'poly' };
             obj.obs_degree = [ 1 ];
             obj.snapshots = Inf;
-            obj.lasso = []; % default is least squares solution
+            obj.lasso = [ 1e6 ]; % default is least squares solution
             obj.delays = 1; % default 1 to ensure model is dynamic
             
             % replace default values with user input values
@@ -349,7 +350,7 @@ classdef sysid
                     fullBasis = [ fullBasis ; obj.basis.fourier_sparser ];
                 elseif strcmp( type{i} , 'atan' )
                     obj = obj.def_atanLift( degree(i) );
-                    fullBasis = [ fullBasis ; obj.basis.fourier_sparser ];
+                    fullBasis = [ fullBasis ; obj.basis.atan ];
                 end
             end
             
@@ -579,7 +580,7 @@ classdef sysid
             % shorthand
             zeta = obj.params.zeta;
             
-            atanBasis = atan2( zeta(2) , zeta(1) );
+            atanBasis = [ atan2( zeta(2) , zeta(1) ) ; atan2( zeta(4) , zeta(3) ) ];
             
             % create the lifting function: zeta -> fourier_sparser(zeta)
             obj.lift.atan = matlabFunction(atanBasis, 'Vars', {zeta});
@@ -824,6 +825,33 @@ classdef sysid
             obj.model = out;
         end
         
+        % train_models (train multiple koopman models with diff. lasso params)
+        function obj = train_models( obj , lasso )
+            %train_model: finds koopman operator for given snapshot pairs
+            %and lasso params.
+            %   lasso - array containing lasso penalty values. The size of
+            %     lasso determines whether the outputs will be cell arrays or
+            %     not.
+            
+            % lasso argument is optional
+            if nargin < 2
+                lasso = obj.lasso;
+            end
+            
+            if length(lasso) < 2
+                obj.koopData = obj.get_Koopman( obj.snapshotPairs , lasso );
+                obj.model = obj.get_model( obj.koopData );
+            else
+                obj.koopData = cell( length(lasso) , 1 );
+                obj.model = cell( length(lasso) , 1 );
+                for i = 1 : length(lasso)
+                    obj.koopData{i} = obj.get_Koopman( obj.snapshotPairs , lasso(i) );
+                    obj.model{i} = obj.get_model( obj.koopData{i} );
+                end
+            end
+        end
+        
+        
         %% validate performance of a fitted model
         
         % val_model (compares model simulation to real data)
@@ -838,6 +866,11 @@ classdef sysid
             treal = valdata.t(index0 : end);    % start simulation late so delays can be taken into account
             yreal = valdata.y(index0 : end , :);
             ureal = valdata.u(index0 : end , :);
+            [ ~ , zetareal ] = obj.get_zeta( valdata );
+            zreal = zeros( size( zetareal , 2 ) , obj.params.N );
+            for i = 1 : size( zetareal , 1 )
+                zreal(i,:) = obj.lift.full( zetareal(i,:)' );
+            end
             
             % set initial condition
             valdata_wzeta = get_zeta( obj , valdata );
@@ -852,8 +885,10 @@ classdef sysid
             results.t = treal; 
             results.sim.t = tsim;
             results.sim.y = ysim;
+            results.sim.z = zsim;
             results.real.t = treal;
             results.real.y = yreal;
+            results.real.z = zreal;
             
             % save error info (optional, could get rid of this)
             results.error = obj.get_error( results.sim , results.real );
@@ -881,12 +916,41 @@ classdef sysid
                 subplot( obj.params.n , 1 , i );
                 ylabel( [ 'y' , num2str(i) ] );
                 title( [ 'NRMSE = ' , num2str( err.nrmse(i) ) ] );
+                ylim([-1,1]);
                 hold on;
                 plot( realdata.t , realdata.y( : , i ) , 'b' );
                 plot( simdata.t , simdata.y( : , i ) , 'r' );
                 hold off;
             end
             legend({'Real' , 'Koopman'});
+        end
+        
+        % valNplot_models (run val_model and plot_comparison for a given model)
+        function [ results , err ] = valNplot_models( obj , model_id )
+            %valNplot_models: run val_model and plot_comparison for a given model
+            
+            % if no model id is provided, use first one in the model cell array
+            if nargin < 2 && ~iscell(obj.model)
+                mod = obj.model;
+            elseif nargin < 2
+                mod = obj.model{1};
+            else
+                mod = obj.model{model_id};
+            end
+                
+            results = cell( size(obj.valdata) );    % store results in a cell array
+            err = cell( size(obj.valdata) );    % store error in a cell array
+            for i = 1 : length(obj.valdata)
+                results{i} = obj.val_model( mod , obj.valdata{i} );
+                err{i} = obj.get_error( results{i}.sim , results{i}.real );
+                obj.plot_comparison( results{i}.sim , results{i}.real );
+            end
+            
+            % save (or don't save) sysid class, model, and training data
+            saveModel = questdlg('Would you like to save this model?');
+            if strcmp( saveModel , 'Yes' )
+                model = obj.save_class( mod , obj.isupdate);
+            end   
         end
         
     end

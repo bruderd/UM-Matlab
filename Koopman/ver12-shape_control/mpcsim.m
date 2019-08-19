@@ -52,7 +52,7 @@ classdef mpcsim
             % scale the reference trajectory
             ref_sc = ref * obj.scaledown.ref;
             
-            % set initial condition (may add an inpur armument for this later)
+            % set initial condition (may add an input argument for this later)
             x0 = zeros( nd+1 , obj.sys.params.nx );
             y0 = obj.sys.get_y( x0 );   % get corresponding outputs
             u0 = zeros( obj.mpc.params.nd+1 , obj.sys.params.nu );
