@@ -340,15 +340,21 @@ classdef sysid
                     fullBasis = [ fullBasis ; obj.basis.armshape ];
                 elseif strcmp( type{i} , 'poly' )
                     obj = obj.def_polyLift( degree(i) );
-                    fullBasis = [ fullBasis ; obj.basis.poly ];
+                    fullBasis = [ fullBasis ; obj.basis.poly( obj.params.n+1 : end ) ]; % don't include first n states because they will be repeats
                 elseif strcmp( type{i} , 'fourier' )
                     obj = obj.def_fourierLift( degree(i) );
                     fullBasis = [ fullBasis ; obj.basis.fourier ];
                 elseif strcmp( type{i} , 'fourier_sparser' )
                     obj = obj.def_fourierLift_sparser( degree(i) );
                     fullBasis = [ fullBasis ; obj.basis.fourier_sparser ];
+                elseif strcmp( type{i} , 'atan' )
+                    obj = obj.def_atanLift( degree(i) );
+                    fullBasis = [ fullBasis ; obj.basis.atan ];
                 end
             end
+            
+            % add a constant term to the end of the set
+            fullBasis = [ fullBasis ; sym(1) ];
             
             % define outputs
             obj.basis.full = fullBasis;
@@ -378,10 +384,10 @@ classdef sysid
             for i = 1:maxDegree
                 exponents = [exponents; partitions(i, ones(1,nzeta))];
             end
-            exponents = [exponents ; zeros(1,nzeta)];   % put constant at end of basis so state can be the first nzeta elements
+%             exponents = [exponents ; zeros(1,nzeta)];   % put constant at end of basis so state can be the first nzeta elements
             
             % create vector of orderd monomials (column vector)
-            for i = 1:N
+            for i = 1:N-1
                 polyBasis(i,1) = obj.get_monomial(zeta, exponents(i,:));
             end
             
@@ -484,7 +490,7 @@ classdef sysid
             % Number of basis elements, i.e. dimenstion of p(x)
             Nfourier = nzeta + (1 + 2*maxDegree)^nzeta;
             
-            % create sins of cosines of all the states
+            % create sines of cosines of all the states
             poop = sym( zeros(1+2*maxDegree , nzeta) );
             for i = 1 : nzeta
                 poop(1,i) = 1;
@@ -499,6 +505,9 @@ classdef sysid
             for i = 2 : nzeta
                 fourierBasis = kron(fourierBasis, poop(:,i));
             end
+            
+            % remove the constant element from the basis
+            fourierBasis = fourierBasis( 2 : end );
             
             % create the lifting function: zeta -> fourier(zeta)
             obj.lift.fourier = matlabFunction(fourierBasis, 'Vars', {zeta});
@@ -525,6 +534,7 @@ classdef sysid
             for i = 1:maxDegree
                 multipliers = [multipliers; partitions(i, ones(1, 2*nzeta))];
             end
+            multipliers = multipliers( 2 : end , : );   % remove 1st row which is a constant
             
             % Number of basis elements, i.e. dimenstion of p(x)
             N = nzeta + size(multipliers , 1);
@@ -562,8 +572,22 @@ classdef sysid
             end
         end
 
-        
+        % def_atanLift (defines arc-tangent basis functions)
+        function obj = def_atanLift( obj , degree )
+            %def_atanLift: defines arc-tangetn basis functions
             
+            % shorthand
+            zeta = obj.params.zeta;
+            
+            atanBasis = [ atan2( zeta(2) , zeta(1) ) ];   % atan2( zeta(4) , zeta(3) ) ];
+            
+            % create the lifting function: zeta -> fourier_sparser(zeta)
+            obj.lift.atan = matlabFunction(atanBasis, 'Vars', {zeta});
+            
+            % output variables
+            obj.basis.atan = atanBasis;    % symbolic vector
+        end
+                   
         %% fitting Koopman operator and A,B,C system matrices
         
         % get_zeta (adds a zeta field to a test data struct)
