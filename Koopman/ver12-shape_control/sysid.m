@@ -6,7 +6,10 @@ classdef sysid
         params struct;  % sysid parameters
         lift struct;    % contains matlab generated lifting functions
         basis struct;   % contains the observables for the system
-        model;   % contains lifted system model of system
+        
+        model;   % contains the bese lifted system model of system (chosen from candidates)
+        
+        candidates; % candidate models trained with different lasso params
         koopData;   % info related to the training of koopman operator
         
         % properties that can be set using Name,Value pair input to constructor
@@ -46,10 +49,12 @@ classdef sysid
             obj.params.n = size( data.y , 2 );  % dimension of measured state
             obj.params.m = size( data.u , 2 );  % dimension of input
             obj.params.Ts = mean( data.t(2:end) - data.t(1:end-1) );    % sampling time
+            obj.params.isfake = false;  % assume system is real
             
             % if data has a params field save it as sysParams
             if isfield( data , 'params' )
                 obj.params.sysParams = data.params;
+                obj.params.isfake = true;   % if params field exist the system is fake
             end
             
             % initialize structs
@@ -87,15 +92,6 @@ classdef sysid
             
             % get shapshot pairs from traindata
             obj.snapshotPairs = obj.get_snapshotPairs( obj.traindata , obj.snapshots );
-            
-            % REMOVED ON 8/17/2019. REMOVE LATER IF ALL WORKS OKAY
-%             % load in system parameters if any are provided
-%             if length(varargin) == 1
-%                 obj.params.sysParams = varargin{1};
-%                 obj.params.isfake = 1; % indicates whether class is built from a simulated system or real data
-%             else
-%                 obj.params.isfake = 0;
-%             end
         end
         
         % parse_args: Parses the Name, Value pairs in varargin
@@ -267,7 +263,7 @@ classdef sysid
         %% save the class object
         
         % save_class
-        function obj = save_class( obj , varargin)
+        function obj = save_class( obj , model_id )
             %save_class: Saves the class as a .mat file
             %   If class is from a simulated system, it is saved in the
             %   subfolder corresponding to that system.
@@ -276,13 +272,18 @@ classdef sysid
             %   varargin = isupdate - indicates whether this is an update of a
             %   previously saved class (1) or a new class (0).
             
-            % assume this is a new class file (not update) by default
-            if length(varargin) == 1
-                isupdate = varargin{1};
-            else
-                isupdate = 0;
-            end
+            % shorthand
+            isupdate = obj.isupdate;
             
+            % if no model id is provided, save the first candidate model
+            if nargin < 2 && ~iscell(obj.candidates)
+                obj.model = obj.candidates;
+            elseif nargin < 2
+                obj.model = obj.candidates{1};
+            else
+                obj.model = obj.candidates{model_id};
+            end
+                        
             % set the class name based on its parameters
             if isupdate
                 classname = obj.params.classname;
@@ -293,18 +294,18 @@ classdef sysid
             end
     
             % save the class file
-            model = obj;
+            sysid_class = obj;
             if obj.params.isfake    % check if class was created from simulated system
                 dirname = [ 'systems' , filesep , obj.params.sysParams.sysName , filesep , 'models'];
                 if ~isupdate
                     mkdir( dirname );
                 end
                 fname = [ dirname , filesep , classname, '.mat' ];
-                save( fname , 'model' );
+                save( fname , 'sysid_class' );
             else
                 dirname = [ 'systems' , filesep , 'fromData' ];
                 fname = [ dirname , filesep , classname, '.mat' ];
-                save( fname , 'model' );
+                save( fname , 'sysid_class' );
             end
         end
         
@@ -840,13 +841,14 @@ classdef sysid
             
             if length(lasso) < 2
                 obj.koopData = obj.get_Koopman( obj.snapshotPairs , lasso );
-                obj.model = obj.get_model( obj.koopData );
+                obj.candidates = obj.get_model( obj.koopData );
             else
                 obj.koopData = cell( length(lasso) , 1 );
-                obj.model = cell( length(lasso) , 1 );
+                obj.candidates = cell( length(lasso) , 1 );
                 for i = 1 : length(lasso)
                     obj.koopData{i} = obj.get_Koopman( obj.snapshotPairs , lasso(i) );
-                    obj.model{i} = obj.get_model( obj.koopData{i} );
+                    obj.candidates{i} = obj.get_model( obj.koopData{i} );
+                    obj.candidates{i}.lasso = lasso(i);  % save lasso parameter with model
                 end
             end
         end
@@ -905,13 +907,19 @@ classdef sysid
         end
         
         % plot_comparison (plots a comparison between simulation and real data)
-        function plot_comparison( obj , simdata , realdata )
+        function plot_comparison( obj , simdata , realdata , figtitle)
             %plot_comparison: plots a comparison between simulation and real data.
             
             % quantify the error
             err = obj.get_error( simdata , realdata );
             
-            fig = figure;   % create new figure
+            % create new figure
+            if nargin > 3
+                figure('NumberTitle', 'off', 'Name', figtitle);  
+            else
+                figure;
+            end
+            
             for i = 1 : obj.params.n
                 subplot( obj.params.n , 1 , i );
                 ylabel( [ 'y' , num2str(i) ] );
@@ -925,17 +933,17 @@ classdef sysid
             legend({'Real' , 'Koopman'});
         end
         
-        % valNplot_models (run val_model and plot_comparison for a given model)
-        function [ results , err ] = valNplot_models( obj , model_id )
-            %valNplot_models: run val_model and plot_comparison for a given model
+        % valNplot_model (run val_model and plot_comparison for a given model)
+        function [ results , err ] = valNplot_model( obj , model_id )
+            %valNplot_model: run val_model and plot_comparison for a given model
             
             % if no model id is provided, use first one in the model cell array
-            if nargin < 2 && ~iscell(obj.model)
-                mod = obj.model;
+            if nargin < 2 && ~iscell(obj.candidates)
+                mod = obj.candidates;
             elseif nargin < 2
-                mod = obj.model{1};
+                mod = obj.candidates{1};
             else
-                mod = obj.model{model_id};
+                mod = obj.candidates{model_id};
             end
                 
             results = cell( size(obj.valdata) );    % store results in a cell array
@@ -943,14 +951,14 @@ classdef sysid
             for i = 1 : length(obj.valdata)
                 results{i} = obj.val_model( mod , obj.valdata{i} );
                 err{i} = obj.get_error( results{i}.sim , results{i}.real );
-                obj.plot_comparison( results{i}.sim , results{i}.real );
+                obj.plot_comparison( results{i}.sim , results{i}.real , ['Lasso: ' , num2str(mod.lasso)] );
             end
             
 %             % save (or don't save) sysid class, model, and training data
 %             saveModel = questdlg('Would you like to save this model?');
 %             if strcmp( saveModel , 'Yes' )
 %                 obj.save_class( obj , obj.isupdate);
-%             end   
+%             end
         end
         
     end
