@@ -880,7 +880,17 @@ classdef sysid
             z0 = obj.lift.full( zeta0 );    % initial lifted state
             
             % simulate lifted linear model
-            [ ysim , tsim , zsim ] = lsim(model.sys, ureal , treal , z0);
+%             [ ysim , tsim , zsim ] = lsim(model.sys, ureal , treal , z0); % Don't use lsim. Might be doing weird stuff
+            tsim = treal;
+            usim = ureal;
+            ysim = zeros( size( yreal ) ); % preallocate
+            zsim = zeros( size( zreal ) ); % preallocate
+            ysim(1,:) = yreal(1,:); % initialize
+            zsim(1,:) = z0';        % initialize
+            for j = 1 : length(treal)-1
+                zsim(j+1,:) = ( model.A * zsim(j,:)' + model.B * usim(j,:)' )';
+                ysim(j+1,:) = ( model.C * zsim(j+1,:)' )';
+            end
             
             % save simulations in output struct
             results = struct;

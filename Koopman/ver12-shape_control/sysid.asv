@@ -49,10 +49,12 @@ classdef sysid
             obj.params.n = size( data.y , 2 );  % dimension of measured state
             obj.params.m = size( data.u , 2 );  % dimension of input
             obj.params.Ts = mean( data.t(2:end) - data.t(1:end-1) );    % sampling time
+            obj.params.isfake = false;  % assume system is real
             
             % if data has a params field save it as sysParams
             if isfield( data , 'params' )
                 obj.params.sysParams = data.params;
+                obj.params.isfake = true;   % if params field exist the system is fake
             end
             
             % initialize structs
@@ -90,15 +92,6 @@ classdef sysid
             
             % get shapshot pairs from traindata
             obj.snapshotPairs = obj.get_snapshotPairs( obj.traindata , obj.snapshots );
-            
-            % REMOVED ON 8/17/2019. REMOVE LATER IF ALL WORKS OKAY
-%             % load in system parameters if any are provided
-%             if length(varargin) == 1
-%                 obj.params.sysParams = varargin{1};
-%                 obj.params.isfake = 1; % indicates whether class is built from a simulated system or real data
-%             else
-%                 obj.params.isfake = 0;
-%             end
         end
         
         % parse_args: Parses the Name, Value pairs in varargin
@@ -888,6 +881,15 @@ classdef sysid
             
             % simulate lifted linear model
             [ ysim , tsim , zsim ] = lsim(model.sys, ureal , treal , z0);
+            ysim = zeros( length(treal) , model.params.n ); % preallocate
+            usim = zeros( length(treal) , model.params.m ); % preallocate
+            zsim = zeros( length(treal) , model.params.N ); % preallocate
+            ysim(1,:) = yreal(1,:); % initialize
+            usim(1,:) = ureal(1,:); % initialize
+            zsim(1,:) = z0';        % initialize
+            for j = 1 : length(treal)-1
+                zsim( i+1 , : ) = 
+            end
             
             % save simulations in output struct
             results = struct;

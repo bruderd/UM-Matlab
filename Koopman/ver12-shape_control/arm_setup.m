@@ -10,9 +10,9 @@
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm_1-mods_1-links_01-Ts';
+params.sysName = 'arm_4-mods_1-links_01-Ts';
 
-params.Nmods = 1;   % number of modules (actuated sections)
+params.Nmods = 4;   % number of modules (actuated sections)
 params.nlinks = 1;      % number of links in each module
 params.Nlinks = params.Nmods * params.nlinks;   % total number of links in robot
 
@@ -38,7 +38,7 @@ params.ku = 1e-3; % effective input stiffness
 
 % simulation parameters
 params.Ts = 1e-2;   % sampling time
-params.umax = pi; % maximum input value (scalar for all modules, vector for different limits per module)
+params.umax = pi/2; % maximum input value (scalar for all modules, vector for different limits per module)
 
 %% Derive the equations of motion
 % EOM = arm_set_EOM(params);

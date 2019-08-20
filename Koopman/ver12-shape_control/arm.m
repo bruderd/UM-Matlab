@@ -376,6 +376,21 @@ classdef arm
             shape = [ pol_x , pol_y ];
         end
         
+        % get_shape_coeffs (gets the shape coefficients for many points)
+        function coeffs = get_shape_coeffs( obj , alpha , degree )
+            %get_shape_coeffs: gets the shape coefficients for many points
+            %   alpha: rows should be individual configurations
+            %   degree: degree of the shape polynomial to be fit
+            
+            coeffs = zeros( size(alpha,1) , degree * 2 );   % assumes 2d-planar arm
+            for i = 1 : size( alpha , 1 )
+                [ ~ , coeff_matrix ] = obj.get_shape( alpha(i,:) , degree );
+                coeff_vec = reshape( coeff_matrix' , [ numel( coeff_matrix ) , 1 ] )';
+                coeffs(i,:) = coeff_vec;
+            end
+        end
+        
+        
         %% visualization
         
         % def_fig (defines a default figure for plotting arm

@@ -18,7 +18,7 @@ sysid = sysid( data4sysid, ...
         'obs_type' , { 'poly' } ,...
         'obs_degree' , [ 2 ] ,...
         'snapshots' , Inf ,...
-        'lasso' , [ 1:5 ] ,...
+        'lasso' , [ 1:2:20 ] ,...
         'delays' , 1 ,...
         'isupdate' , false );
 
@@ -32,9 +32,15 @@ sysid = sysid.train_models;
 
 results = cell( size(sysid.candidates) );    % store results in a cell array
 err = cell( size(sysid.candidates) );    % store error in a cell array 
-for i = 1 : length(sysid.candidates)
-    [ results{i} , err{i} ] = sysid.valNplot_model( i );
+
+if iscell(sysid.candidates)
+    for i = 1 : length(sysid.candidates)
+        [ results{i} , err{i} ] = sysid.valNplot_model( i );
+    end
+else
+    [ results{1} , err{1} ] = sysid.valNplot_model;
 end
+    
 
 %% save model(s)
 
