@@ -355,6 +355,9 @@ classdef sysid
                 elseif strcmp( type{i} , 'atan' )
                     obj = obj.def_atanLift( degree(i) );
                     fullBasis = [ fullBasis ; obj.basis.atan ];
+                elseif strcmp( type{i} , 'gaussian' )
+                    obj = obj.def_gaussianLift( degree(i) );
+                    fullBasis = [ fullBasis ; obj.basis.gaussian ];
                 end
             end
             
@@ -577,7 +580,7 @@ classdef sysid
             end
         end
 
-        % def_atanLift (defines arc-tangent basis functions)
+        % def_atanLift (defines arc-tangent basis functions ONLY USE ON SINGLE PENDULUM)
         function obj = def_atanLift( obj , degree )
             %def_atanLift: defines arc-tangetn basis functions
             
@@ -593,6 +596,36 @@ classdef sysid
             obj.basis.atan = atanBasis;    % symbolic vector
         end
                    
+        % def_gaussianLift (defines gaussian basis functions)
+        function obj = def_gaussianLift( obj , degree )
+            %def_gaussianLift: Defines a set of randomly distributed
+            %gaussian basis functions
+            
+            % shorthand variable names
+            n = obj.params.n;
+            p = obj.params.m;
+            zeta = obj.params.zeta; % get the symbolic unlifted state
+            nzeta = length(zeta);
+            maxDegree = degree;
+            
+            % create basis functions with random centers in interval [-1 , 1]
+            psi = sym('gaussianBasis', [maxDegree , 1]);
+            zeta0 = (2*rand([nzeta,maxDegree]) - 1); % columns are random centers
+            for i = 1 : maxDegree
+                radius = norm( zeta - zeta0(:,i) );
+                gaussianBasis(i,:) = exp(-( 1 * radius )^2) ;
+                %    % I think this might work faster
+                %    radius = sum( ( zeta - zeta0(:,i) ).^2 );
+                %    psi(i,:) = exp( -radius );
+            end
+            
+            % create the lifting function: zeta -> fourier_sparser(zeta)
+            obj.lift.gaussian = matlabFunction(gaussianBasis, 'Vars', {zeta});
+            
+            % output variables
+            obj.basis.gaussian = gaussianBasis;    % symbolic vector
+        end
+        
         %% fitting Koopman operator and A,B,C system matrices
         
         % get_zeta (adds a zeta field to a test data struct)
@@ -688,7 +721,7 @@ classdef sysid
                 if isempty( varargin{1} )
                     lasso = 1e4 * obj.params.N;   % defualt value of the lasso parameter (should emulate least squares)
                 else
-                    lasso = varargin{1};
+                    lasso = varargin{1} * obj.params.N;
                 end
             else
                 lasso = 1e4 * obj.params.N;   % defualt value of the lasso parameter (should emulate least squares)
