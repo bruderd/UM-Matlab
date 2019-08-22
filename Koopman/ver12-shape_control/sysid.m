@@ -81,14 +81,17 @@ classdef sysid
             % merge the training data into a single big file (requred for training function to work)
             data4train_merged = obj.merge_trials( data4train );
             
-            % scale data to be in range [-1 , 1]
-            [ traindata , obj ] = obj.get_scale( data4train_merged );
-            valdata = cell( size( data4val ) );
-            for i = 1 : length( data4val )
-                valdata{i} = obj.scale_data( data4val{i} );
-            end
-            obj.traindata = traindata;
-            obj.valdata = valdata;
+%             % scale data to be in range [-1 , 1]
+%             [ traindata , obj ] = obj.get_scale( data4train_merged );
+%             valdata = cell( size( data4val ) );
+%             for i = 1 : length( data4val )
+%                 valdata{i} = obj.scale_data( data4val{i} );
+%             end
+%             obj.traindata = traindata;
+%             obj.valdata = valdata;
+            %SUPPRESS SCALING FOR NOW
+            obj.traindata = data4train_merged;
+            obj.valdata = data4val;
             
             % get shapshot pairs from traindata
             obj.snapshotPairs = obj.get_snapshotPairs( obj.traindata , obj.snapshots );
@@ -564,12 +567,12 @@ classdef sysid
             sinusoid = sym(1);  % initialize as a symbolic variable
             for i = 1 : n/2
                 if multiplier(i) ~= 0
-                    sinusoid = sinusoid * sin(2*pi*multiplier(i)*x(i));
+                    sinusoid = sinusoid * sin(multiplier(i)*x(i)); %sin(2*pi*multiplier(i)*x(i));   % removed 2pi. 8/21/2019
                 end
             end
             for j = n/2 + 1 : n
                 if multiplier(j) ~= 0
-                    sinusoid = sinusoid * cos(2*pi*multiplier(j)*x(j - n/2));
+                    sinusoid = sinusoid * cos(multiplier(j)*x(j - n/2)); %cos(2*pi*multiplier(j)*x(j - n/2));   % removed 2pi. 8/21/2019
                 end
             end
         end
@@ -896,9 +899,11 @@ classdef sysid
             results = struct;
             results.t = treal; 
             results.sim.t = tsim;
+            results.sim.u = usim;
             results.sim.y = ysim;
             results.sim.z = zsim;
             results.real.t = treal;
+            results.real.u = ureal;
             results.real.y = yreal;
             results.real.z = zreal;
             
