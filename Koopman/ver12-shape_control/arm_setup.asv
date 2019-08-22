@@ -38,7 +38,7 @@ params.ku = 1e-3; % effective input stiffness
 
 % simulation parameters
 params.Ts = 0.05;   % sampling time (for 20 hz)
-params.umax = 7*pi/8; % maximum input value (scalar for all modules, vector for different limits per module)
+params.umax = 7*pi/6; % maximum input value (scalar for all modules, vector for different limits per module)
 
 %% Derive the equations of motion
 % EOM = arm_set_EOM(params);

@@ -567,12 +567,12 @@ classdef sysid
             sinusoid = sym(1);  % initialize as a symbolic variable
             for i = 1 : n/2
                 if multiplier(i) ~= 0
-                    sinusoid = sinusoid * sin(multiplier(i)*x(i)); %sin(2*pi*multiplier(i)*x(i));   % removed 2pi. 8/21/2019
+                    sinusoid = sinusoid * sin(2*pi*multiplier(i)*x(i));
                 end
             end
             for j = n/2 + 1 : n
                 if multiplier(j) ~= 0
-                    sinusoid = sinusoid * cos(multiplier(j)*x(j - n/2)); %cos(2*pi*multiplier(j)*x(j - n/2));   % removed 2pi. 8/21/2019
+                    sinusoid = sinusoid * cos(2*pi*multiplier(j)*x(j - n/2));
                 end
             end
         end
@@ -732,10 +732,16 @@ classdef sysid
             %   Lasso method
             %   x is vectorized Koopman operator, decomposed into positive and negative parts of each entry x = [u11+, ..., uNN+, u11-, ... , uNN-]';
             %   Uvec = M * x, where M subtracts the + and - parts of each entry: uij+ - uij-
-
+            
+            % local variable names
             nx = obj.params.N^2;
             Nm = obj.params.N + obj.params.m;
             N = obj.params.N;
+            n = obj.params.n;
+            m = obj.params.m;
+            nd = obj.params.nd;
+            nnd = obj.params.n * obj.params.nd;
+            mnd = obj.params.m * obj.params.nd;
             
             M = [speye(Nm^2) , -speye(Nm^2)];
             
@@ -755,30 +761,20 @@ classdef sysid
             bq = [ zeros(2*Nm^2 , 1) ; t ];
             
             % enforce delay constraint (see notebook from 2019-8-22)
-            n = obj.params.n;
-            m = obj.params.m;
-            nd = obj.params.nd;
-            nnd = obj.params.n * obj.params.nd;
-            mnd = obj.params.m * obj.params.nd;
-%             Ad_pos = spalloc( nnd , Nm^2 , nnd );
-%             for i = 1 : nnd
-%                 index = n + ( Nm + 1 ) * (i-1) + 1;
-%                 Ad_pos(i,index) = 1;
-%             end
-%             bd_pos = ones( nnd , 1 );
-%             Ad = [ Ad_pos ; -Ad_pos ] * M;
-%             bd = [ bd_pos ; -bd_pos ];
-
-            % delay constraint take 2
             Ad_pos = speye( Nm^2 );
-            bd_pos = zeros( Nm^2 , 1 );
-            for i = 1 : nnd
-                index_y = Nm*n + ( Nm + 1 ) * (i-1) + 1;
-                bd_pos(index_y,1) = 1;
+            Ad_pos = Ad_pos( n*Nm+1 : Nm*( n*(nd+1) + mnd ) , : );  % remove unused rows
+            bd_pos = zeros( Nm * ( nnd + mnd ) , 1 );
+            for i = 1 : nnd     % state delays
+                index = (Nm+1) * (i-1) + 1;
+                bd_pos(index,1) = 1;
             end
-            for i = 1 : m   % enforce input pass through (only for one delay at moment)
-                index_u = Nm * n * (nd + 1) + N + ( Nm + 1 ) * (i-1) + 1;
-                bd_pos(index_u,1) = 1;
+            for i = 1 : m   % first input delay
+                index = Nm * nnd + N + (Nm+1) * (i-1) + 1;
+                bd_pos(index,1) = 1;
+            end
+            for i = 1 : m*(nd-1)    % subsequent input delays (nd > 1)
+                index = Nm * (nnd+m) + nnd + (Nm+1) * (i-1) + 1;
+                bd_pos(index,1) = 1;
             end
             Ad = [ Ad_pos ; -Ad_pos ] * M;
             bd = [ bd_pos ; -bd_pos ];

@@ -482,7 +482,7 @@ classdef arm
                 x = X(:,1);
                 y = X(:,2);
                 marker = obj.get_markers( alpha(index,:) );   % get mocap sensor location
-                [shape , ~ ] = obj.get_shape( alpha(index,:) , degree); % get polynomial approx of shape (3rd order)
+                [shape , ~ ] = obj.get_shape( alpha(index,:) , degree); % get polynomial approx of shape
                 
                 hold on;
                 p1 = plot(x, y, 'b-o');

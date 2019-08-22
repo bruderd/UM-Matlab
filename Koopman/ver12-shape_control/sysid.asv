@@ -735,6 +735,7 @@ classdef sysid
 
             nx = obj.params.N^2;
             Nm = obj.params.N + obj.params.m;
+            N = obj.params.N;
             
             M = [speye(Nm^2) , -speye(Nm^2)];
             
@@ -775,12 +776,24 @@ classdef sysid
                 index_y = Nm*n + ( Nm + 1 ) * (i-1) + 1;
                 bd_pos(index_y,1) = 1;
             end
-            for i = 1 : m   % enforce input pass through
+            for i = 1 : m   % enforce input pass through (only for one delay at moment)
                 index_u = Nm * n * (nd + 1) + N + ( Nm + 1 ) * (i-1) + 1;
                 bd_pos(index_u,1) = 1;
             end
             Ad = [ Ad_pos ; -Ad_pos ] * M;
             bd = [ bd_pos ; -bd_pos ];
+            
+            % delay constraint take 3
+            Ad_pos = speye( Nm^2 );
+            Ad_pos = Ad_pos( n*Nm+1 : Nm*( n*(nd+1) + mnd ) , : );  % remove unused rows
+            bd_pos = zeros( Nm * ( nnd + mnd ) , 1 );
+            for i = 1 : nnd
+                index = (Nm+1) * (i-1) + 1;
+                bd_pos(index,1) = 1;
+            end
+            for i = 1 : m
+                index = Nm*nnd + N + (Nm+1) * (i-1) + 1;
+            
             
             % tack on the the dely constraint
             Aq = [ Aq ; Ad ];
