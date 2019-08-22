@@ -81,17 +81,17 @@ classdef sysid
             % merge the training data into a single big file (requred for training function to work)
             data4train_merged = obj.merge_trials( data4train );
             
-%             % scale data to be in range [-1 , 1]
-%             [ traindata , obj ] = obj.get_scale( data4train_merged );
-%             valdata = cell( size( data4val ) );
-%             for i = 1 : length( data4val )
-%                 valdata{i} = obj.scale_data( data4val{i} );
-%             end
-%             obj.traindata = traindata;
-%             obj.valdata = valdata;
-            %SUPPRESS SCALING FOR NOW
-            obj.traindata = data4train_merged;
-            obj.valdata = data4val;
+            % scale data to be in range [-1 , 1]
+            [ traindata , obj ] = obj.get_scale( data4train_merged );
+            valdata = cell( size( data4val ) );
+            for i = 1 : length( data4val )
+                valdata{i} = obj.scale_data( data4val{i} );
+            end
+            obj.traindata = traindata;
+            obj.valdata = valdata;
+%             % To suppress scaling, comment this in and comment out above
+%             obj.traindata = data4train_merged;
+%             obj.valdata = data4val;
             
             % get shapshot pairs from traindata
             obj.snapshotPairs = obj.get_snapshotPairs( obj.traindata , obj.snapshots );
@@ -715,7 +715,7 @@ classdef sysid
             % Call function that solves QP problem
             Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
             Umtx = reshape(Uvec, [Nm,Nm]); % Koopman operator matrix
-            K = Umtx;   % switching to K convention to not confused with input
+            K = Umtx;   % switching to K convention to not confuse with input
             
             % other usefule outputs
             koopData.K = K; % Koopman operator matrix (note the switch to K)
@@ -735,6 +735,7 @@ classdef sysid
 
             nx = obj.params.N^2;
             Nm = obj.params.N + obj.params.m;
+            N = obj.params.N;
             
             M = [speye(Nm^2) , -speye(Nm^2)];
             
@@ -752,6 +753,39 @@ classdef sysid
             t = lasso;
             Aq = [ -speye(2*Nm^2) ; ones(1 , 2*Nm^2) ];
             bq = [ zeros(2*Nm^2 , 1) ; t ];
+            
+            % enforce delay constraint (see notebook from 2019-8-22)
+            n = obj.params.n;
+            m = obj.params.m;
+            nd = obj.params.nd;
+            nnd = obj.params.n * obj.params.nd;
+            mnd = obj.params.m * obj.params.nd;
+%             Ad_pos = spalloc( nnd , Nm^2 , nnd );
+%             for i = 1 : nnd
+%                 index = n + ( Nm + 1 ) * (i-1) + 1;
+%                 Ad_pos(i,index) = 1;
+%             end
+%             bd_pos = ones( nnd , 1 );
+%             Ad = [ Ad_pos ; -Ad_pos ] * M;
+%             bd = [ bd_pos ; -bd_pos ];
+
+            % delay constraint take 2
+            Ad_pos = speye( Nm^2 );
+            bd_pos = zeros( Nm^2 , 1 );
+            for i = 1 : nnd
+                index_y = Nm*n + ( Nm + 1 ) * (i-1) + 1;
+                bd_pos(index_y,1) = 1;
+            end
+            for i = 1 : m   % enforce input pass through (only for one delay at moment)
+                index_u = Nm * n * (nd + 1) + N + ( Nm + 1 ) * (i-1) + 1;
+                bd_pos(index_u,1) = 1;
+            end
+            Ad = [ Ad_pos ; -Ad_pos ] * M;
+            bd = [ bd_pos ; -bd_pos ];
+            
+            % tack on the the dely constraint
+            Aq = [ Aq ; Ad ];
+            bq = [ bq ; bd ];
             
             % Solve the quadratic program
             [x , results] = quadprog_gurobi( H , f , Aq , bq );       % use gurobi to solve
@@ -815,6 +849,8 @@ classdef sysid
             % define outputs
             out.A = M*A;  % edited to include projection M, 12/11/2018
             out.B = M*B;  % edited to include projection M, 12/11/2018
+%             out.A = A; 
+%             out.B = B;  
             out.Asim = A;
             out.Bsim = B;
             out.C = Cy;
@@ -845,6 +881,7 @@ classdef sysid
             if length(lasso) < 2
                 obj.koopData = obj.get_Koopman( obj.snapshotPairs , lasso );
                 obj.candidates = obj.get_model( obj.koopData );
+                obj.candidates.lasso = lasso;
             else
                 obj.koopData = cell( length(lasso) , 1 );
                 obj.candidates = cell( length(lasso) , 1 );
