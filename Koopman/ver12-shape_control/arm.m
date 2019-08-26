@@ -345,14 +345,16 @@ classdef arm
                     ' You may need to take its transpose.']);
             end
             
-            y = zeros( size(x,1) , 2 * ( obj.params.Nlinks ) + 2 );
+%             y = zeros( size(x,1) , 2 * ( obj.params.Nlinks ) + 2 );
+            y = zeros( size(x,1) , 3 ); % THIS LINE IS ONLY FOR DEBUGGING MPC. REMOVE WHEN FINISHED!
             for i = 1 : size(x,1)
                 alpha = x( i , 1 : obj.params.Nlinks );
                 theta = obj.alpha2theta( alpha );
                 temp = obj.get_markers( alpha );
                 markers = reshape( temp' , [ 1 , 2 * ( obj.params.Nmods+1 ) ] );
                 orient = obj.theta2complex( theta(end) );
-                y(i,:) = [ markers( : , 3:end ) , orient ]; % (remove 0th marker position because it is always at the origin)
+%                 y(i,:) = [ markers( : , 3:end ) , orient ]; % (remove 0th marker position because it is always at the origin)
+                y(i,:) = [ x(i,1) , markers( : , 3:end ) ]; % THIS LINE IS ONLY FOR DEBUGGING MPC. REMOVE WHEN FINISHED!
             end
         end
         

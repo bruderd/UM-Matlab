@@ -358,6 +358,9 @@ classdef sysid
                 elseif strcmp( type{i} , 'gaussian' )
                     obj = obj.def_gaussianLift( degree(i) );
                     fullBasis = [ fullBasis ; obj.basis.gaussian ];
+                elseif strcmp( type{i} , 'hermite' )
+                    obj = obj.def_hermiteLift( degree(i) );
+                    fullBasis = [ fullBasis ; obj.basis.hermite ];
                 end
             end
             
@@ -624,6 +627,52 @@ classdef sysid
             
             % output variables
             obj.basis.gaussian = gaussianBasis;    % symbolic vector
+        end
+        
+        % get_hermite (builds a product of hermite polynomials)
+        function [ hermite ] = get_hermite( obj, x, orders )
+            %get_monomial: builds a monomial from symbolic vector x and a vector of
+            %exponents
+            %   e.g. x = [x1 x2]; exponents = [1 2]; =>  monomial = hermiteH(1,x1) * hermiteH(2,x2)
+            
+            n = length(x);
+            
+            hermite = hermiteH( 1 , x(1) );
+            for i = 2:n
+                hermite = hermite * hermiteH( orders(i) , x(i) );
+            end
+        end
+        
+        % def_polyLift (defines polynomial basis functions)
+        function obj = def_hermiteLift( obj , degree )
+            %def_polyLift: Defines the lifting function that lifts state variable x to
+            % space spanned by monomials with total degree less than or equal to
+            % max_degree.
+            %   e.g. 1 x1 x2 x1^2 x1x2 x2^2 ...
+            
+            zeta = obj.params.zeta; % get the symbolic unlifted state
+            nzeta = length(zeta);
+            maxDegree = degree;
+            
+            % Number of mononials, i.e. dimenstion of p(x)
+            N = factorial(nzeta + maxDegree) / ( factorial(nzeta) * factorial(maxDegree) );
+            
+            % matrix of exponents (N x naug). Each row gives exponents for 1 monomial
+            exponents = [];
+            for i = 1:maxDegree
+                exponents = [exponents; partitions(i, ones(1,nzeta))];
+            end
+            
+            % create vector of orderd monomials (column vector)
+            for i = 1:N-1
+                hermiteBasis(i,1) = obj.get_hermite(zeta, exponents(i,:));
+            end
+            
+            % create the lifting function: zeta -> p(zeta)
+            obj.lift.hermite = matlabFunction(hermiteBasis, 'Vars', {zeta});
+            
+            % output variables
+            obj.basis.hermite = hermiteBasis;    % symbolic vector of basis monomials, p(x)
         end
         
         %% fitting Koopman operator and A,B,C system matrices
