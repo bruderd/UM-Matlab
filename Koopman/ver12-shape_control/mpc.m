@@ -284,7 +284,7 @@ classdef mpc
         end
         
         % get_mpcInput: Solve the mpc problem to get the input over entire horizon
-        function U = get_mpcInput( obj , traj , ref , shape_bounds )
+        function [ U , z ]= get_mpcInput( obj , traj , ref , shape_bounds )
             %get_mpcInput: Soves the mpc problem to get the input over
             % entire horizon.
             %   traj - struct with fields y , u. Contains the measured
@@ -294,6 +294,7 @@ classdef mpc
             %   shape_bounds - [min_shape_parameters , max_shape_parameters] 
             %    This is only requred if system has shape constraints 
             %   (note: size is num of shape observables x 2)
+            %   z - the lifted state at the current timestep
             
             % make sure shape bounds are included if the system needs them
             if ( nargin < 4 ) && strcmp( obj.shape_bounds , 'on' )

@@ -346,6 +346,7 @@ classdef arm
             end
             
             y = zeros( size(x,1) , 2 * ( obj.params.Nlinks ) + 2 );
+%             y = zeros( size(x,1) , 3 ); % THIS LINE IS ONLY FOR DEBUGGING MPC. REMOVE WHEN FINISHED!
             for i = 1 : size(x,1)
                 alpha = x( i , 1 : obj.params.Nlinks );
                 theta = obj.alpha2theta( alpha );
@@ -353,6 +354,7 @@ classdef arm
                 markers = reshape( temp' , [ 1 , 2 * ( obj.params.Nmods+1 ) ] );
                 orient = obj.theta2complex( theta(end) );
                 y(i,:) = [ markers( : , 3:end ) , orient ]; % (remove 0th marker position because it is always at the origin)
+%                 y(i,:) = [ x(i,1) , markers( : , 3:end ) ]; % THIS LINE IS ONLY FOR DEBUGGING MPC. REMOVE WHEN FINISHED!
             end
         end
         
@@ -382,8 +384,12 @@ classdef arm
             %   alpha: rows should be individual configurations
             %   degree: degree of the shape polynomial to be fit
             
+            coeffs = zeros( size(alpha,1) , degree * 2 );   % assumes 2d-planar arm
             for i = 1 : size( alpha , 1 )
-            
+                [ ~ , coeff_matrix ] = obj.get_shape( alpha(i,:) , degree );
+                coeff_vec = reshape( coeff_matrix' , [ numel( coeff_matrix ) , 1 ] )';
+                coeffs(i,:) = coeff_vec;
+            end
         end
         
         
@@ -472,13 +478,13 @@ classdef arm
             % run animation fram by frame
             for i = 1:totFrames
                 
-                index = (i-1) * floor( nsteps / totFrames ) + 1;   % skips points between frames
+                index = floor( (i-1) * (nsteps / totFrames) ) + 1;   % skips points between frames
                 
                 [ X , ~ ] = obj.alpha2x( alpha(index,:)' );
                 x = X(:,1);
                 y = X(:,2);
                 marker = obj.get_markers( alpha(index,:) );   % get mocap sensor location
-                [shape , ~ ] = obj.get_shape( alpha(index,:) , degree); % get polynomial approx of shape (3rd order)
+                [shape , ~ ] = obj.get_shape( alpha(index,:) , degree); % get polynomial approx of shape
                 
                 hold on;
                 p1 = plot(x, y, 'b-o');
@@ -549,7 +555,7 @@ classdef arm
             sim.x = Alpha;  % internal state of the system
             sim.alpha = Alpha( : , 1 : obj.params.Nlinks );   % joint angles
             sim.alphadot = Alpha( : , obj.params.Nlinks+1 : end );  % joint velocities
-            sim.y = [ markers( : , 3:end ) , orient ];    % output based on available observations (remove 0th marker position because it is always at the origin)
+            sim.y = get_y[ markers( : , 3:end ) , orient ];    % output based on available observations (remove 0th marker position because it is always at the origin)
             sim.u = u;  % input
             sim.params = obj.params;    % parameters associated with the system
             

@@ -10,9 +10,9 @@
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm_1-mods_1-links_05-Ts';
+params.sysName = 'arm-angles_3-mods_1-links_05-Ts';
 
-params.Nmods = 1;   % number of modules (actuated sections)
+params.Nmods = 3;   % number of modules (actuated sections)
 params.nlinks = 1;      % number of links in each module
 params.Nlinks = params.Nmods * params.nlinks;   % total number of links in robot
 
@@ -48,8 +48,7 @@ params.umax = 7*pi/8; % maximum input value (scalar for all modules, vector for 
 % 
 %% Create class for this system
 
-% arm = arm( params , fcns );
-arm = arm( params );
+arm = arm( params , 'output_type' , 'angles');   % other choice is 'markers'
 
 % save this system for later use
 dirname = [ 'systems' , filesep , params.sysName ];

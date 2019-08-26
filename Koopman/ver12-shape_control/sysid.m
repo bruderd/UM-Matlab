@@ -19,6 +19,7 @@ classdef sysid
         snapshots;  % number of snapshot pairs to use in training
         lasso;      % lasso L1 regularization penalty weight 
         delays;     % number of delays to include
+        armclass;   % an instance of the arm class. Needed for shape observables.
         
         traindata;  % scaled exp/sim data for training the model
         valdata;    % scaled exp/sim data for validating the model
@@ -69,6 +70,7 @@ classdef sysid
             obj.snapshots = Inf;
             obj.lasso = [ 1e6 ]; % default is least squares solution
             obj.delays = 1; % default 1 to ensure model is dynamic
+            obj.armclass = [];
             
             % replace default values with user input values
             obj = obj.parse_args( varargin{:} );
@@ -441,50 +443,66 @@ classdef sysid
             
         % def_armshapeLift (defines the basis functions that describe the shape of robot arm)
         function obj = def_armshapeLift( obj , degree )
+            %def_armshapeLift: 
+            %  Assumes that there is an 'arm' class provided. Otherwise
+            %  will return an error.
             
-            % 2D case (will deal with the 3D case later)
-            if ( ( obj.params.n-2 ) / obj.params.sysParams.Nmods ) == 2
-                
-                % define symbolic parameters
-                zeta = obj.params.zeta;
+            % make sure there is an arm class
+            if isempty( obj.armclass )
+                error('You must provide an arm class to included arm shape parameters in the set of observables.');
+            end
+            
+            % define symbolic parameters
+            zeta = obj.params.zeta;
+            
+            if strcmp( obj.armclass.output_type , 'markers' )
+                % 2D case (will deal with the 3D case later)
+                if ~( ( ( obj.params.n-2 ) / obj.params.sysParams.Nmods ) == 2 )
+                    error('Number of marker postions must be number of modules (for now)');
+                end
                 x = zeta( 1 : 2 : obj.params.n - 3 );   % x-coordinates of markers
                 y = zeta( 2 : 2 : obj.params.n - 2 );    % y-coordinates of markers
-                orient = zeta( obj.params.n-1 : obj.params.n );   % unit vector pointin in direction of end effector
-                
-                % define intermediate variables
-                points = [ x , y ]; % matrix of marker coordinates. Each row is coords of a marker
-                positions = obj.params.sysParams.markerPos(2:end); % row vector of marker positions [0,1]
-                
-                % generate virtual points to provide slope constraint at the base & end
-                startpoint = [ 0 , 1e-2 ];
-                endpoint = ( orient' )*1e-2 + points(end,:);    % add point extended from last link
-                points_supp = [0 , 0 ; startpoint ; points ; endpoint];
-                
-                % generate A matrix for least squares problem
-                positions_supp = [ 0 , 1e-2 , positions , 1+1e-2 ];
-                A = zeros( length(positions_supp) , degree );
-                for i = 1 : degree
-                    A(:,i) = reshape( positions_supp , [] , 1) .^ i;
-                end
-                
-                % separate x and y corrdinates of points
-                points_x = points_supp(:,1);
-                points_y = points_supp(:,2);
-                
-                % find polynomial coefficients
-                obs_matrix = pinv(A);
-                coeffs_vec_x = obs_matrix * points_x;
-                coeffs_vec_y = obs_matrix * points_y;
-                
-                % define output
-                armshapeBasis = [coeffs_vec_x ; coeffs_vec_y ];
-                obj.basis.armshape = armshapeBasis;
-                
-                % create the lifting function: zeta -> p(zeta)
-                obj.lift.armshape = matlabFunction(armshapeBasis, 'Vars', {zeta});
-            else
-                error('Number of marker postions must be number of modules (for now)');
+                orient = zeta( obj.params.n-1 : obj.params.n );   % unit vector pointing in direction of end effector
+            elseif strcmp( obj.armclass.output_type , 'angles' )
+                alpha = zeta(1:obj.params.n);
+                xypairs = obj.armclass.alpha2x( alpha );
+                x = xypairs(2:end,1);   % ignore origin
+                y = xypairs(2:end,2);   % ignore origin
+                theta = obj.armclass.alpha2theta( alpha );
+                orient = obj.armclass.theta2complex( theta(end) )';
             end
+            
+            % define intermediate variables
+            points = [ x , y ]; % matrix of marker coordinates. Each row is coords of a marker
+            positions = obj.params.sysParams.markerPos(2:end); % row vector of marker positions [0,1]
+            
+            % generate virtual points to provide slope constraint at the base & end
+            startpoint = [ 0 , 1e-2 ];
+            endpoint = ( orient' )*1e-2 + points(end,:);    % add point extended from last link
+            points_supp = [0 , 0 ; startpoint ; points ; endpoint];
+            
+            % generate A matrix for least squares problem
+            positions_supp = [ 0 , 1e-2 , positions , 1+1e-2 ];
+            A = zeros( length(positions_supp) , degree );
+            for i = 1 : degree
+                A(:,i) = reshape( positions_supp , [] , 1) .^ i;
+            end
+            
+            % separate x and y coordinates of points
+            points_x = points_supp(:,1);
+            points_y = points_supp(:,2);
+            
+            % find polynomial coefficients
+            obs_matrix = pinv(A);
+            coeffs_vec_x = obs_matrix * points_x;
+            coeffs_vec_y = obs_matrix * points_y;
+            
+            % define output
+            armshapeBasis = [coeffs_vec_x ; coeffs_vec_y ];
+            obj.basis.armshape = armshapeBasis;
+            
+            % create the lifting function: zeta -> p(zeta)
+            obj.lift.armshape = matlabFunction(armshapeBasis, 'Vars', {zeta});
         end
         
         % def_fourierLift (defines sin/cos basis functions)
@@ -637,7 +655,7 @@ classdef sysid
             
             n = length(x);
             
-            hermite = hermiteH( 1 , x(1) );
+            hermite = hermiteH( orders(1) , x(1) );
             for i = 2:n
                 hermite = hermite * hermiteH( orders(i) , x(i) );
             end

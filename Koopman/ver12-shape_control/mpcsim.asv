@@ -7,10 +7,12 @@ classdef mpcsim
         mpc;
         scaledown;  % for scaling data into range [-1 , 1]
         scaleup;    % for unscaling data from range [-1 , 1]
+        ref;        % reference trajectory
+        shape;      % reference point or trajectory of shape parameters (for arm system only)
     end
     
     methods
-        function obj = mpcsim( system_class , mpc_class )
+        function obj = mpcsim( system_class , mpc_class , varargin )
             %CLASS CONSTRUCTOR
             %   Detailed explanation goes here
             
@@ -21,6 +23,22 @@ classdef mpcsim
             obj.scaledown = mpc_class.params.scaledown;
             obj.scaleup = mpc_class.params.scaleup;
             obj = obj.get_refscale;   % get the scale matrix for reference traj.
+            
+            % set default values of optional inputs
+            ref = [];
+            shape = [];
+            
+            % replace default values with user input values
+            obj = obj.parse_args( varargin{:} );
+        end
+        
+        % parse_args: Parses the Name, Value pairs in varargin
+        function obj = parse_args( obj , varargin )
+            %parse_args: Parses the Name, Value pairs in varargin of the
+            % constructor, and assigns property values
+            for idx = 1:2:length(varargin)
+                obj.(varargin{idx}) = varargin{idx+1} ;
+            end
         end
         
         %% Define reference trajectories and state constraints
@@ -52,7 +70,7 @@ classdef mpcsim
             % scale the reference trajectory
             ref_sc = ref * obj.scaledown.ref;
             
-            % set initial condition (may add an inpur armument for this later)
+            % set initial condition (may add an input argument for this later)
             x0 = zeros( nd+1 , obj.sys.params.nx );
             y0 = obj.sys.get_y( x0 );   % get corresponding outputs
             u0 = zeros( obj.mpc.params.nd+1 , obj.sys.params.nu );
@@ -65,7 +83,7 @@ classdef mpcsim
             results.U = [ u0( end , : ) ];
             results.Y = [ y0( end , : ) ];
             results.K = [ 0 ];
-            results.Yr = [ ref(1,:) ];
+            results.R = [ ref(1,:) ];
             results.X = [ x0( end , : ) ];
             
             k = 1;
@@ -76,8 +94,8 @@ classdef mpcsim
                 
                 % get current state and input with delays
                 if k == 1
-                    current.y = y0;
-                    current.u = u0;
+                    current.y = y0 * obj.scaledown.y;
+                    current.u = u0 * obj.scaledown.u;
                 elseif k < nd + 1
                     y = [ y0( k : end-1 , : ) ; results.Y ];
                     u = [ u0( k : end-1 , : ) ; results.U ];
@@ -87,7 +105,7 @@ classdef mpcsim
                     y = results.Y( end - nd : end , : );
                     u = results.U( end - nd : end , : );
                     current.y = y * obj.scaledown.y;
-                    current.u = u * objscaledown.u;
+                    current.u = u * obj.scaledown.u;
                 end
                 
                 % isolate the reference trajectory over the horizon
@@ -97,11 +115,15 @@ classdef mpcsim
                     refhor = ref_sc( k : end , : );
                 end
                     
-                % isolate the shape_bounds over the horizon (TODO)
-%                 shape_bounds
+%                 % isolate the shape_bounds over the horizon (TODO)
+%                 if k + Np <= size( shape_bounds , 1 )
+%                     shapehor = shape_bounds( k : k + Np , :);
+%                 else
+%                     shapehor = shape_bounds( k : end , : );
+%                 end
 
                 % get optimal input over horizon
-                U = obj.mpc.get_mpcInput( current , refhor , shape_bounds );
+                [ U , z ] = obj.mpc.get_mpcInput( current , refhor , shape_bounds );
                 
                 % isolate input for this step
                 u_k_sc = U( 2 , : )';
@@ -119,8 +141,9 @@ classdef mpcsim
                 results.U = [ results.U ; u_k' ];
                 results.Y = [ results.Y ; y_kp1 ];
                 results.K = [ results.K ; k ];
-                results.Yr = [ results.Yr ; ref( k , : ) ];
+                results.R = [ results.R ; ref( k , : ) ];
                 results.X = [ results.X ; x_kp1' ];
+                results.Z = [ results.z ]
                 
                 k = k + 1;  % increment step counter
             end

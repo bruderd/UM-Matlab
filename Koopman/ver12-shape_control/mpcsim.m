@@ -7,10 +7,12 @@ classdef mpcsim
         mpc;
         scaledown;  % for scaling data into range [-1 , 1]
         scaleup;    % for unscaling data from range [-1 , 1]
+        ref;        % reference trajectory
+        shape;      % reference point or trajectory of shape parameters (for arm system only)
     end
     
     methods
-        function obj = mpcsim( system_class , mpc_class )
+        function obj = mpcsim( system_class , mpc_class , varargin )
             %CLASS CONSTRUCTOR
             %   Detailed explanation goes here
             
@@ -21,6 +23,22 @@ classdef mpcsim
             obj.scaledown = mpc_class.params.scaledown;
             obj.scaleup = mpc_class.params.scaleup;
             obj = obj.get_refscale;   % get the scale matrix for reference traj.
+            
+            % set default values of optional inputs
+            ref = [];
+            shape = [];
+            
+            % replace default values with user input values
+            obj = obj.parse_args( varargin{:} );
+        end
+        
+        % parse_args: Parses the Name, Value pairs in varargin
+        function obj = parse_args( obj , varargin )
+            %parse_args: Parses the Name, Value pairs in varargin of the
+            % constructor, and assigns property values
+            for idx = 1:2:length(varargin)
+                obj.(varargin{idx}) = varargin{idx+1} ;
+            end
         end
         
         %% Define reference trajectories and state constraints
@@ -50,7 +68,8 @@ classdef mpcsim
             Np = obj.mpc.horizon;
             
             % scale the reference trajectory
-            ref_sc = ref * obj.scaledown.ref;
+%             ref_sc = ref * obj.scaledown.ref;
+            ref_sc = ref;   % reference is already scaled
             
             % set initial condition (may add an input argument for this later)
             x0 = zeros( nd+1 , obj.sys.params.nx );
@@ -67,6 +86,7 @@ classdef mpcsim
             results.K = [ 0 ];
             results.R = [ ref(1,:) ];
             results.X = [ x0( end , : ) ];
+            results.Z = []; % lifted states
             
             k = 1;
             while k < size( ref , 1 )
@@ -97,11 +117,15 @@ classdef mpcsim
                     refhor = ref_sc( k : end , : );
                 end
                     
-                % isolate the shape_bounds over the horizon (TODO)
-%                 shape_bounds
+%                 % isolate the shape_bounds over the horizon (TODO)
+%                 if k + Np <= size( shape_bounds , 1 )
+%                     shapehor = shape_bounds( k : k + Np , :);
+%                 else
+%                     shapehor = shape_bounds( k : end , : );
+%                 end
 
                 % get optimal input over horizon
-                U = obj.mpc.get_mpcInput( current , refhor , shape_bounds );
+                [ U , z ] = obj.mpc.get_mpcInput( current , refhor , shape_bounds );
                 
                 % isolate input for this step
                 u_k_sc = U( 2 , : )';
@@ -121,6 +145,7 @@ classdef mpcsim
                 results.K = [ results.K ; k ];
                 results.R = [ results.R ; ref( k , : ) ];
                 results.X = [ results.X ; x_kp1' ];
+                results.Z = [ results.Z ; z' ]; % current lifted state
                 
                 k = k + 1;  % increment step counter
             end

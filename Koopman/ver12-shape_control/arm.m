@@ -5,14 +5,30 @@ classdef arm
     properties
         params struct;  % model parameters
         fcns struct;   % equation of motion functions
+        output_type;  % choice for the system output. Either 'angles' or 'markers' 
     end
     
     methods
-        function obj = arm( params )
+        function obj = arm( params , varargin )
             %Construct an instance of EOM class
             %   Detailed explanation goes here
             obj.params = params;
             obj.fcns = obj.set_EOM;
+            
+            % set default value of the output type
+            output_type = 'angles';
+            
+            % replace default values with user input values
+            obj = obj.parse_args( varargin{:} );
+        end
+        
+        % parse_args: Parses the Name, Value pairs in varargin
+        function obj = parse_args( obj , varargin )
+            %parse_args: Parses the Name, Value pairs in varargin of the
+            % constructor, and assigns property values
+            for idx = 1:2:length(varargin)
+                obj.(varargin{idx}) = varargin{idx+1} ;
+            end
         end
         
         %% transformations
@@ -345,16 +361,22 @@ classdef arm
                     ' You may need to take its transpose.']);
             end
             
-%             y = zeros( size(x,1) , 2 * ( obj.params.Nlinks ) + 2 );
-            y = zeros( size(x,1) , 3 ); % THIS LINE IS ONLY FOR DEBUGGING MPC. REMOVE WHEN FINISHED!
-            for i = 1 : size(x,1)
-                alpha = x( i , 1 : obj.params.Nlinks );
-                theta = obj.alpha2theta( alpha );
-                temp = obj.get_markers( alpha );
-                markers = reshape( temp' , [ 1 , 2 * ( obj.params.Nmods+1 ) ] );
-                orient = obj.theta2complex( theta(end) );
-%                 y(i,:) = [ markers( : , 3:end ) , orient ]; % (remove 0th marker position because it is always at the origin)
-                y(i,:) = [ x(i,1) , markers( : , 3:end ) ]; % THIS LINE IS ONLY FOR DEBUGGING MPC. REMOVE WHEN FINISHED!
+            % set the output, depending on what the output_type is.
+            if strcmp( obj.output_type , 'markers' )
+                y = zeros( size(x,1) , 2 * ( obj.params.Nlinks ) + 2 );
+                for i = 1 : size(x,1)
+                    alpha = x( i , 1 : obj.params.Nlinks );
+                    theta = obj.alpha2theta( alpha );
+                    temp = obj.get_markers( alpha );
+                    markers = reshape( temp' , [ 1 , 2 * ( obj.params.Nmods+1 ) ] );
+                    orient = obj.theta2complex( theta(end) );
+                    y(i,:) = [ markers( : , 3:end ) , orient ]; % (remove 0th marker position because it is always at the origin)
+                end
+            elseif strcmp( obj.output_type , 'angles' )
+                y = zeros( size(x,1) , obj.params.Nlinks );
+                for i = 1 : size(x,1)
+                    y(i,:) = x( i , 1 : obj.params.Nlinks );    % first half of x is the joint angles
+                end
             end
         end
         
@@ -383,6 +405,7 @@ classdef arm
             %get_shape_coeffs: gets the shape coefficients for many points
             %   alpha: rows should be individual configurations
             %   degree: degree of the shape polynomial to be fit
+            %   coeffs: returns the shape coefficients row vectors
             
             coeffs = zeros( size(alpha,1) , degree * 2 );   % assumes 2d-planar arm
             for i = 1 : size( alpha , 1 )
@@ -478,7 +501,7 @@ classdef arm
             % run animation fram by frame
             for i = 1:totFrames
                 
-                index = (i-1) * floor( nsteps / totFrames ) + 1;   % skips points between frames
+                index = floor( (i-1) * (nsteps / totFrames) ) + 1;   % skips points between frames
                 
                 [ X , ~ ] = obj.alpha2x( alpha(index,:)' );
                 x = X(:,1);
@@ -555,7 +578,7 @@ classdef arm
             sim.x = Alpha;  % internal state of the system
             sim.alpha = Alpha( : , 1 : obj.params.Nlinks );   % joint angles
             sim.alphadot = Alpha( : , obj.params.Nlinks+1 : end );  % joint velocities
-            sim.y = [ markers( : , 3:end ) , orient ];    % output based on available observations (remove 0th marker position because it is always at the origin)
+            sim.y = obj.get_y( Alpha );    % output based on available observations (remove 0th marker position because it is always at the origin)
             sim.u = u;  % input
             sim.params = obj.params;    % parameters associated with the system
             
