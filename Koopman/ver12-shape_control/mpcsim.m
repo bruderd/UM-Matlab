@@ -68,8 +68,8 @@ classdef mpcsim
             Np = obj.mpc.horizon;
             
             % scale the reference trajectory
-%             ref_sc = ref * obj.scaledown.ref;
-            ref_sc = ref;   % reference is already scaled
+            ref_sc = ref * obj.scaledown.ref;
+%             ref_sc = ref;   % reference is already scaled
             
             % set initial condition (may add an input argument for this later)
             x0 = zeros( nd+1 , obj.sys.params.nx );
