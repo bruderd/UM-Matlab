@@ -149,7 +149,7 @@ classdef sysid
             scaleup_udelays = kron( eye(obj.delays) , obj.params.scaleup.u );
             obj.params.scaleup.zeta = blkdiag( scaleup_ydelays , scaleup_udelays );
             
-            % define z (lifted state) scaling matrix
+            % define z (lifted state) scaling matrix (THIS DOES NOT WORK FOR BASIS FUNCTIONS WITH SINES ANS COSINES)
             zeta_scaledown = obj.params.scaledown.zeta * ones( obj.params.nzeta , 1);  % scaledown identity zeta vector
             zeta_scaleup = obj.params.scaleup.zeta * ones( obj.params.nzeta , 1);  % scaleup identity zeta vector
             zscales_down = obj.lift.full( zeta_scaledown ); % vector of scaling down factors
@@ -340,14 +340,14 @@ classdef sysid
             obj.params.zeta = zeta;
             
             % construct the observables
-            fullBasis = x;  % first n observables should always be the measured state
+            fullBasis = zeta;  % first nzeta observables should always be the measured state and delays
             for i = 1 : length(degree)
                 if strcmp( type{i} , 'armshape' )
                     obj = obj.def_armshapeLift( degree(i) );
                     fullBasis = [ fullBasis ; obj.basis.armshape ];
                 elseif strcmp( type{i} , 'poly' )
                     obj = obj.def_polyLift( degree(i) );
-                    fullBasis = [ fullBasis ; obj.basis.poly( obj.params.n+1 : end ) ]; % don't include first n states because they will be repeats
+                    fullBasis = [ fullBasis ; obj.basis.poly( obj.params.nzeta+1 : end ) ]; % don't include first nzeta states because they will be repeats
                 elseif strcmp( type{i} , 'fourier' )
                     obj = obj.def_fourierLift( degree(i) );
                     fullBasis = [ fullBasis ; obj.basis.fourier ];
@@ -910,10 +910,10 @@ classdef sysid
             % Cy selects the first n entries of the lifted state
             Cy = [eye(obj.params.n), zeros(obj.params.n , obj.params.N - obj.params.n)]; 
             
-            % Cshape selects the observables related to shape (assumes they come right after observed state y)
+            % Cshape selects the observables related to shape (assumes they come right after observed state y and the delays of y and u)
             if isfield( obj.basis , 'armshape' )
                 nshape = length( obj.basis.armshape );
-                Cshape = [ zeros( nshape , obj.params.n ) , eye( nshape ) , zeros( nshape , obj.params.N - obj.params.n - nshape ) ];
+                Cshape = [ zeros( nshape , obj.params.nzeta ) , eye( nshape ) , zeros( nshape , obj.params.N - obj.params.nzeta - nshape ) ];
             else
                 Cshape = [];
             end
