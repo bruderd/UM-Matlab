@@ -136,8 +136,8 @@ classdef sysid
             % shift and scale the data
             data_scaled = struct;    % initialize
             data_scaled.t = data.t;  % time is not scaled
-            data.scaled.y = ( data.y - y_dc ) ./ scale_y;
-            data.scaled.u = ( data.u - u_dc ) ./ scale_u;
+            data_scaled.y = ( data.y - y_dc ) ./ scale_y;
+            data_scaled.u = ( data.u - u_dc ) ./ scale_u;
             
             % save scaling functions
             y = sym( 'y' , [ 1 , obj.params.n ] );
@@ -158,7 +158,7 @@ classdef sysid
                 x_max = max( data.x );
                 x_dc = ( x_max + x_min ) ./ 2;
                 scale_x = ( x_max - x_min ) ./ 2;
-                data.scaled.x = ( data.x - x_dc ) ./ scale_x;
+                data_scaled.x = ( data.x - x_dc ) ./ scale_x;
                 x = sym( 'x' , [ 1 , size(data.x,2) ] );
                 x_scaledown = ( x - x_dc ) ./ scale_x;
                 obj.scaledown.x = matlabFunction( x_scaledown , 'Vars' , {x} );
@@ -289,18 +289,18 @@ classdef sysid
             if down
                 data_scaled = struct;    % initialize
                 data_scaled.t = data.t;  % time is not scaled
-                data_scaled.y = data.y * obj.params.scaledown.y;
-                data_scaled.u = data.u * obj.params.scaledown.u;
+                data_scaled.y = obj.scaledown.y( data.y );  %data.y * obj.params.scaledown.y;
+                data_scaled.u = obj.scaledown.u( data.u );  %data.u * obj.params.scaledown.u;
                 if ismember( 'x' , fields(data) )
-                    data_scaled.x = data.x * obj.params.scaledown.x;
+                    data_scaled.x = obj.scaledown.x( data.x );  %data.x * obj.params.scaledown.x;
                 end
             else
                 data_scaled = struct;    % initialize
                 data_scaled.t = data.t;  % time is not scaled
-                data_scaled.y = data.y * obj.params.scaleup.y;
-                data_scaled.u = data.u * obj.params.scaleup.u;
+                data_scaled.y = obj.scaleup.y( data.y );    %data.y * obj.params.scaleup.y;
+                data_scaled.u = obj.scaleup.u( data.u );    %data.u * obj.params.scaleup.u;
                 if ismember( 'x' , fields(data) )
-                    data_scaled.x = data.x * obj.params.scaleup.x;
+                    data_scaled.x = data.scaleup.x( data.x );    %data.x * obj.params.scaleup.x;
                 end
             end
         end
