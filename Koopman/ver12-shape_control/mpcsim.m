@@ -19,10 +19,10 @@ classdef mpcsim
             obj.sys = system_class; % hold onto entire class
             obj.mpc = mpc_class;    % hold onto entire class
             
-            % copy the scaling matrices for easier access
-            obj.scaledown = mpc_class.params.scaledown;
-            obj.scaleup = mpc_class.params.scaleup;
-            obj = obj.get_refscale;   % get the scale matrix for reference traj.
+            % copy the scaling functions for easier access
+            obj.scaledown = mpc_class.scaledown;
+            obj.scaleup = mpc_class.scaleup;
+%             obj = obj.get_refscale;   % get the scale matrix for reference traj.
             
             % set default values of optional inputs
             ref = [];
@@ -96,18 +96,18 @@ classdef mpcsim
                 
                 % get current state and input with delays
                 if k == 1
-                    current.y = y0 * obj.scaledown.y;
-                    current.u = u0 * obj.scaledown.u;
+                    current.y = obj.scaledown.y( y0 );
+                    current.u = obj.scaledown.u( u0 );
                 elseif k < nd + 1
                     y = [ y0( k : end-1 , : ) ; results.Y ];
                     u = [ u0( k : end-1 , : ) ; results.U ];
-                    current.y = y * obj.scaledown.y;
-                    current.u = u * obj.scaledown.u;
+                    current.y = obj.scaledown.y( y );
+                    current.u = obj.scaledown.u( u );
                 else
                     y = results.Y( end - nd : end , : );
                     u = results.U( end - nd : end , : );
-                    current.y = y * obj.scaledown.y;
-                    current.u = u * obj.scaledown.u;
+                    current.y = obj.scaledown.y( y );
+                    current.u = obj.scaledown.u( u );
                 end
                 
                 % isolate the reference trajectory over the horizon
@@ -128,10 +128,10 @@ classdef mpcsim
                 [ U , z ] = obj.mpc.get_mpcInput( current , refhor , shape_bounds );
                 
                 % isolate input for this step
-                u_k_sc = U( 2 , : )';
+                u_k_sc = U( 2 , : );
                 
                 % scaleup the input for the system simulation
-                u_k = obj.scaleup.u * u_k_sc;
+                u_k = obj.scaleup.u( u_k_sc )';
                 
                 % simulate the system over one time-step
                 x_k = results.X( end , : )';

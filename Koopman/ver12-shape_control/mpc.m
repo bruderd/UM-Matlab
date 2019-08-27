@@ -21,6 +21,9 @@ classdef mpc
         constraints;    % stores constraint matrices
         set_constRHS;  % function that sets the value of the RHS of constraints
         get_zeta;   % function that constructs zeta from state and input data in time
+        
+        scaledown;  % functions for scaling to [-1,1]
+        scaleup;    % functions for scaling from [-1,1]
     end
     
     methods
@@ -37,6 +40,8 @@ classdef mpc
             obj.lift = sysid_class.lift;
             obj.basis = sysid_class.basis;
             obj.get_zeta = @sysid_class.get_zeta;   % copies this method for convenience
+            obj.scaledown = sysid_class.scaledown;
+            obj.scaleup = sysid_class.scaleup;
             
             % define default values of properties
             obj.horizon = floor( 1 / obj.params.Ts );
@@ -179,7 +184,7 @@ classdef mpc
                 E = [ E ; Ebounds ];    % append matrix
                 
                 % c: input_bounds
-                input_bounds_sc = params.scaledown.u * obj.input_bounds;   % scaled down the input bounds
+                input_bounds_sc = obj.scaledown.u( obj.input_bounds' )';   % scaled down the input bounds
                 cbounds_i = sym( [ -input_bounds_sc(:,1) ; input_bounds_sc(:,2) ] ); % [ -umin ; umax ]
                 cbounds = sym( zeros( num * (Np+1) , 1) );    % initialization
                 cbounds(1 : num*Np) = kron( ones( Np , 1 ) , cbounds_i );     % fill in nonzeros
@@ -200,7 +205,7 @@ classdef mpc
                 E = [ E ; sparse( 2 * params.m * (Np-1) , size(cost.B,1) ) ];
                 
                 % c: input_slopeConst
-                slope_lim = obj.input_slopeConst * mean( diag( params.scaledown.u ) );  % scale down the 2nd deriv. limit
+                slope_lim = obj.input_slopeConst * mean( params.scale.u_factor );  % scale down the 2nd deriv. limit
                 cslope_top = sym( slope_lim * ones( params.m * (Np-1) , 1 ) );
                 cslope = [ cslope_top ; cslope_top ];
                 c = [ c ; cslope ];     % append vector
@@ -221,7 +226,7 @@ classdef mpc
                 E = [ E ; sparse( 2 * params.m * (Np-2) , size(cost.B,1) ) ];
                 
                 % c: input_smoothConst
-                smooth_lim = params.Ts^2 * obj.input_smoothConst * mean( diag( params.scaledown.u ) );  % scale down the 2nd deriv. limit
+                smooth_lim = params.Ts^2 * obj.input_smoothConst * mean( params.scale.u_factor );  % scale down the 2nd deriv. limit
                 csmooth = sym( smooth_lim * ones( size(Fsmooth,1) ,1) );
                 c = [ c ; csmooth ];
             end
@@ -241,7 +246,7 @@ classdef mpc
                 F = [ F ; Fsbounds ];    % append matrix
                 
                 % c: state_bounds
-                state_bounds_sc = params.scaledown.y * obj.state_bounds;    % scaled down state bounds
+                state_bounds_sc = obj.scaledown.y( obj.state_bounds' )';    % scaled down state bounds
                 csbounds_i = sym( [ -state_bounds_sc(:,1) ; state_bounds_sc(:,2) ] ); % [ -ymin ; ymax ]
                 csbounds = kron( ones( Np+1 , 1 ) , csbounds_i );     % fill in nonzeros
                 c = [ c ; csbounds ];    % append vector
