@@ -12,6 +12,9 @@ classdef sysid
         candidates; % candidate models trained with different lasso params
         koopData;   % info related to the training of koopman operator
         
+        scaledown;      % contains scaling functions for y,u,zeta to lie in [-1,1]
+        scaleup;        % contains scaling from [-1,1] to real life range
+        
         % properties that can be set using Name,Value pair input to constructor
         isupdate;   % true if this should overwrite an existing model, false otherwise
         obs_type;   % cell array of the types of observables to include in model
@@ -110,53 +113,148 @@ classdef sysid
         
         %% operations on simulation/experimental data (some are redundant and found in the data class)
         
-        % get_scale (scale sim/exp data to be in range [-1 , 1])
         function [ data_scaled , obj ] = get_scale( obj , data )
             %scale: Scale sim/exp data to be in range [-1 , 1]
             %    Also creates scaleup/scaledown matrices and saves as params
             %    data - struct containing fields t , y , u (at least)
-            %    data_scaled - struct containing t , y , u , x (optional)
+            %    data_scaled - struct containing t , y , u , x (optional)   
             
-            % get max absolute values in each dimension
-            y_maxabs = max( abs( data.y ) );
-            u_maxabs = max( abs( data.u ) );
+            % get min/max values in each dimension
+            y_min = min( data.y );
+            u_min = min( data.u );
+            y_max = max( data.y );
+            u_max = max( data.u );
             
-            % scale the data
+            % calculate centers of range
+            y_dc = ( y_max + y_min ) ./ 2;
+            u_dc = ( u_max + u_min ) ./ 2;
+            
+            % calculate scaling factors
+            scale_y = ( y_max - y_min ) ./ 2;
+            scale_u = ( u_max - u_min ) ./ 2;
+            
+            % shift and scale the data
             data_scaled = struct;    % initialize
             data_scaled.t = data.t;  % time is not scaled
-            data_scaled.y = data.y ./ y_maxabs;
-            data_scaled.u = data.u ./ u_maxabs;
+            data.scaled.y = ( data.y - y_dc ) ./ scale_y;
+            data.scaled.u = ( data.u - u_dc ) ./ scale_u;
             
-            % save the scaling matrices (note, these are meant to premultiply column vectors or postmultiply row vectors)
-            obj.params.scaleup.y = diag( y_maxabs );
-            obj.params.scaleup.u = diag( u_maxabs );
-            obj.params.scaledown.y = diag( y_maxabs .^ (-1) );
-            obj.params.scaledown.u = diag( u_maxabs .^ (-1) );
+            % save scaling functions
+            y = sym( 'y' , [ 1 , obj.params.n ] );
+            u = sym( 'u' , [ 1 , obj.params.m ] );
+            y_scaledown = ( y - y_dc ) ./ scale_y;
+            u_scaledown = ( u - u_dc ) ./ scale_u;
+            obj.scaledown.y = matlabFunction( y_scaledown , 'Vars' , {y} );
+            obj.scaledown.u = matlabFunction( u_scaledown , 'Vars' , {u} );
+            
+            y_scaleup = ( y .* scale_y ) + y_dc;
+            u_scaleup = ( u .* scale_u ) + u_dc;
+            obj.scaleup.y = matlabFunction( y_scaleup , 'Vars' , {y} );
+            obj.scaleup.u = matlabFunction( u_scaleup , 'Vars' , {u} );
             
             % do same for x if it is part of data struct
             if ismember( 'x' , fields(data) )
-                x_maxabs = max( abs( data.x ) );
-                data_scaled.x = data.x ./ x_maxabs;
-                obj.params.scaleup.x = diag( x_maxabs );
-                obj.params.scaledown.x = diag( x_maxabs .^ (-1) );
+                x_min = min( data.x );
+                x_max = max( data.x );
+                x_dc = ( x_max + x_min ) ./ 2;
+                scale_x = ( x_max - x_min ) ./ 2;
+                data.scaled.x = ( data.x - x_dc ) ./ scale_x;
+                x = sym( 'x' , [ 1 , size(data.x,2) ] );
+                x_scaledown = ( x - x_dc ) ./ scale_x;
+                obj.scaledown.x = matlabFunction( x_scaledown , 'Vars' , {x} );
+                x_scaleup = ( x .* scale_x ) + x_dc;
+                obj.scaleup.x = matlabFunction( x_scaleup , 'Vars' , {x} );
             end
             
-            % define zeta scaling matrix
-            scaledown_ydelays = kron( eye(obj.delays+1) , obj.params.scaledown.y );
-            scaledown_udelays = kron( eye(obj.delays) , obj.params.scaledown.u );
-            obj.params.scaledown.zeta = blkdiag( scaledown_ydelays , scaledown_udelays );
-            scaleup_ydelays = kron( eye(obj.delays+1) , obj.params.scaleup.y );
-            scaleup_udelays = kron( eye(obj.delays) , obj.params.scaleup.u );
-            obj.params.scaleup.zeta = blkdiag( scaleup_ydelays , scaleup_udelays );
-            
-            % define z (lifted state) scaling matrix (THIS DOES NOT WORK FOR BASIS FUNCTIONS WITH SINES ANS COSINES)
-            zeta_scaledown = obj.params.scaledown.zeta * ones( obj.params.nzeta , 1);  % scaledown identity zeta vector
-            zeta_scaleup = obj.params.scaleup.zeta * ones( obj.params.nzeta , 1);  % scaleup identity zeta vector
-            zscales_down = obj.lift.full( zeta_scaledown ); % vector of scaling down factors
-            zscales_up = obj.lift.full( zeta_scaleup );     % vector of scaling up factors
-            obj.params.scaledown.z = diag( zscales_down );  % turn vector into scaling mtx
-            obj.params.scaleup.z = diag( zscales_up );     % turn vector into scaling mtx
+            % create scaling functions for zeta
+            zeta = sym( 'zeta' , [ 1 , obj.params.nzeta ] );
+            zeta_scaledown = sym( zeros( size(zeta) ) );
+            zeta_scaleup = sym( zeros( size(zeta) ) );
+            zeta_scaledown(1:obj.params.n) = obj.scaledown.y( zeta(1:obj.params.n) );
+            zeta_scaleup(1:obj.params.n) = obj.scaleup.y( zeta(1:obj.params.n) );
+            for i = 1 : obj.delays   % for y delays
+                range = obj.params.n * i + 1 : obj.params.n * (i+1);
+                zeta_scaledown(range) = obj.scaledown.y( zeta(range) );
+                zeta_scaleup(range) = obj.scaleup.y( zeta(range) );
+            end
+            for i = 1 : obj.delays   % for u delays
+                endy = obj.params.n * ( obj.delays + 1 );
+                range = endy + obj.params.m * (i-1) + 1 : endy + obj.params.m * i;
+                zeta_scaledown(range) = obj.scaledown.u( zeta(range) );
+                zeta_scaleup(range) = obj.scaleup.u( zeta(range) );
+            end
+            obj.scaledown.zeta = matlabFunction( zeta_scaledown , 'Vars' , {zeta} );
+            obj.scaleup.zeta = matlabFunction( zeta_scaleup , 'Vars' , {zeta} );
         end
+        
+%         % get_scale (scale sim/exp data to be in range [-1 , 1])
+%         function [ data_scaled , obj ] = get_scale( obj , data )
+%             %scale: Scale sim/exp data to be in range [-1 , 1]
+%             %    Also creates scaleup/scaledown matrices and saves as params
+%             %    data - struct containing fields t , y , u (at least)
+%             %    data_scaled - struct containing t , y , u , x (optional)
+%             
+%             % get mean value in each dimension
+%             y_mean = mean( data.y );
+%             u_mean = mean( data.u );
+%             
+%             % subtract the mean value to center data about zero
+%             y_cent = data.y - y_mean;
+%             u_cent = data.u - u_mean;
+%             
+%             % get max absolute values in each dimension
+%             y_maxabs = max( abs( y_cent ) );
+%             u_maxabs = max( abs( u_cent ) );
+%             
+%             % scale the data
+%             data_scaled = struct;    % initialize
+%             data_scaled.t = data.t;  % time is not scaled
+%             data_scaled.y = y_cent ./ y_maxabs;
+%             data_scaled.u = u_cent ./ u_maxabs;
+%             
+%             % save scaling functions
+%             y = sym( 'y' , [ 1 , obj.params.n ] );
+%             u = sym( 'u' , [ 1 , obj.params.m ] );
+%             y_scaledown = ( y - y_mean ) ./ y_maxabs;
+%             u_scaledown = ( u - u_mean ) ./ u_maxabs;
+%             obj.scaledown.y = matlabFunction( y_scaledown , 'Vars' , {y} );
+%             obj.scaledown.u = matlabFunction( u_scaledown , 'Vars' , {u} );
+%             
+%             y_scaleup = ( y .* y_maxabs ) + y_mean;
+%             u_scaleup = ( u .* u_maxabs ) + u_mean;
+%             obj.scaleup.y = matlabFunction( y_scaleup , 'Vars' , {y} );
+%             obj.scaleup.u = matlabFunction( u_scaleup , 'Vars' , {u} );
+%             
+% %             % save the scaling matrices (note, these are meant to premultiply column vectors or postmultiply row vectors)
+% %             obj.params.scaleup.y = diag( y_maxabs );
+% %             obj.params.scaleup.u = diag( u_maxabs );
+% %             obj.params.scaledown.y = diag( y_maxabs .^ (-1) );
+% %             obj.params.scaledown.u = diag( u_maxabs .^ (-1) );
+% %             
+% %             % do same for x if it is part of data struct
+% %             if ismember( 'x' , fields(data) )
+% %                 x_maxabs = max( abs( data.x ) );
+% %                 data_scaled.x = data.x ./ x_maxabs;
+% %                 obj.params.scaleup.x = diag( x_maxabs );
+% %                 obj.params.scaledown.x = diag( x_maxabs .^ (-1) );
+% %             end
+% %             
+% %             % define zeta scaling matrix
+% %             scaledown_ydelays = kron( eye(obj.delays+1) , obj.params.scaledown.y );
+% %             scaledown_udelays = kron( eye(obj.delays) , obj.params.scaledown.u );
+% %             obj.params.scaledown.zeta = blkdiag( scaledown_ydelays , scaledown_udelays );
+% %             scaleup_ydelays = kron( eye(obj.delays+1) , obj.params.scaleup.y );
+% %             scaleup_udelays = kron( eye(obj.delays) , obj.params.scaleup.u );
+% %             obj.params.scaleup.zeta = blkdiag( scaleup_ydelays , scaleup_udelays );
+% %             
+% %             % define z (lifted state) scaling matrix (THIS DOES NOT WORK FOR BASIS FUNCTIONS WITH SINES ANS COSINES)
+% %             zeta_scaledown = obj.params.scaledown.zeta * ones( obj.params.nzeta , 1);  % scaledown identity zeta vector
+% %             zeta_scaleup = obj.params.scaleup.zeta * ones( obj.params.nzeta , 1);  % scaleup identity zeta vector
+% %             zscales_down = obj.lift.full( zeta_scaledown ); % vector of scaling down factors
+% %             zscales_up = obj.lift.full( zeta_scaleup );     % vector of scaling up factors
+% %             obj.params.scaledown.z = diag( zscales_down );  % turn vector into scaling mtx
+% %             obj.params.scaleup.z = diag( zscales_up );     % turn vector into scaling mtx
+%         end
         
         % resample (resamples data with a desired time step)
         function data_resampled = resample( obj , data , Ts )
