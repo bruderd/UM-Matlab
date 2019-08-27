@@ -19,10 +19,10 @@ classdef mpcsim
             obj.sys = system_class; % hold onto entire class
             obj.mpc = mpc_class;    % hold onto entire class
             
-            % copy the scaling matrices for easier access
-            obj.scaledown = mpc_class.params.scaledown;
-            obj.scaleup = mpc_class.params.scaleup;
-            obj = obj.get_refscale;   % get the scale matrix for reference traj.
+            % copy the scaling functions for easier access
+            obj.scaledown = mpc_class.scaledown;
+            obj.scaleup = mpc_class.scaleup;
+%             obj = obj.get_refscale;   % get the scale matrix for reference traj.
             
             % set default values of optional inputs
             ref = [];
@@ -43,7 +43,7 @@ classdef mpcsim
         
         %% Define reference trajectories and state constraints
         
-        % get_refscale: creates matrices for scaling the reference trajectory
+        % get_refscale (DO NOT USE): creates matrices for scaling the reference trajectory
         function obj = get_refscale( obj )
             % get_refscale: creates matrices for scaling the reference trajectory
             
@@ -61,14 +61,26 @@ classdef mpcsim
             %run_trial: Runs a simulation of system under mpc controller.
             %   Tries to follow the trajectory in ref and impose the
             %   shape constraints in shape_bounds.
-            %   Assume ref has same sampling frequency as sytem.
+            %   Assume ref and shape_bounds have same sampling frequency as
+            %   sytem, and that they are already scaled to be consistent 
+            %   with the lifted model.
+            %   ref - [ TotSteps , num_ref ], reference trajectory where
+            %     each row is a desired point at the corresponding timestep
+            %   shape_bounds - [ TotSteps (or 1) , 2*num_shapeParams ]
+            %     min and max of shape parameters arranged in rows. First
+            %     half of row is min values, 2nd half is max values.
+            
+            % set value of shape_bounds if none provided
+            if nargin < 3
+                shape_bounds = [];
+            end
             
             % shorthand
             nd = obj.mpc.params.nd;
             Np = obj.mpc.horizon;
             
             % scale the reference trajectory
-            ref_sc = ref * obj.scaledown.ref;
+            ref_sc = ref;   % reference is already scaled
             
             % set initial condition (may add an input argument for this later)
             x0 = zeros( nd+1 , obj.sys.params.nx );
@@ -85,6 +97,7 @@ classdef mpcsim
             results.K = [ 0 ];
             results.R = [ ref(1,:) ];
             results.X = [ x0( end , : ) ];
+            results.Z = []; % lifted states
             
             k = 1;
             while k < size( ref , 1 )
@@ -94,42 +107,44 @@ classdef mpcsim
                 
                 % get current state and input with delays
                 if k == 1
-                    current.y = y0 * obj.scaledown.y;
-                    current.u = u0 * obj.scaledown.u;
+                    current.y = obj.scaledown.y( y0 );
+                    current.u = obj.scaledown.u( u0 );
                 elseif k < nd + 1
                     y = [ y0( k : end-1 , : ) ; results.Y ];
                     u = [ u0( k : end-1 , : ) ; results.U ];
-                    current.y = y * obj.scaledown.y;
-                    current.u = u * obj.scaledown.u;
+                    current.y = obj.scaledown.y( y );
+                    current.u = obj.scaledown.u( u );
                 else
                     y = results.Y( end - nd : end , : );
                     u = results.U( end - nd : end , : );
-                    current.y = y * obj.scaledown.y;
-                    current.u = u * obj.scaledown.u;
+                    current.y = obj.scaledown.y( y );
+                    current.u = obj.scaledown.u( u );
                 end
                 
                 % isolate the reference trajectory over the horizon
                 if k + Np <= size( ref_sc , 1 )
                     refhor = ref_sc( k : k + Np , :);
                 else
-                    refhor = ref_sc( k : end , : );
+                    refhor = ref_sc( k : end , : );     % repeat last entry
                 end
                     
-%                 % isolate the shape_bounds over the horizon (TODO)
-%                 if k + Np <= size( shape_bounds , 1 )
-%                     shapehor = shape_bounds( k : k + Np , :);
-%                 else
-%                     shapehor = shape_bounds( k : end , : );
-%                 end
+                % isolate the shape_bounds over the horizon (TODO)
+                len_sb = size( shape_bounds , 1);
+                if k + Np <= len_sb
+                    shapehor = shape_bounds( k : k + Np , :);
+                elseif k <= len_sb
+                    shapehor = [ shape_bounds( k : end , : ) ;...
+                                kron( ones( Np - (len) ) , shape_bounds(end,:) ) ]; % repeat last entry
+                end
 
                 % get optimal input over horizon
-                [ U , z ] = obj.mpc.get_mpcInput( current , refhor , shape_bounds );
+                [ U , z ] = obj.mpc.get_mpcInput( current , refhor , shapehor );
                 
                 % isolate input for this step
-                u_k_sc = U( 2 , : )';
+                u_k_sc = U( 2 , : );
                 
                 % scaleup the input for the system simulation
-                u_k = obj.scaleup.u * u_k_sc;
+                u_k = obj.scaleup.u( u_k_sc )';
                 
                 % simulate the system over one time-step
                 x_k = results.X( end , : )';
@@ -143,7 +158,7 @@ classdef mpcsim
                 results.K = [ results.K ; k ];
                 results.R = [ results.R ; ref( k , : ) ];
                 results.X = [ results.X ; x_kp1' ];
-                results.Z = [ results.z ]
+                results.Z = [ results.Z ; z'  ]; % current lifted state
                 
                 k = k + 1;  % increment step counter
             end

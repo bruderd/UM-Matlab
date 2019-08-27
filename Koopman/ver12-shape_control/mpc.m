@@ -265,9 +265,17 @@ classdef mpc
                 F = [ F ; Fshape ];    % append matrix
                 
                 % c: shape_bounds (symbolic variables)
-                coeffs_bounds = sym( 'coeffs_bounds' , [ size( obj.model.Cshape , 1 ) , 2 ] , 'real');   % [ min , max ]
-                cshape_i = [ -coeffs_bounds(:,1) ; coeffs_bounds(:,2) ];
-                cshape = kron( ones( Np+1 , 1 ) , cshape_i );
+%                 coeffs_bounds = sym( 'coeffs_bounds' , [ size( obj.model.Cshape , 1 ) , 2 ] , 'real');   % [ min , max ]
+%                 cshape_i = [ -coeffs_bounds(:,1) ; coeffs_bounds(:,2) ];
+%                 cshape = kron( ones( Np+1 , 1 ) , cshape_i );
+                % revamped for shape constraints that evolve over time
+                coeffs_bounds = sym( 'coeffs_bounds' , [ Np + 1 , 2 * size( obj.model.Cshape , 1 ) ] , 'real');   % [ min , max ]
+                len_cb = size(coeffs_bounds,2);
+                cshape = inf( size( coeffs_bounds , 2 ) , 1 ); % don't worry about constraint violation at current timestep
+                for i = 1 : Np
+                    cshape_i = [ -coeffs_bounds( i , 1 : len_cb/2 ) , coeffs_bounds( i , len_cb/2 + 1 : len_cb ) ]';
+                    cshape = [ cshape ; cshape_i ];
+                end
                 c = [ c ; cshape ];
                 
                 % define set_constRHS, which sets the value of c

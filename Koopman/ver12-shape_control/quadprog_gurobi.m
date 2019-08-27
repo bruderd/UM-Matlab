@@ -12,10 +12,16 @@ model.sense = '<';
 model.lb = -Inf * ones( size(H,1) , 1 );    % change from default lower bound which is zero
 
 % solve using gurobi
-results = gurobi(model);
+params.outputflag = 1;  % if 0 will turn off the display while running
+results = gurobi(model , params);
 
 % extract the solution from the results struct
-x = results.x;
+if strcmp( results.status , 'OPTIMAL' )
+    x = results.x;
+else
+    disp( [ 'NOT SOLVED BECAUSE MODEL IS ' , results.status ] );
+    x = nan( size(A,2) , 1 );
+end
 
 end
 

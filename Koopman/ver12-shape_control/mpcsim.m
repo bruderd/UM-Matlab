@@ -43,7 +43,7 @@ classdef mpcsim
         
         %% Define reference trajectories and state constraints
         
-        % get_refscale: creates matrices for scaling the reference trajectory
+        % get_refscale (DO NOT USE): creates matrices for scaling the reference trajectory
         function obj = get_refscale( obj )
             % get_refscale: creates matrices for scaling the reference trajectory
             
@@ -57,24 +57,46 @@ classdef mpcsim
         %% Simulate a the system with mpc controller
         
         % run_trial: Runs a simulation of system under mpc controller
-        function results = run_trial( obj , ref , shape_bounds )
+        function results = run_trial( obj , ref , shape_bounds , x0 , u0)
             %run_trial: Runs a simulation of system under mpc controller.
             %   Tries to follow the trajectory in ref and impose the
             %   shape constraints in shape_bounds.
-            %   Assume ref has same sampling frequency as sytem.
+            %   Assume ref and shape_bounds have same sampling frequency as
+            %   sytem, and that they are already scaled to be consistent 
+            %   with the lifted model.
+            %   ref - [ TotSteps , num_ref ], reference trajectory where
+            %     each row is a desired point at the corresponding timestep
+            %   shape_bounds - [ TotSteps (or 1) , 2*num_shapeParams ]
+            %     min and max of shape parameters arranged in rows. First
+            %     half of row is min values, 2nd half is max values.
+            %   x0 - [1,n] initial condtion (state of underlying sys not output)
+            %   u0 - [1,m] initial input
             
             % shorthand
             nd = obj.mpc.params.nd;
             Np = obj.mpc.horizon;
             
+            % set value of shape_bounds if none provided
+            if nargin < 3
+                shape_bounds = [];
+                x0 = zeros( nd+1 , obj.sys.params.nx );
+                u0 = zeros( nd+1 , obj.sys.params.nu );
+            elseif nargin < 4
+                x0 = zeros( nd+1 , obj.sys.params.nx );
+                u0 = zeros( nd+1 , obj.sys.params.nu );
+            elseif nargin < 5
+                x0 = kron( ones( nd+1 , 1 ) , x0 );
+                u0 = zeros( nd+1 , obj.sys.params.nu );
+            else
+                x0 = kron( ones( nd+1 , 1 ) , x0 );
+                u0 = kron( ones( nd+1 , 1 ) , u0 );
+            end
+            
             % scale the reference trajectory
-%             ref_sc = ref * obj.scaledown.ref;
             ref_sc = ref;   % reference is already scaled
             
             % set initial condition (may add an input argument for this later)
-            x0 = zeros( nd+1 , obj.sys.params.nx );
             y0 = obj.sys.get_y( x0 );   % get corresponding outputs
-            u0 = zeros( obj.mpc.params.nd+1 , obj.sys.params.nu );
             initial.y = y0; initial.u = u0;
             [ initial , zeta0 ] = obj.mpc.get_zeta( initial );
             
@@ -114,18 +136,27 @@ classdef mpcsim
                 if k + Np <= size( ref_sc , 1 )
                     refhor = ref_sc( k : k + Np , :);
                 else
-                    refhor = ref_sc( k : end , : );
+                    refhor = ref_sc( k : end , : );     % repeat last entry
                 end
                     
-%                 % isolate the shape_bounds over the horizon (TODO)
-%                 if k + Np <= size( shape_bounds , 1 )
-%                     shapehor = shape_bounds( k : k + Np , :);
-%                 else
-%                     shapehor = shape_bounds( k : end , : );
-%                 end
+                % isolate the shape_bounds over the horizon (TODO)
+                len_sb = size( shape_bounds , 1);
+                if k + Np <= len_sb
+                    shapehor = shape_bounds( k : k + Np , :);
+                elseif k <= len_sb
+                    shapehor = [ shape_bounds( k : end , : ) ;...
+                                kron( ones( Np + k - len_sb , 1 ) , shape_bounds(end,:) ) ]; % repeat last entry
+                else
+                    shapehor = kron( ones( Np + 1, 1 ) , shape_bounds(end,:) ); % repeat last entry
+                end
 
                 % get optimal input over horizon
-                [ U , z ] = obj.mpc.get_mpcInput( current , refhor , shape_bounds );
+                [ U , z ] = obj.mpc.get_mpcInput( current , refhor , shapehor );
+                
+                % if a solution what not found, break out of while loop
+                if any( isnan(U) )
+                    break;
+                end
                 
                 % isolate input for this step
                 u_k_sc = U( 2 , : );
