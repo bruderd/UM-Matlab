@@ -10,10 +10,10 @@
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm-angles_3-mods_1-links_05-Ts';
+params.sysName = 'arm-angles_3-mods_4-links_05-Ts';
 
 params.Nmods = 3;   % number of modules (actuated sections)
-params.nlinks = 1;      % number of links in each module
+params.nlinks = 4;      % number of links in each module
 params.Nlinks = params.Nmods * params.nlinks;   % total number of links in robot
 
 % general system parameters (make sure to include these an any system class)
