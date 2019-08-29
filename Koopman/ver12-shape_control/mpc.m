@@ -264,25 +264,25 @@ classdef mpc
                 Fshape = zeros( size( Eshape , 1 ) , size( cost.B , 2 ) );
                 F = [ F ; Fshape ];    % append matrix
                 
-                % VERSION 1: enforces same constraint over entire horizon
+                % VERSION 1: enforces same constraint over entire horizon (incompatible with current form of the shape_bounds input)
                 % c: shape_bounds (symbolic variables)
 %                 coeffs_bounds = sym( 'coeffs_bounds' , [ size( obj.model.Cshape , 1 ) , 2 ] , 'real');   % [ min , max ]
 %                 cshape_i = [ -coeffs_bounds(:,1) ; coeffs_bounds(:,2) ];
 %                 cshape = kron( ones( Np+1 , 1 ) , cshape_i );
                 % VERSION 2: revamped for shape constraints that evolve over time
-%                 coeffs_bounds = sym( 'coeffs_bounds' , [ Np + 1 , 2 * size( obj.model.Cshape , 1 ) ] , 'real');   % [ min , max ]
-%                 len_cb = size(coeffs_bounds,2);
-%                 cshape = inf( size( coeffs_bounds , 2 ) , 1 ); % don't worry about constraint violation at current timestep
-%                 for i = 1 : Np
-%                     cshape_i = [ -coeffs_bounds( i , 1 : len_cb/2 ) , coeffs_bounds( i , len_cb/2 + 1 : len_cb ) ]';
-%                     cshape = [ cshape ; cshape_i ];
-%                 end
-                % VERSION 3: only enforce as a terminal constraint (could do this without infs if I also change E matrix)
                 coeffs_bounds = sym( 'coeffs_bounds' , [ Np + 1 , 2 * size( obj.model.Cshape , 1 ) ] , 'real');   % [ min , max ]
                 len_cb = size(coeffs_bounds,2);
-                cshape = inf( Np * size( coeffs_bounds , 2 ) , 1 ); % don't worry about constraint violation at current timestep
-                cshape_end = [ -coeffs_bounds( Np + 1 , 1 : len_cb/2 ) , coeffs_bounds( Np + 1 , len_cb/2 + 1 : len_cb ) ]';
-                cshape = [ cshape ; cshape_end ];
+                cshape = inf( size( coeffs_bounds , 2 ) , 1 ); % don't worry about constraint violation at current timestep
+                for i = 1 : Np
+                    cshape_i = [ -coeffs_bounds( i , 1 : len_cb/2 ) , coeffs_bounds( i , len_cb/2 + 1 : len_cb ) ]';
+                    cshape = [ cshape ; cshape_i ];
+                end
+                % VERSION 3: only enforce as a terminal constraint (could do this without infs if I also change E matrix)
+%                 coeffs_bounds = sym( 'coeffs_bounds' , [ Np + 1 , 2 * size( obj.model.Cshape , 1 ) ] , 'real');   % [ min , max ]
+%                 len_cb = size(coeffs_bounds,2);
+%                 cshape = inf( Np * size( coeffs_bounds , 2 ) , 1 ); % don't worry about constraint violation at current timestep
+%                 cshape_end = [ -coeffs_bounds( Np + 1 , 1 : len_cb/2 ) , coeffs_bounds( Np + 1 , len_cb/2 + 1 : len_cb ) ]';
+%                 cshape = [ cshape ; cshape_end ];
                 
                 c = [ c ; cshape ];
                 

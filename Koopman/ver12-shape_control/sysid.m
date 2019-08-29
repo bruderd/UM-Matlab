@@ -896,27 +896,29 @@ classdef sysid
             bq = [ zeros(2*Nm^2 , 1) ; t ];
             
             % enforce delay constraint (see notebook from 2019-8-22)
-            Ad_pos = speye( Nm^2 );
-            Ad_pos = Ad_pos( n*Nm+1 : Nm*( n*(nd+1) + mnd ) , : );  % remove unused rows
-            bd_pos = zeros( Nm * ( nnd + mnd ) , 1 );
-            for i = 1 : nnd     % state delays
-                index = (Nm+1) * (i-1) + 1;
-                bd_pos(index,1) = 1;
+            if nd >= 1
+                Ad_pos = speye( Nm^2 );
+                Ad_pos = Ad_pos( n*Nm+1 : Nm*( n*(nd+1) + mnd ) , : );  % remove unused rows
+                bd_pos = zeros( Nm * ( nnd + mnd ) , 1 );
+                for i = 1 : nnd     % state delays
+                    index = (Nm+1) * (i-1) + 1;
+                    bd_pos(index,1) = 1;
+                end
+                for i = 1 : m   % first input delay
+                    index = Nm * nnd + N + (Nm+1) * (i-1) + 1;
+                    bd_pos(index,1) = 1;
+                end
+                for i = 1 : m*(nd-1)    % subsequent input delays (nd > 1)
+                    index = Nm * (nnd+m) + nnd + (Nm+1) * (i-1) + 1;
+                    bd_pos(index,1) = 1;
+                end
+                Ad = [ Ad_pos ; -Ad_pos ] * M;
+                bd = [ bd_pos ; -bd_pos ];
+                
+                % tack on the the dely constraint
+                Aq = [ Aq ; Ad ];
+                bq = [ bq ; bd ];
             end
-            for i = 1 : m   % first input delay
-                index = Nm * nnd + N + (Nm+1) * (i-1) + 1;
-                bd_pos(index,1) = 1;
-            end
-            for i = 1 : m*(nd-1)    % subsequent input delays (nd > 1)
-                index = Nm * (nnd+m) + nnd + (Nm+1) * (i-1) + 1;
-                bd_pos(index,1) = 1;
-            end
-            Ad = [ Ad_pos ; -Ad_pos ] * M;
-            bd = [ bd_pos ; -bd_pos ];
-            
-            % tack on the the dely constraint
-            Aq = [ Aq ; Ad ];
-            bq = [ bq ; bd ];
             
             % Solve the quadratic program
             [x , results] = quadprog_gurobi( H , f , Aq , bq );       % use gurobi to solve
