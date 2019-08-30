@@ -414,7 +414,7 @@ classdef sysid
         end
         
         % def_polyLift (defines polynomial basis functions)
-        function obj = def_polyLift( obj , degree )
+        function [ obj , polyBasis ] = def_polyLift( obj , degree )
             %def_polyLift: Defines the lifting function that lifts state variable x to
             % space spanned by monomials with total degree less than or equal to
             % max_degree.
@@ -425,7 +425,9 @@ classdef sysid
             maxDegree = degree;
             
             % Number of mononials, i.e. dimenstion of p(x)
-            N = factorial(nzeta + maxDegree) / ( factorial(nzeta) * factorial(maxDegree) );
+%             N = factorial(nzeta + maxDegree) / ( factorial(nzeta) * factorial(maxDegree) );
+            N = prod( ( nzeta + 1) : ( nzeta + maxDegree ) ) / factorial(maxDegree);    % avoids Infs for really big factorials
+
             
             % matrix of exponents (N x naug). Each row gives exponents for 1 monomial
             exponents = [];
@@ -477,7 +479,7 @@ classdef sysid
         end
             
         % def_armshapeLift (defines the basis functions that describe the shape of robot arm)
-        function obj = def_armshapeLift( obj , degree )
+        function [ obj , armshapeBasis ] = def_armshapeLift( obj , degree )
             %def_armshapeLift: 
             %  Assumes that there is an 'arm' class provided. Otherwise
             %  will return an error.
@@ -541,7 +543,7 @@ classdef sysid
         end
         
         % def_fourierLift (defines sin/cos basis functions)
-        function obj = def_fourierLift( obj , degree )
+        function [ obj , fourierBasis ] = def_fourierLift( obj , degree )
             %def_fourierLift: Defines fourier basis functions
             
             % shorthand variable names
@@ -581,7 +583,7 @@ classdef sysid
         end
         
         % def_fourierLift_sparser (defines sin/cos basis functions)
-        function obj = def_fourierLift_sparser( obj , degree )
+        function [ obj , fourierBasis ] = def_fourierLift_sparser( obj , degree )
             %def_fourierLift_sparser: Defines fourier basis functions, but
             % not as many as def_fourierLift (i.e. not every combination of
             % a suitable degree)
@@ -653,7 +655,7 @@ classdef sysid
         end
                    
         % def_gaussianLift (defines gaussian basis functions)
-        function obj = def_gaussianLift( obj , degree )
+        function [ obj , gaussianBasis ] = def_gaussianLift( obj , degree )
             %def_gaussianLift: Defines a set of randomly distributed
             %gaussian basis functions
             
@@ -697,7 +699,7 @@ classdef sysid
         end
         
         % def_polyLift (defines polynomial basis functions)
-        function obj = def_hermiteLift( obj , degree )
+        function [ obj , hermiteBasis ] = def_hermiteLift( obj , degree )
             %def_polyLift: Defines the lifting function that lifts state variable x to
             % space spanned by monomials with total degree less than or equal to
             % max_degree.
@@ -1015,6 +1017,7 @@ classdef sysid
                 obj.koopData = obj.get_Koopman( obj.snapshotPairs , lasso );
                 obj.candidates = obj.get_model( obj.koopData );
                 obj.candidates.lasso = lasso;
+                obj.model = obj.candidates; % save as the model
             else
                 obj.koopData = cell( length(lasso) , 1 );
                 obj.candidates = cell( length(lasso) , 1 );
@@ -1022,6 +1025,9 @@ classdef sysid
                     obj.koopData{i} = obj.get_Koopman( obj.snapshotPairs , lasso(i) );
                     obj.candidates{i} = obj.get_model( obj.koopData{i} );
                     obj.candidates{i}.lasso = lasso(i);  % save lasso parameter with model
+                    % save the first candidate as 'model' by default. Will be
+                    %   overwritten by user choice later
+                    obj.model = obj.candidates{1};
                 end
             end
         end
