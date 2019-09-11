@@ -140,16 +140,20 @@ classdef mpcsim
                 end
                     
                 % isolate the shape_bounds over the horizon (TODO)
-                len_sb = size( shape_bounds , 1);
-                if k + Np <= len_sb
-                    shapehor = shape_bounds( k : k + Np , :);
-                elseif k <= len_sb
-                    shapehor = [ shape_bounds( k : end , : ) ;...
-                                kron( ones( Np + k - len_sb , 1 ) , shape_bounds(end,:) ) ]; % repeat last entry
+                if ~isempty( shape_bounds )
+                    len_sb = size( shape_bounds , 1);
+                    if k + Np <= len_sb
+                        shapehor = shape_bounds( k : k + Np , :);
+                    elseif k <= len_sb
+                        shapehor = [ shape_bounds( k : end , : ) ;...
+                            kron( ones( Np + k - len_sb , 1 ) , shape_bounds(end,:) ) ]; % repeat last entry
+                    else
+                        shapehor = kron( ones( Np + 1, 1 ) , shape_bounds(end,:) ); % repeat last entry
+                    end
                 else
-                    shapehor = kron( ones( Np + 1, 1 ) , shape_bounds(end,:) ); % repeat last entry
+                    shapehor = [];
                 end
-
+                
                 % get optimal input over horizon
                 [ U , z ] = obj.mpc.get_mpcInput( current , refhor , shapehor );
                 

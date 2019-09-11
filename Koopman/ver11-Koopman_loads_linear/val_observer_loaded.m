@@ -82,7 +82,7 @@ for j = 1 : params.numVals
     xhat = [ y , what ];
     
     % build matrices for estimating the load
-    hor = 50;    % number of time steps to be considered in load estimate equation
+    hor = 10;    % number of time steps to be considered in load estimate equation
     UK = zeros(params.p*hor,1); % stack of inputs
     Ykp1 = zeros(params.ny*hor,1);
     Wk = zeros(params.N*hor , 1 + params.nw);

@@ -64,7 +64,6 @@ classdef sysid_unl < sysid
             end
         end
         
-        
         % def_e2u_basis (define the basis of observable functions)
         function obj = def_e2u_basis( obj , type , degree )
             % def_e2u_basis: Defines the set of nonlinear observable
@@ -123,6 +122,7 @@ classdef sysid_unl < sysid
             obj.e2u_basis = fullBasis;
             obj.e2u_lift = matlabFunction( fullBasis , 'Vars' , {zeta} );
         end
+        
         
     end
 end
