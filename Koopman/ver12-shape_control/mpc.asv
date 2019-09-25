@@ -184,11 +184,9 @@ classdef mpc
                 E = [ E ; Ebounds ];    % append matrix
                 
                 % c: input_bounds
-                if isfield( obj.params , 'NLinput' )    % don't scale input if it's nonlinear
-                    input_bounds_sc = obj.input_bounds;
-                else
-                    input_bounds_sc = obj.scaledown.u( obj.input_bounds' )';   % scaled down the input bounds
-                end
+                if isfield( obj.params , 'NLinput' )
+                    input_bounds_sc = obj.input_bounds
+                input_bounds_sc = obj.scaledown.u( obj.input_bounds' )';   % scaled down the input bounds
                 cbounds_i = sym( [ -input_bounds_sc(:,1) ; input_bounds_sc(:,2) ] ); % [ -umin ; umax ]
                 cbounds = sym( zeros( num * (Np+1) , 1) );    % initialization
                 cbounds(1 : num*Np) = kron( ones( Np , 1 ) , cbounds_i );     % fill in nonzeros

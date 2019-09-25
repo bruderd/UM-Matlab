@@ -30,6 +30,14 @@ sysid_unl = sysid_unl( data4sysid, options ,...
 
 [ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( sysid_unl.traindata.e , sysid_unl.traindata.u(1:end-1,:)  );
 
+%% modify model so that it will work with mpc
+
+sysid_unl.model.B = eye( sysid_unl.model.params.N );
+sysid_unl.model.params.m = sysid_unl.model.params.N;
+sysid_unl.params.m = sysid_unl.params.N;
+
+sysid_unl.params.NLinput = sysid_unl.e2u.fun;
+
 %NEED TO MODIFY BELOW THIS LINE--------------------------------------------  
 
 %% validate model(s)

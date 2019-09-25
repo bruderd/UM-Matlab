@@ -3,6 +3,8 @@ classdef sysid_unl < sysid
     %   Detailed explanation goes here
     
     properties
+        NLinput;        % flags that this class has a nonlinear input
+        
         basis_type;     % types of nonlinear functions in e2u mapping
         basis_degree;   % degree of functions in e2u mapping
         
@@ -20,8 +22,7 @@ classdef sysid_unl < sysid
             % Create instance of sysid class
             obj = obj@sysid( data4sysid , varargin{:} );
             
-            % Flag this as an object with a nonlinear input
-            obj.params.NLinput = 1;
+            %
             
             % set default values of arguments that are specific to this class
             obj.basis_type = { 'poly' };
