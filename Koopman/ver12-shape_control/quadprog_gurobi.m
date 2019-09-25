@@ -4,8 +4,8 @@ function [ x , results ] = quadprog_gurobi( H, f, A, b )
 
 %% solve QP using gurobi
 
-%YOU MUST REMOVE THIS !!!!!!!!!!!!!! DONT FORGET!!!!!!!!!!!!!!!!!!!!!!!!!
-H = H + eye( size(H,1) ) * 1e-6;
+% %YOU MUST REMOVE THIS !!!!!!!!!!!!!! DONT FORGET!!!!!!!!!!!!!!!!!!!!!!!!!
+% H = H + eye( size(H,1) ) * 1e-6;
 
 model.Q = sparse(H);  % removed 0.5 on 2019-08-26
 model.A = sparse(A);

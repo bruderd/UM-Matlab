@@ -97,8 +97,8 @@ classdef mpcsim
             ref_sc = ref;   % reference is already scaled
             
             % set initial condition (may add an input argument for this later)
-%             y0 = obj.sys.get_y( x0 );   % get corresponding outputs
-            y0 = zeros(1,6);    % NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!
+            y0 = obj.sys.get_y( x0 );   % get corresponding outputs
+%             y0 = zeros(1,6);    % NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!
             initial.y = y0; initial.u = u0;
             [ initial , zeta0 ] = obj.mpc.get_zeta( initial );
             
@@ -126,7 +126,7 @@ classdef mpcsim
                     current.y = obj.scaledown.y( y0 );
                     current.u = obj.scaledown.u( u0 );
                     if isfield( obj.mpc.params , 'NLinput' )    % replace with pseudoinput
-                        current.u = results.UNL(end,:);
+                        current.unl = results.UNL(end,:);
                     end
                 elseif k < nd + 1
                     y = [ y0( k : end-1 , : ) ; results.Y ];
@@ -134,7 +134,7 @@ classdef mpcsim
                     current.y = obj.scaledown.y( y );
                     current.u = obj.scaledown.u( u );
                     if isfield( obj.mpc.params , 'NLinput' )    % replace with pseudoinput
-                        current.u = results.UNL(end,:);
+                        current.unl = results.UNL(end,:);
                     end
                 else
                     y = results.Y( end - nd : end , : );
@@ -142,7 +142,7 @@ classdef mpcsim
                     current.y = obj.scaledown.y( y );
                     current.u = obj.scaledown.u( u );
                     if isfield( obj.mpc.params , 'NLinput' )    % replace with pseudoinput
-                        current.u = results.UNL(end,:);
+                        current.unl = results.UNL(end,:);
                     end
                 end
                 
@@ -178,6 +178,7 @@ classdef mpcsim
                 
                 % if the model is using a nonliner input, convert it
                 if isfield( obj.mpc.params , 'NLinput' )
+                    unl = U(2,:);   % save the pseudoinput
                     U = obj.mpc.params.NLinput(U')';
                 end
                 
@@ -190,8 +191,8 @@ classdef mpcsim
                 % simulate the system over one time-step
                 x_k = results.X( end , : )';
                 x_kp1 = obj.sys.simulate_Ts( x_k , u_k );
-%                 y_kp1 = obj.sys.get_y( x_kp1' );
-                y_kp1 = obj.sys.get_shape_coeffs( x_kp1(1:3)' , 3 );    %NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                y_kp1 = obj.sys.get_y( x_kp1' );
+%                 y_kp1 = obj.sys.get_shape_coeffs( x_kp1(1:3)' , 3 );    %NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 
                 % record updated results
                 results.T = [ results.T ; t ];
@@ -201,6 +202,9 @@ classdef mpcsim
                 results.R = [ results.R ; ref( k , : ) ];
                 results.X = [ results.X ; x_kp1' ];
                 results.Z = [ results.Z ; z'  ]; % current lifted state
+                if isfield( obj.mpc.params , 'NLinput' )
+                    results.UNL = [ results.UNL ; unl ];
+                end
                 
                 k = k + 1;  % increment step counter
             end

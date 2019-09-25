@@ -209,7 +209,11 @@ classdef mpc
                 E = [ E ; sparse( 2 * params.m * (Np-1) , size(cost.B,1) ) ];
                 
                 % c: input_slopeConst
-                slope_lim = obj.input_slopeConst * mean( params.scale.u_factor );  % scale down the 2nd deriv. limit
+                if isfield( obj.params , 'NLinput' )    % don't scale slope if it's nonlinear
+                    slope_lim = obj.input_slopeConst;
+                else
+                    slope_lim = obj.input_slopeConst * mean( params.scale.u_factor );  % scale down the 2nd deriv. limit
+                end
                 cslope_top = sym( slope_lim * ones( params.m * (Np-1) , 1 ) );
                 cslope = [ cslope_top ; cslope_top ];
                 c = [ c ; cslope ];     % append vector
@@ -366,7 +370,11 @@ classdef mpc
             Atack = [ [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - obj.params.m ) ];
 %             Atack_bot = [ sparse( 2*obj.params.m , obj.params.m) , [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - 2*obj.params.m ) ];
 %             Atack = [ Atack_top ; Atack_bot ];
-            btack = [ traj.u(end,:)' ; -traj.u(end,:)' ];
+            if isfield( traj , 'unl' )
+                btack = [ traj.unl(end,:)' ; -traj.unl(end,:)' ];
+            else
+                btack = [ traj.u(end,:)' ; -traj.u(end,:)' ];
+            end
             A = [A ; Atack];    % tack on memory constraint
             b = [b ; btack];
             
