@@ -1,0 +1,55 @@
+% sysid_unl_main
+%
+% Creates a sysid_unl class and walks through all of the steps of building a
+% model from data, validating its performance, and saving it (if desired)
+
+
+%% gather training data (need to prepare data file before running this)
+
+% load in data file(s)
+[ datafile_name , datafile_path ] = uigetfile( 'datafiles/*.mat' , 'Choose data file for sysid...' );
+data4sysid = load( [datafile_path , datafile_name] );
+
+
+%% construct sysid class
+options = {};
+sysid_unl = sysid_unl( data4sysid, options ,...
+    'obs_type' , { 'poly' } ,...
+    'obs_degree' , [ 4 ] ,...
+    'snapshots' , Inf ,...
+    'lasso' , [ 100 ] ,...
+    'delays' , 0 ,...
+    'isupdate' , false,...
+    'armclass' , [] );
+
+%% calculate the  no-input-model error on the training data
+
+[ e , sysid_unl.traindata ] = sysid_unl.get_e( sysid_unl.traindata );
+
+%% train neural network to map from e to u
+
+[ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( sysid_unl.traindata.e , sysid_unl.traindata.u(1:end-1,:)  );
+
+%NEED TO MODIFY BELOW THIS LINE--------------------------------------------  
+
+%% validate model(s)
+% could also manually do this for one model at a time
+
+results = cell( size(sysid_unl.candidates) );    % store results in a cell array
+err = cell( size(sysid_unl.candidates) );    % store error in a cell array 
+
+if iscell(sysid_unl.candidates)
+    for i = 1 : length(sysid_unl.candidates)
+        [ results{i} , err{i} ] = sysid_unl.valNplot_model( i );
+    end
+else
+    [ results{1} , err{1} ] = sysid_unl.valNplot_model;
+end
+    
+
+%% save model(s)
+
+% You do this based on the validation results.
+% Call this function:
+%   sysid.save_class( model_id )
+

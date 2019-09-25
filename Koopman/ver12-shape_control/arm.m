@@ -15,7 +15,7 @@ classdef arm
             obj.params = params;
             obj.fcns = obj.set_EOM;
             
-            % set default value of the output type
+            % set default value of the output type ('angles' or 'markers')
             output_type = 'angles';
             
             % replace default values with user input values

@@ -7,17 +7,27 @@ classdef visual
     end
     
     methods
-        function obj = data(varargin)
+        function obj = visual(varargin)
             %visual: Construct an instance of this class
             %   Detailed explanation goes here
 %             obj.Property1 = inputArg1 + inputArg2;
         end
+    
+        % parse_args: Parses the Name, Value pairs in varargin
+        function obj = parse_args( obj , varargin )
+            %parse_args: Parses the Name, Value pairs in varargin of the
+            % constructor, and assigns property values
+            for idx = 1:2:length(varargin)
+                obj.(varargin{idx}) = varargin{idx+1} ;
+            end
+        end
+        
     end
-   
+
     methods(Static)    
        
         % plot_fromCoeffs: Plots 2D/3D polynomials specified as coefficients
-        function [ shape , fig ] =  plot_fromCoeffs( coeffs , fig )
+        function [ shape , pshape , fig ] =  plot_fromCoeffs( coeffs , fig )
             % plot_fromCoeffs: Plots 2D/3D polynomials specified as coefficients
             %   coeffs - [ dim x degree ] matrix. dim is the dimension of 
             %     the space (2D or 3D), degree is the degree of the polys
@@ -35,7 +45,7 @@ classdef visual
                 coeffs = [ coeffs(1,:) ;...
                            zeros(1,size(coeffs,2)) ;...
                            coeffs(2,:) ];
-                view(2); % change view of the plot
+%                 view(2); % change view of the plot
             end
             
             % get the shape
@@ -52,7 +62,7 @@ classdef visual
             shape = [ pol_x , pol_y , pol_z];
             
             % plot the shape
-            plot3( pol_x , pol_y , pol_z , 'LineWidth' , 3);  
+            pshape = plot3( pol_x , pol_y , pol_z , 'b' , 'LineWidth' , 3);  
             
             % plot the base of the robot
             hold on;
@@ -67,15 +77,15 @@ classdef visual
         end
         
         % plot_fromMarkers: Plots 2D/3D polynomials specified as a list of marker positions
-        function [ shape , fig ] = plot_fromMarkers( degree , points , positions , orient , fig )
+        function [ shape , pshape , pmarkers , fig ] = plot_fromMarkers( degree , points , positions , orient , fig )
             % plot_fromMarkers: Plots 2D/3D polynomials specified as a list of marker positions
             
             % set optional argument default values
-            if nargin < 5
+            if nargin < 4
                 orient = [];    
                 fig = figure;
                 % set axes and other preferences ...
-            elseif nargin < 6
+            elseif nargin < 5
                 fig = figure;
                 % set axes and other preferences ...
             end
@@ -84,17 +94,17 @@ classdef visual
             [ coeffs , ~ ] = visual.points2poly(degree, points, positions, orient);
             
             % plot the shape
-            [ shape , fig ] =  visual.plot_fromCoeffs( coeffs , fig );
+            [ shape , pshape , fig ] =  visual.plot_fromCoeffs( coeffs , fig );
             
             % plot the marker points
             if( size(points,2) == 2 ) 
                 points = [ points(:,1) ,...
                            zeros(size(points,1),1) ,...
                            points(:,2) ];
-                view(0,0);
+%                 view(0,0);
             end
             hold on;
-            plot3( points(:,1) , points(:,2) , points(:,3) , 'r.' , 'MarkerSize' , 30);
+            pmarkers = plot3( points(:,1) , points(:,2) , points(:,3) , 'r.' , 'MarkerSize' , 30);
             hold off;
         end
         
@@ -156,6 +166,84 @@ classdef visual
             else
                 error('points matrix must be nx2');
             end
+        end
+        
+        % animate
+        function animate( t , varargin )
+            %animate: a sequence of 3D polynomials in time
+            %   t - time vector from simulation
+            %   varargin = Name, Value pairs
+            %       Names:
+            %           -'markers' 
+            %           -'coeffs'
+            %           -'name'
+            %           -'degree'
+            %       Values:
+            %           -struct with the following fields
+            %               points - [length(t) x 3degree]
+            %               positions - [1 x numMarkers] location of markers in parametrized coordinates 
+            %               orient - [lenght(t) x 4] orientation of end effector as quaternion (eventually)
+            %           [ length(t) x 3degree ] - polynomial coeffs
+            %           [ string ] - name of video file
+            
+            input.name = 'test-3Danimation';    % default filename
+            input.degree = 3;   % default polynomial degree
+            
+            % sort out the optional inputs
+            for idx = 1:2:length(varargin)
+                input.(varargin{idx}) = varargin{idx+1} ;
+            end
+            
+            fig = figure;   % create figure for the animation
+            axis([-1 , 1 , -1 , 1 , -1 , 1] * 0.5)
+            set(gca,'Zdir','reverse')
+            xlabel('x(m)')
+            ylabel('y(m)')
+            zlabel('z(m)')
+            
+            % Prepare the new file.
+            vidObj = VideoWriter( ['animations' , filesep , input.name , '.mp4'] , 'MPEG-4' );
+            vidObj.FrameRate = 30;
+            open(vidObj);
+            
+            set(gca,'nextplot','replacechildren', 'FontUnits' , 'normalized');
+            
+            totTime = t(end);    % total time for animation (s)
+            nsteps = length(t); % total steps in the simulation
+            totFrames = 30 * totTime;   % total frames in 30 fps video
+            
+            % run animation fram by frame
+            for i = 1:totFrames
+                
+                index = floor( (i-1) * (nsteps / totFrames) ) + 1;   % skips points between frames
+                
+                hold on;
+                if isfield( input , 'markers' ) % get shape from markers
+                    points_vec = input.markers.points(index,:);
+                    points_mat = reshape( points_vec' , [ length(points_vec) / length(input.markers.positions) , length(input.markers.positions) ] )';
+                    [ ~ , p1 , m1 , ~ ] = visual.plot_fromMarkers( input.degree , points_mat , ...
+                                      input.markers.positions, input.markers.orient , fig );    % need to fix orient argument
+                end
+                if isfield( input , 'coeffs' ) % get shape from coeffs
+                    coeffs_mat = [ coeffs.x(index,:) ; coeffs.y(index,:) ; coeffs.z(index,:) ];
+                    [ ~ , p2 , ~ ] = visual.plot_fromCoeffs( coeffs_mat , fig );
+                end
+                hold off;
+                
+                % write each frame to the file
+                currFrame = getframe(fig);
+                writeVideo(vidObj,currFrame);
+                
+                % clear the plots for next frame
+                if exist('p1','var')
+                    delete(p1);
+                    delete(m1);
+                end
+                if exist('p2','var')
+                    delete(p2);
+                end
+            end
+            close(vidObj); 
         end
         
     end

@@ -881,18 +881,18 @@ classdef sysid
             mnd = obj.params.m * obj.params.nd;
             
             M = [speye(Nm^2) , -speye(Nm^2)];
+           
             
             PxTPx = Px' * Px;
             
-            % Ensure PxTPx is PSD by adding constant along diagonal
-            [ ~ , Dpx ] = eig(PxTPx);
-            if any( diag(Dpx) < 0 )
-                PxTPx = PxTPx + eye( size(PxTPx,1) ) * 1e-6;
-            end
 %             [ U,S,V ] = svd(PxTPx);
 %             S( find(abs(S) < 1e-10) ) = 0;
 %             PxTPx = U * S * V';
 
+%             PxTPx( find(abs(PxTPx)) < 1e-10 ) = 0;  % zero small elements for numerical sake
+%             PxTPx = (PxTPx+PxTPx') - eye(size(PxTPx,1)).*diag(PxTPx);   % flip along digonal to ensure symmetry
+
+            PxTPx = PxTPx + eye( size(PxTPx,1) ) * 1e-5;  % fudge factor to force PxTPx to be PSD
 
             PxTPy = Px' * Py;
             ATA = kron(speye(Nm) , PxTPx);  % repeat blocks diagonally N times

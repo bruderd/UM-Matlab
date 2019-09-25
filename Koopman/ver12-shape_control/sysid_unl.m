@@ -8,6 +8,8 @@ classdef sysid_unl < sysid
         
         e2u_basis;      % set of nonlinear functions in e2u mapping
         e2u_lift;       % function for evaluating basis functions
+        
+        e2u;            % struct to hold e2u function and nnetwork
     end
     
     methods
