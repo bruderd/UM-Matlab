@@ -69,6 +69,37 @@ classdef sysid_unl < sysid
             end
         end
         
+        % get_nu: calculate a reduced dimension version of e using pca
+        function [ nu , Beta , data_out ] = get_nu( obj , data_in )
+            
+            if isfield( data_in , 'e' ) % assume data_in is struct containing time series or snapshot pairs 
+                e = data_in.e;
+            else    % assume data_in is just an e_matrix
+                e = data_in;
+            end
+            
+            % use pca to find most important components
+            [ coeffs , ~ , ~ , ~ , explained , ~ ] = pca( e );
+            
+            % take enough components to explain > 90% of the data
+            num_pcs = 1;
+            while sum( explained(1:num_pcs) ) < 90
+                num_pcs = num_pcs + 1;
+            end
+            
+            % define projection matrix from e to nu
+            Beta = coeffs( : , 1 : num_pcs )';
+            
+            % calculate nu for each value of e in data_in
+            nu = e * Beta';
+            
+            % add nu as a field to data_in (if it is a struct)
+            data_out = data_in; % just pass through
+            if isfield( data_in , 'e' ) % assume data_in is struct containing time series or snapshot pairs 
+                data_out.nu = nu;
+            end
+        end
+        
         % def_e2u_basis (define the basis of observable functions)
         function obj = def_e2u_basis( obj , type , degree )
             % def_e2u_basis: Defines the set of nonlinear observable

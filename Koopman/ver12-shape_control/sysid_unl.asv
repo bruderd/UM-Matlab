@@ -3,8 +3,6 @@ classdef sysid_unl < sysid
     %   Detailed explanation goes here
     
     properties
-        NLinput;        % flags that this class has a nonlinear input
-        
         basis_type;     % types of nonlinear functions in e2u mapping
         basis_degree;   % degree of functions in e2u mapping
         
@@ -22,7 +20,8 @@ classdef sysid_unl < sysid
             % Create instance of sysid class
             obj = obj@sysid( data4sysid , varargin{:} );
             
-            %
+            % Flag this as an object with a nonlinear input
+            obj.params.NLinput = 1;
             
             % set default values of arguments that are specific to this class
             obj.basis_type = { 'poly' };
@@ -68,6 +67,33 @@ classdef sysid_unl < sysid
                 data_out = data_in;
                 data_out.e = e;
             end
+        end
+        
+        % get_nu: calculate a reduced dimension version of e using pca
+        function [ nu , Beta , data_out ] = get_nu( obj , data_in )
+            
+           
+            if isfield( data_in , 'e' ) % assume data_in is struct containing time series or snapshot pairs 
+                e = data_in.e;
+            else    % assume data_in is just an e_matrix
+                e = data_in;
+                data_out = data_in; % just pass through
+            end
+            
+            % use pca to find most important components
+            [ coeffs , ~ , ~ , ~ , explained , ~ ] = pca( data_in );
+            
+            % take enough components to explain > 90% of the data
+            num_pcs = 1;
+            while sum( explained(1:num_pcs) ) < 90
+                num_pcs = num_pcs + 1;
+            end
+            
+            % define projection matrix from e to nu
+            Beta = coeffs( : , 1 : num_pcs )';
+            
+            % calculate nu for each value of e in data_in
+            nu = data
         end
         
         % def_e2u_basis (define the basis of observable functions)
