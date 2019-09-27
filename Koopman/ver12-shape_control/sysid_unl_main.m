@@ -18,7 +18,7 @@ sysid_unl = sysid_unl( data4sysid, options ,...
     'obs_degree' , [ 2 ] ,...
     'snapshots' , Inf ,...
     'lasso' , [ 100 ] ,...
-    'delays' , 0 ,...
+    'delays' , 1 ,...
     'isupdate' , false,...
     'armclass' , [] );
 
@@ -26,17 +26,32 @@ sysid_unl = sysid_unl( data4sysid, options ,...
 
 [ e , sysid_unl.traindata ] = sysid_unl.get_e( sysid_unl.traindata );
 
-%% train neural network to map from e to u
+% get a reduces order version of nu
+[ nu , Beta , sysid_unl.traindata ] = sysid_unl.get_nu( sysid_unl.traindata );
 
-[ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( sysid_unl.traindata.e , sysid_unl.traindata.u(1:end-1,:)  );
+%% train neural network to map from nu to u
+
+[ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( sysid_unl.traindata.nu , sysid_unl.traindata.u( 1 : size( nu , 1 ) , : )  );
 
 %% modify model so that it will work with mpc
 
-sysid_unl.model.B = speye( sysid_unl.model.params.N );
-sysid_unl.model.params.m = sysid_unl.model.params.N;
-sysid_unl.params.m = sysid_unl.params.N;
+sysid_unl.model.B = pinv(Beta);
+sysid_unl.model.params.m = size( nu , 2 );
+sysid_unl.params.m = size( nu , 2 );
 
 sysid_unl.params.NLinput = sysid_unl.e2u.fun;
+
+% %% train neural network to map from e to u
+% 
+% [ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( sysid_unl.traindata.e , sysid_unl.traindata.u(1:end-1,:)  );
+% 
+% %% modify model so that it will work with mpc
+% 
+% sysid_unl.model.B = speye( sysid_unl.model.params.N );
+% sysid_unl.model.params.m = sysid_unl.model.params.N;
+% sysid_unl.params.m = sysid_unl.params.N;
+% 
+% sysid_unl.params.NLinput = sysid_unl.e2u.fun;
 
 %NEED TO MODIFY BELOW THIS LINE--------------------------------------------  
 

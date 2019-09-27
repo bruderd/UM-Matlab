@@ -3,6 +3,7 @@
 Ne = size( sysid_unl.traindata.e , 1 );
 n = size( sysid_unl.traindata.e , 2 );
 m = size( sysid_unl.traindata.u , 2 );
+nd = mpc.params.nd;
 
 upseudo_mpc = zeros( Ne-1 , n );
 upseudo_real = zeros( Ne-1 , n );
@@ -11,17 +12,18 @@ u_mpc = zeros( Ne-1 , m );
 u_real = zeros( Ne-1 , m );
 u_diff = zeros( Ne-1 , m );
 u_fromnnet = zeros( Ne-1 , m );
-for i = 1 : Ne-1
-    current.y = sysid_unl.traindata.y(i,:);
-    current.u = sysid_unl.traindata.u(i,:);
-    current.unl = sysid_unl.traindata.e(i,:);
+for i = 1 : Ne-nd
+    now = i+nd;
+    current.y = sysid_unl.traindata.y(i:i+nd,:);
+    current.u = sysid_unl.traindata.u(i:i+nd,:);
+    current.unl = sysid_unl.traindata.e(i+nd,:);
     
     Nh = mpc.horizon;
-    if i + Nh < Ne
-        refhor = sysid_unl.traindata.y( i : i+Nh , : );
-    elseif i < Ne
-        refhor = sysid_unl.traindata.y( i : end , : );
-        refhor = [ refhor ; kron( ones(Ne-i,1) , sysid_unl.traindata.y(end,:) ) ];
+    if now + Nh < Ne
+        refhor = sysid_unl.traindata.y( now : now+Nh , : );
+    elseif now < Ne
+        refhor = sysid_unl.traindata.y( now : end , : );
+        refhor = [ refhor ; kron( ones(Ne-now,1) , sysid_unl.traindata.y(end,:) ) ];
     else
         refhor = kron( ones(Nh,1) , sysid_unl.traindata.y(end,:) );
     end
