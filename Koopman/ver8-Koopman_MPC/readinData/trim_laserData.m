@@ -9,7 +9,7 @@ function [t,x,u] = trim_laserData(tstart, tend)
 
 % Prompt user to identify data file
 disp(['Please select .mat file corresponding to raw data.']);
-[data_file,data_path] = uigetfile('C:\Users\danie\Google Drive\PhD\Research\TRI\Labview\KoopmanMPC\Matlab\sysid\dataFiles\v3_12hz');
+[data_file,data_path] = uigetfile('C:\Users\danie\Google Drive\PhD\Research\TRI\Labview\KoopmanMPC\Matlab\sysid\dataFiles\v4_12hz');
 [data_filepath,data_name,data_ext] = fileparts([data_path, data_file]);
 foo = load([data_path, data_file]);
 rawdata = foo.sysidData;
@@ -45,7 +45,7 @@ x = rawdata.Y(i_tstart : i_tend , :);
 u = rawdata.U(i_tstart : i_tend , :);
 
 % save trimmed data files
-val_fname = ['trimdataFiles_v3', filesep, data_name, '_trim.mat'];
+val_fname = ['trimdataFiles_v4', filesep, data_name, '_trim.mat'];
 [unique_fname, change_detect] = auto_rename(val_fname, '0');
 save(unique_fname, 't', 'x', 'u');
 

@@ -97,8 +97,8 @@ classdef mpcsim
             ref_sc = ref;   % reference is already scaled
             
             % set initial condition (may add an input argument for this later)
-%             y0 = obj.sys.get_y( x0 );   % get corresponding outputs
-            y0 = zeros( size(x0,1) , 6);    % NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!
+            y0 = obj.sys.get_y( x0 );   % get corresponding outputs
+%             y0 = kron( ones( size(x0,1) , 1 ) , obj.sys.get_shape_coeffs( x0(1,1:3) , 3 ) );    % NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!
             initial.y = y0; initial.u = u0;
             [ initial , zeta0 ] = obj.mpc.get_zeta( initial );    % LINE NOT NEEDED
             
@@ -191,8 +191,8 @@ classdef mpcsim
                 % simulate the system over one time-step
                 x_k = results.X( end , : )';
                 x_kp1 = obj.sys.simulate_Ts( x_k , u_k );
-%                 y_kp1 = obj.sys.get_y( x_kp1' );
-                y_kp1 = obj.sys.get_shape_coeffs( x_kp1(1:3)' , 3 );    %NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                y_kp1 = obj.sys.get_y( x_kp1' );
+%                 y_kp1 = obj.sys.get_shape_coeffs( x_kp1(1:3)' , 3 );    %NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 
                 % record updated results
                 results.T = [ results.T ; t ];
