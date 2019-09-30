@@ -15,10 +15,10 @@ data4sysid = load( [datafile_path , datafile_name] );
 options = {};
 sysid_unl = sysid_unl( data4sysid, options ,...
     'obs_type' , { 'poly' } ,...
-    'obs_degree' , [ 2 ] ,...
+    'obs_degree' , [ 1 ] ,...
     'snapshots' , Inf ,...
-    'lasso' , [ 100 ] ,...
-    'delays' , 1 ,...
+    'lasso' , [ 10 ] ,...
+    'delays' , 0 ,...
     'isupdate' , false,...
     'armclass' , [] );
 
@@ -26,8 +26,14 @@ sysid_unl = sysid_unl( data4sysid, options ,...
 
 [ e , sysid_unl.traindata ] = sysid_unl.get_e( sysid_unl.traindata );
 
-% get a reduces order version of nu
+% get a reduced order version of nu
 [ nu , Beta , sysid_unl.traindata ] = sysid_unl.get_nu( sysid_unl.traindata );
+
+% also calculate nu for the validation data
+for i = 1 : size( sysid_unl.valdata , 1 )
+    [ ~ , sysid_unl.valdata{i} ] = sysid_unl.get_e( sysid_unl.valdata{i} );
+    sysid_unl.valdata{i}.nu = sysid_unl.valdata{i}.e * Beta';
+end
 
 %% train neural network to map from nu to u
 
@@ -35,21 +41,23 @@ sysid_unl = sysid_unl( data4sysid, options ,...
 
 %% modify model so that it will work with mpc
 
+sysid_unl.model.Beta = Beta;
 sysid_unl.model.B = pinv(Beta);
-sysid_unl.model.params.m = size( nu , 2 );
-sysid_unl.params.m = size( nu , 2 );
+sysid_unl.model.params.mnu = size( nu , 2 );
+sysid_unl.params.mnu = size( nu , 2 );
 
 sysid_unl.params.NLinput = sysid_unl.e2u.fun;
 
 % %% train neural network to map from e to u
 % 
-% [ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( sysid_unl.traindata.e , sysid_unl.traindata.u(1:end-1,:)  );
+% [ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( sysid_unl.traindata.e , sysid_unl.traindata.u(1:end-(1+sysid_unl.params.nd),:)  );
 % 
 % %% modify model so that it will work with mpc
 % 
+% sysid_unl.model.Beta = speye( sysid_unl.model.params.N );
 % sysid_unl.model.B = speye( sysid_unl.model.params.N );
-% sysid_unl.model.params.m = sysid_unl.model.params.N;
-% sysid_unl.params.m = sysid_unl.params.N;
+% % sysid_unl.model.params.m = sysid_unl.model.params.N;
+% % sysid_unl.params.m = sysid_unl.params.N;
 % 
 % sysid_unl.params.NLinput = sysid_unl.e2u.fun;
 

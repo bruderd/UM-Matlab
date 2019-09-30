@@ -63,6 +63,11 @@ classdef mpc
             % resize some properties if they aren't full size already
             obj = obj.expand_props;
             
+            % if the system has nonlinear input, change the dimension of input
+            if isfield( obj.params , 'NLinput' )
+                obj.params.m = obj.params.mnu;
+                obj.model.params.mnu = obj
+            
             % get cost matrices
             obj = obj.get_costMatrices; 
             
@@ -142,7 +147,7 @@ classdef mpc
             
             % R: Input magnitude penalty
             R = kron( speye(obj.horizon) , eye(model.params.m) * obj.cost_input );  % input magnitude penalty (for flaccy use 0.5e-2) (new videos used 0.5e-3)
-            
+
             % H, G, D
             H = B' * C' * Q * C * B + R;
             G = 2 * A' * C' * Q * C * B;
@@ -209,7 +214,11 @@ classdef mpc
                 E = [ E ; sparse( 2 * params.m * (Np-1) , size(cost.B,1) ) ];
                 
                 % c: input_slopeConst
-                slope_lim = obj.input_slopeConst * mean( params.scale.u_factor );  % scale down the 2nd deriv. limit
+                if isfield( obj.params , 'NLinput' )    % don't scale slope if it's nonlinear
+                    slope_lim = obj.input_slopeConst;
+                else
+                    slope_lim = obj.input_slopeConst * mean( params.scale.u_factor );  % scale down the 2nd deriv. limit
+                end
                 cslope_top = sym( slope_lim * ones( params.m * (Np-1) , 1 ) );
                 cslope = [ cslope_top ; cslope_top ];
                 c = [ c ; cslope ];     % append vector
@@ -366,10 +375,87 @@ classdef mpc
             Atack = [ [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - obj.params.m ) ];
 %             Atack_bot = [ sparse( 2*obj.params.m , obj.params.m) , [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - 2*obj.params.m ) ];
 %             Atack = [ Atack_top ; Atack_bot ];
-            if 
-            btack = [ traj.u(end,:)' ; -traj.u(end,:)' ];
+            if isfield( traj , 'unl' )
+                btack = [ traj.unl(end,:)' ; -traj.unl(end,:)' ];
+            else
+                btack = [ traj.u(end,:)' ; -traj.u(end,:)' ];
+            end
             A = [A ; Atack];    % tack on memory constraint
             b = [b ; btack];
+            
+            % solve the MPC problem
+            Uvec = quadprog_gurobi( H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)
+            % U = quadprog( H , f , A , b );     % solve using matlab
+            
+            % reshape the output so each input will have one row (first row equals current input)
+            U = reshape( Uvec , [ obj.params.m , Np ] )';
+        end
+        
+        % get_mpcInput_noIC: Solve the mpc problem to get the input over entire horizon
+        function [ U , z ]= get_mpcInput_noIC( obj , traj , ref , shape_bounds )
+            %get_mpcInput: Soves the mpc problem to get the input over
+            % entire horizon.
+            %   traj - struct with fields y , u. Contains the measured
+            %    states and inputs for the past ndelay+1 timesteps.
+            %   ref - matrix containing the reference trajectory for the
+            %    system over the horizon (one row per timestep).
+            %   shape_bounds - [min_shape_parameters , max_shape_parameters] 
+            %    This is only requred if system has shape constraints 
+            %   (note: size is num of shape observables x 2)
+            %   z - the lifted state at the current timestep
+            
+            % make sure shape bounds are included if the system needs them
+            if ( nargin < 4 ) && strcmp( obj.shape_bounds , 'on' )
+                error('This system has shape bounds so you must include a shape bounds argument');
+            elseif nargin < 4
+                shape_bounds = [];  % null value
+            end
+            
+            % shorthand variable names
+            Np = obj.horizon;       % steps in the horizon
+            nd = obj.params.nd;     % number of delays
+            
+            % construct the current value of zeta
+            [ ~ , zeta_temp ] = obj.get_zeta( traj );
+            zeta = zeta_temp( end , : )';   % want most recent points
+            
+            % lift zeta
+            z = obj.lift.full( zeta );
+            
+            % check that reference trajectory has correct dimensions
+            if size( ref , 2 ) ~= size( obj.projmtx , 1 )
+                error('Reference trajectory is not the correct dimension');
+            elseif size( ref , 1 ) > Np + 1
+                ref = ref( 1 : Np + 1 , : );    % remove points over horizon
+            elseif size( ref , 1 ) < Np + 1
+                ref_temp = kron( ones( Np+1 , 1 ) , ref(end,:) );
+                ref_temp( 1 : size(ref,1) , : ) = ref;
+                ref = ref_temp;     % repeat last point for remainer of horizon
+            end
+            
+            % vectorize the reference trajectory
+            Yr = reshape( ref' , [ ( Np + 1 ) * size(ref,2) , 1 ] );
+            
+            % get the RHS of the inequality constraints
+            c = obj.set_constRHS( shape_bounds );
+            
+            % setup matrices for gurobi solver
+            H = obj.cost.H;      % removed factor of 2 on 12/10/2018
+            f = ( z' * obj.cost.G + Yr' * obj.cost.D )';
+            A = obj.constraints.L;
+            b = - obj.constraints.M * z + c;
+            
+%             % tack on "memory" constraint to fix initial input u_0
+%             Atack = [ [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - obj.params.m ) ];
+% %             Atack_bot = [ sparse( 2*obj.params.m , obj.params.m) , [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - 2*obj.params.m ) ];
+% %             Atack = [ Atack_top ; Atack_bot ];
+%             if isfield( traj , 'unl' )
+%                 btack = [ traj.unl(end,:)' ; -traj.unl(end,:)' ];
+%             else
+%                 btack = [ traj.u(end,:)' ; -traj.u(end,:)' ];
+%             end
+%             A = [A ; Atack];    % tack on memory constraint
+%             b = [b ; btack];
             
             % solve the MPC problem
             Uvec = quadprog_gurobi( H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)

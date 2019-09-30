@@ -110,9 +110,10 @@ classdef mpcsim
             results.K = [ 0 ];
             results.R = [ ref(1,:) ];
             results.X = [ x0( end , : ) ];
-            results.Z = []; % lifted states
+            results.Z = [ obj.mpc.lift.full( zeta0' )' ]; % lifted states
             if isfield( obj.mpc.params , 'NLinput' )
                 results.UNL = [ zeros( 1 , obj.mpc.params.m ) ]; 
+                results.E = [ zeros( 1 , obj.mpc.params.N ) ];
             end
             
             k = 1;
@@ -123,26 +124,32 @@ classdef mpcsim
                 
                 % get current state and input with delays
                 if k == 1
-                    current.y = obj.scaledown.y( y0 );
-                    current.u = obj.scaledown.u( u0 );
+                    current.y = obj.scaledown.y( y0 );   
+                    current.u = obj.scaledown.u( u0 );  
+%                     current.y = y0;   % (no scaling) NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%                     current.u = u0;   % (no scaling) NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     if isfield( obj.mpc.params , 'NLinput' )    % replace with pseudoinput
-                        current.unl = results.UNL(end,:);
+                        current.unl = results.E(end,:) * obj.mpc.model.Beta';
                     end
                 elseif k < nd + 1
                     y = [ y0( k : end-1 , : ) ; results.Y ];
                     u = [ u0( k : end-1 , : ) ; results.U ];
                     current.y = obj.scaledown.y( y );
-                    current.u = obj.scaledown.u( u );
+                    current.u = obj.scaledown.u( u ); 
+%                     current.y = y;    % (no scaling) NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%                     current.u = u;    % (no scaling) NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     if isfield( obj.mpc.params , 'NLinput' )    % replace with pseudoinput
-                        current.unl = results.UNL(end,:);
+                        current.unl = results.E(end,:) * obj.mpc.model.Beta';
                     end
                 else
                     y = results.Y( end - nd : end , : );
                     u = results.U( end - nd : end , : );
-                    current.y = obj.scaledown.y( y );
-                    current.u = obj.scaledown.u( u );
+                    current.y = obj.scaledown.y( y ); 
+                    current.u = obj.scaledown.u( u ); 
+%                     current.y = y;    % (no scaling) NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%                     current.u = u;    % (no scaling) NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     if isfield( obj.mpc.params , 'NLinput' )    % replace with pseudoinput
-                        current.unl = results.UNL(end,:);
+                        current.unl = results.E(end,:) * obj.mpc.model.Beta';
                     end
                 end
                 
@@ -171,6 +178,9 @@ classdef mpcsim
                 % get optimal input over horizon
                 [ U , z ] = obj.mpc.get_mpcInput( current , refhor , shapehor );
                 
+                % compute the one step model error
+                e = z - obj.mpc.model.A * results.Z(end,:)';
+                
                 % if a solution what not found, break out of while loop
                 if any( isnan(U) )
                     break;
@@ -186,7 +196,8 @@ classdef mpcsim
                 u_k_sc = U( 2 , : );
                 
                 % scaleup the input for the system simulation
-                u_k = obj.scaleup.u( u_k_sc )';
+                u_k = obj.scaleup.u( u_k_sc )';       % (no scaling) NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%                 u_k = u_k_sc';
                 
                 % simulate the system over one time-step
                 x_k = results.X( end , : )';
@@ -203,7 +214,8 @@ classdef mpcsim
                 results.X = [ results.X ; x_kp1' ];
                 results.Z = [ results.Z ; z'  ]; % current lifted state
                 if isfield( obj.mpc.params , 'NLinput' )
-                    results.UNL = [ results.UNL ; unl ];
+                    results.UNL = [ results.UNL ; unl ];    % pseudoinput
+                    results.E = [ results.E ; e' ];    % model error (with no input)
                 end
                 
                 k = k + 1;  % increment step counter
