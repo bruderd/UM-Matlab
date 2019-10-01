@@ -86,10 +86,10 @@ classdef sysid_unl < sysid
             while sum( explained(1:num_pcs) ) < 90
                 num_pcs = num_pcs + 1;
             end
-            num_pcs = size(e,2);        % MUST UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!
             
             % define projection matrix from e to nu
             Beta = coeffs( : , 1 : num_pcs )';
+            Beta = eye( size(e,2) );  % make nu same as e  % MUST UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!
             
             % calculate nu for each value of e in data_in
             nu = e * Beta';
