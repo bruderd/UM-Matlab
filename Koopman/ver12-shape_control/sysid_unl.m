@@ -101,7 +101,7 @@ classdef sysid_unl < sysid
             end
         end
         
-        % def_e2u_basis (define the basis of observable functions)
+        % def_e2u_basis (define the basis of observable functions) (UNUSED 2019-10-08)
         function obj = def_e2u_basis( obj , type , degree )
             % def_e2u_basis: Defines the set of nonlinear observable
             % functions that will act as basis of Koopman subspace
@@ -163,4 +163,23 @@ classdef sysid_unl < sysid
         
     end
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

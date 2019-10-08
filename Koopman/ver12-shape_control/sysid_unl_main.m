@@ -20,7 +20,8 @@ sysid_unl = sysid_unl( data4sysid, options ,...
     'lasso' , [ 100 ] ,...
     'delays' , 0 ,...
     'isupdate' , false,...
-    'armclass' , [] );
+    'armclass' , [] ,...
+    'liftinput' , 1 );
 
 %% calculate the  no-input-model error on the training data
 
@@ -37,7 +38,7 @@ end
 
 %% train neural network to map from nu to u
 
-[ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( sysid_unl.traindata.nu , sysid_unl.traindata.u( 1 : size( nu , 1 ) , : )  );
+[ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [ sysid_unl.traindata.nu ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , : )  );
 
 %% modify model so that it will work with mpc
 

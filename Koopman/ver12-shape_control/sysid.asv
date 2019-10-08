@@ -23,6 +23,7 @@ classdef sysid
         lasso;      % lasso L1 regularization penalty weight 
         delays;     % number of delays to include
         armclass;   % an instance of the arm class. Needed for shape observables.
+        liftinput;  % if 1, input is lifted along with state, yielding nonlinear model
         
         traindata;  % scaled exp/sim data for training the model
         valdata;    % scaled exp/sim data for validating the model
@@ -74,6 +75,7 @@ classdef sysid
             obj.lasso = [ 1e6 ]; % default is least squares solution
             obj.delays = 1; % default 1 to ensure model is dynamic
             obj.armclass = [];
+            obj.liftinput = 0;  % default is not to lift input
             
             % replace default values with user input values
             obj = obj.parse_args( varargin{:} );
@@ -372,11 +374,13 @@ classdef sysid
             ud = sym('ud', [obj.params.nd * obj.params.m, 1] , 'real');   % input delays i.e. for 2 delays: [u_i-1, u_i-2]'
             zeta = [x ; xd; ud];    % state variable with delays
             u = sym('u', [obj.params.m, 1] , 'real');   % input vector u
-            if obj.params.liftinput == 1    % if the state input
+            if obj.liftinput == 1    % if the includes input in unlifted state
                 zeta = [ zeta ; u ];
                 obj.params.nzeta = obj.params.nzeta + obj.params.m;
             end
             obj.params.zeta = zeta;
+            obj.params.x = x;
+            obj.params.u = u;
             
             % construct the observables
             fullBasis = zeta;  % first nzeta observables should always be the measured state and delays
@@ -748,6 +752,7 @@ classdef sysid
             for i = obj.params.nd + 1 : size( data_in.y , 1 )
                 ind = i - obj.params.nd;    % current timestep index
                 y = data_in.y( i , : );
+                u = data_in.u( i , : );
                 ydel = zeros( 1 , obj.params.nd * obj.params.n );
                 udel = zeros( 1 , obj.params.nd * obj.params.m );
                 for j = 1 : obj.params.nd
@@ -757,6 +762,9 @@ classdef sysid
                     udel(1 , fillrange_u) = data_in.u( i - j , : );
                 end
                 zetak = [ y , ydel , udel ];
+                if obj.liftinput == 1     % include input in zeta
+                    zetak = [ zetak , u ];
+                end
                 data_out.zeta( ind , : ) = zetak;
                 data_out.uzeta( ind , : ) = data_in.u( i , : );    % current timestep with zeta (input starting at current timestep)
             end
@@ -842,20 +850,35 @@ classdef sysid
             
             % Build matrices
             [n, m] = deal( obj.params.n , obj.params.m );
-            Nm = obj.params.N + m;   % dimension of zeta plus input
+            Nm = obj.params.N + m;   % dimension of z plus input
+            N = obj.params.N;       % dimension of z (i.e. lifted state)
             
-            Px = zeros(length(x), Nm);
-            Py = zeros(length(x), Nm);
+            if obj.liftinput == 1    % don't append input
+                Px = zeros(length(x), obj.params.N);
+                Py = zeros(length(x), obj.params.N);
+            else    % append input to end of lifted state
+                Px = zeros(length(x), Nm);
+                Py = zeros(length(x), Nm);
+            end
             for i = 1:length(x)
                 psix = obj.lift.full( x(i,:)' )';   
                 psiy = obj.lift.full( y(i,:)' )';
-                Px(i,:) = [ psix , u(i,:) ];
-                Py(i,:) = [ psiy , zeros(1,m) ];     % exclude u from Py (could also use same u as Px)
+                if obj.liftinput == 1    % don't append input if it already is lifted nonlinearly
+                    Px(i,:) = psix;
+                    Py(i,:) = psiy;
+                else
+                    Px(i,:) = [ psix , u(i,:) ];
+                    Py(i,:) = [ psiy , zeros(1,m) ];     % exclude u from Py (could also use same u as Px)
+                end
             end
             
             % Call function that solves QP problem
             Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
-            Umtx = reshape(Uvec, [Nm,Nm]); % Koopman operator matrix
+            if obj.liftinput == 1
+                Umtx = reshape(Uvec, [N,N]); % Koopman operator matrix
+            else
+                Umtx = reshape(Uvec, [Nm,Nm]); % Koopman operator matrix
+            end
             K = Umtx;   % switching to K convention to not confuse with input
             
             % other usefule outputs
@@ -876,7 +899,7 @@ classdef sysid
             
             % local variable names
             nx = obj.params.N^2;
-            Nm = obj.params.N + obj.params.m;
+            Nm = size( Px , 2 );    % obj.params.N + obj.params.m;
             N = obj.params.N;
             n = obj.params.n;
             m = obj.params.m;
@@ -951,7 +974,7 @@ classdef sysid
         
         % get_model (Extracts the A,B,C matrices from Koopman matrix)
         function [ out , obj ] = get_model( obj , koopData )
-            %get_ABC: Defines the A, B, and C matrices that describe the linear
+            %get_model: Defines the A, B, and C matrices that describe the linear
             %lifted system z+ = Az + Bu, x = Cz.
             %   out - struct with fields A, B, C, sys, params, ...
             %   obj.model - property of struct which stores the model
@@ -1015,6 +1038,60 @@ classdef sysid
             obj.model = out;
         end
         
+        % get_NLmodel (Extracts the A,B,C matrices from Koopman matrix)
+        function [ out , obj ] = get_NLmodel( obj , koopData )
+            %get_NLmodel: Defines the A, B, and C matrices that describe the nonlinear
+            %lifted system z_y+ = A z_y + B z_u , y = Cz.
+            %   out - struct with fields A, B, C, sys, params, ...
+            %   obj.model - property of struct which stores the model
+            
+            UT = koopData.K';    % transpose of koopman operator
+            
+            % Find all rows/columns of K that have inputs in them
+            u_terms_index = contains( string( obj.basis.full ) , 'u' );
+            obj.basis.zx = obj.basis.full( ~u_terms_index );
+            obj.basis.zu = obj.basis.full( u_terms_index );
+            obj.lift.zx = matlabFunction(obj.basis.zx, 'Vars', { obj.params.x });
+            obj.lift.zu = matlabFunction(obj.basis.zu, 'Vars', { obj.params.x , obj.params.u});
+            
+            % separate components of dynamics that do/don't include inputs
+            A = UT( ~u_terms_index , ~u_terms_index );
+            B = UT( ~u_terms_index , u_terms_index );
+           
+            % Cy selects the first n entries of the lifted state
+            Cy = [eye(obj.params.n), zeros(obj.params.n , length( obj.basis.zx ) - obj.params.n)]; 
+            
+%             % find M matrix that (approximately) projects a lifted point onto the subset of all legitimate lifted points in R^N
+%             Px = koopData.Px; Py = koopData.Py;
+%             U = koopData.u;
+%             L = zeros( size(Px,1) , obj.params.N );
+%             for i = 1 : size( Px , 1)
+%                 L(i,:) = ( A * Px(i,:)' + B * U(i,:)' )' ;        % with input
+%                 %     L(i,:) = ( A * Px(i,:)' )' ;        % without input
+%             end
+%             R = zeros( size(L,1) , obj.params.N );
+%             for i = 1 : size( L , 1 )
+%                 %     R(i,:) = ( stateLift( Cz * L(1,:)' ) )' ;
+%                 R(i,:) = Py(i,:) ;  % debug. This should make M the identity
+%             end
+%             Mtranspose = L \ R;
+%             M = Mtranspose';
+            
+            % define outputs
+            out.A = A;  % edited to include projection M, 12/11/2018
+            out.B = B;  % edited to include projection M, 12/11/2018
+            out.Asim = A;
+            out.Bsim = B;
+            out.C = Cy;
+%             out.M = M;
+%             out.sys = ss( out.A , out.B , Cy , 0 , obj.params.Ts );  % discrete state space system object
+            out.params = obj.params;    % save system parameters as part of system struct    
+            out.K = koopData.K; % save the Koopman operator matrix just in case
+            
+            % add model substruct to the class
+            obj.model = out;
+        end
+        
         % train_models (train multiple koopman models with diff. lasso params)
         function obj = train_models( obj , lasso )
             %train_model: finds koopman operator for given snapshot pairs
@@ -1030,7 +1107,11 @@ classdef sysid
             
             if length(lasso) < 2
                 obj.koopData = obj.get_Koopman( obj.snapshotPairs , lasso );
-                obj.candidates = obj.get_model( obj.koopData );
+                if obj.liftinput == 1
+                    obj.candidates = obj.get_NLmodel( obj.koopData );
+                else
+                    obj.candidates = obj.get_model( obj.koopData );
+                end
                 obj.candidates.lasso = lasso;
                 obj.model = obj.candidates; % save as the model
             else
@@ -1038,7 +1119,11 @@ classdef sysid
                 obj.candidates = cell( length(lasso) , 1 );
                 for i = 1 : length(lasso)
                     obj.koopData{i} = obj.get_Koopman( obj.snapshotPairs , lasso(i) );
-                    obj.candidates{i} = obj.get_model( obj.koopData{i} );
+                    if obj.liftinput == 1
+                        obj.candidates{i} = obj.get_NLmodel( obj.koopData{i} );
+                    else
+                        obj.candidates{i} = obj.get_model( obj.koopData{i} );
+                    end
                     obj.candidates{i}.lasso = lasso(i);  % save lasso parameter with model
                     % save the first candidate as 'model' by default. Will be
                     %   overwritten by user choice later
@@ -1082,6 +1167,59 @@ classdef sysid
             ysim(1,:) = yreal(1,:); % initialize
             zsim(1,:) = z0';        % initialize
             for j = 1 : length(treal)-1
+                zsim(j+1,:) = ( model.A * zsim(j,:)' + model.B * usim(j,:)' )';
+                ysim(j+1,:) = ( model.C * zsim(j+1,:)' )';
+            end
+            
+            % save simulations in output struct
+            results = struct;
+            results.t = treal; 
+            results.sim.t = tsim;
+            results.sim.u = usim;
+            results.sim.y = ysim;
+            results.sim.z = zsim;
+            results.real.t = treal;
+            results.real.u = ureal;
+            results.real.y = yreal;
+            results.real.z = zreal;
+            
+            % save error info (optional, could get rid of this)
+            results.error = obj.get_error( results.sim , results.real );
+        end
+        
+        % val_NLmodel (compares model simulation to real data)
+        function results = val_NLmodel( obj , model , valdata )
+            %val_NLmodel: Compares a model simulation to real data
+            %   liftedSys - struct with fields A, B, C, sys, ...
+            %   valdata - struct with fields t, y, u (at least)
+            %   results - struct with simulation results and error calculations
+            
+            % shift real data so delays can be accounted for
+            index0 = obj.params.nd + 1;  % index of the first state
+            treal = valdata.t(index0 : end);    % start simulation late so delays can be taken into account
+            yreal = valdata.y(index0 : end , :);
+            ureal = valdata.u(index0 : end , :);
+            [ ~ , zetareal ] = obj.get_zeta( valdata );
+            zreal = zeros( size( zetareal , 2 ) , obj.params.N );
+            for i = 1 : size( zetareal , 1 )
+                zreal(i,:) = obj.lift.full( zetareal(i,:)' );
+            end
+            
+            % set initial condition
+            y0 = obj.yreal( 1, : )';
+            zx0 = obj.lift.zx( y0 );
+            
+            % simulate lifted linear model
+%             [ ysim , tsim , zsim ] = lsim(model.sys, ureal , treal , z0); % Don't use lsim. Might be doing weird stuff
+            tsim = treal;
+            usim = ureal;
+            ysim = zeros( size( yreal ) ); % preallocate
+%             zsim = zeros( size( zreal ) ); % preallocate
+            ysim(1,:) = yreal(1,:); % initialize
+            zxsim(1,:) = zx0';        % initialize
+            for j = 1 : length(treal)-1
+                zusim = 
+                zxsim(j+1,:) = ( model.A * zxsim(j,:)' + model.B *  )
                 zsim(j+1,:) = ( model.A * zsim(j,:)' + model.B * usim(j,:)' )';
                 ysim(j+1,:) = ( model.C * zsim(j+1,:)' )';
             end
