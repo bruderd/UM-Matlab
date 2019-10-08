@@ -372,6 +372,10 @@ classdef sysid
             ud = sym('ud', [obj.params.nd * obj.params.m, 1] , 'real');   % input delays i.e. for 2 delays: [u_i-1, u_i-2]'
             zeta = [x ; xd; ud];    % state variable with delays
             u = sym('u', [obj.params.m, 1] , 'real');   % input vector u
+            if obj.params.liftinput == 1    % if the includes input in unlifted state
+                zeta = [ zeta ; u ];
+                obj.params.nzeta = obj.params.nzeta + obj.params.m;
+            end
             obj.params.zeta = zeta;
             
             % construct the observables
@@ -744,6 +748,7 @@ classdef sysid
             for i = obj.params.nd + 1 : size( data_in.y , 1 )
                 ind = i - obj.params.nd;    % current timestep index
                 y = data_in.y( i , : );
+                u = data_in.u( i , : );
                 ydel = zeros( 1 , obj.params.nd * obj.params.n );
                 udel = zeros( 1 , obj.params.nd * obj.params.m );
                 for j = 1 : obj.params.nd
@@ -753,6 +758,9 @@ classdef sysid
                     udel(1 , fillrange_u) = data_in.u( i - j , : );
                 end
                 zetak = [ y , ydel , udel ];
+                if obj.params.liftinput == 1     % include input in zeta
+                    zetak = [ zetak , u ];
+                end
                 data_out.zeta( ind , : ) = zetak;
                 data_out.uzeta( ind , : ) = data_in.u( i , : );    % current timestep with zeta (input starting at current timestep)
             end

@@ -567,11 +567,11 @@ classdef arm
             
             % simulate system
             options = odeset( 'Mass' , @(t,x) obj.vf_massMatrix( t , x , u ) );
-%             [ t , Alpha ] = ode45( @(t,x) obj.vf_RHS( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , tsteps , [ a0 ; adot0 ] , options );    % with mass matrix, variable time step
-            [ t , Alpha ] = ode45( @(t,x) obj.vf_RHS( t , x , 0.5*sin( t ) + u( floor(t/obj.params.Ts) + 1 , : )' ) , tsteps , [ a0 ; adot0 ] , options );    % with mass matrix, variable time step, sinusoid
-            for i = 1 : length(t)
-                u(i,:) = 0.5*sin( 3*t(i) ) + u( floor(t(i)/obj.params.Ts) + 1 , : );
-            end
+            [ t , Alpha ] = ode45( @(t,x) obj.vf_RHS( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , tsteps , [ a0 ; adot0 ] , options );    % with mass matrix, variable time step
+%             [ t , Alpha ] = ode45( @(t,x) obj.vf_RHS( t , x , 0.5*sin( t ) + u( floor(t/obj.params.Ts) + 1 , : )' ) , tsteps , [ a0 ; adot0 ] , options );    % with mass matrix, variable time step, sinusoid
+%             for i = 1 : length(t)
+%                 u(i,:) = 0.5*sin( 3*t(i) ) + u( floor(t(i)/obj.params.Ts) + 1 , : );
+%             end
 %             Alpha = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , tsteps , [ a0 ; adot0 ] );  % with numerical inversion, fixed time step
             
             % get locations of the markers at each time step

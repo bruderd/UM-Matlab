@@ -372,6 +372,10 @@ classdef sysid
             ud = sym('ud', [obj.params.nd * obj.params.m, 1] , 'real');   % input delays i.e. for 2 delays: [u_i-1, u_i-2]'
             zeta = [x ; xd; ud];    % state variable with delays
             u = sym('u', [obj.params.m, 1] , 'real');   % input vector u
+            if obj.params.liftinput == 1    % if the state input
+                zeta = [ zeta ; u ];
+                obj.params.nzeta = obj.params.nzeta + obj.params.m;
+            end
             obj.params.zeta = zeta;
             
             % construct the observables
@@ -881,18 +885,18 @@ classdef sysid
             mnd = obj.params.m * obj.params.nd;
             
             M = [speye(Nm^2) , -speye(Nm^2)];
-           
             
             PxTPx = Px' * Px;
             
+            % Ensure PxTPx is PSD by adding constant along diagonal
+            [ ~ , Dpx ] = eig(PxTPx);
+            if any( diag(Dpx) < 0 )
+                PxTPx = PxTPx + eye( size(PxTPx,1) ) * 1e-6;
+            end
 %             [ U,S,V ] = svd(PxTPx);
 %             S( find(abs(S) < 1e-10) ) = 0;
 %             PxTPx = U * S * V';
 
-%             PxTPx( find(abs(PxTPx)) < 1e-10 ) = 0;  % zero small elements for numerical sake
-%             PxTPx = (PxTPx+PxTPx') - eye(size(PxTPx,1)).*diag(PxTPx);   % flip along digonal to ensure symmetry
-
-            PxTPx = PxTPx + eye( size(PxTPx,1) ) * 1e-5;  % fudge factor to force PxTPx to be PSD
 
             PxTPy = Px' * Py;
             ATA = kron(speye(Nm) , PxTPx);  % repeat blocks diagonally N times

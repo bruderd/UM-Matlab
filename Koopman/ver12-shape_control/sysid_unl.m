@@ -89,7 +89,7 @@ classdef sysid_unl < sysid
             
             % define projection matrix from e to nu
             Beta = coeffs( : , 1 : num_pcs )';
-            Beta = eye( size(e,2) );  % make nu same as e  % MUST UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!
+%             Beta = eye( size(e,2) );  % make nu same as e  % MUST UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!
             
             % calculate nu for each value of e in data_in
             nu = e * Beta';

@@ -20,7 +20,7 @@
 if ~exist('params' ,'var')  % recycle struct from previous run 
     params = struct;
 end
-params.getData = 'file';            % ('exp' or 'file')
+params.getData = 'exp';            % ('exp' or 'file')
 params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
@@ -32,7 +32,7 @@ params.numericalDerivs  = false;    % choose whether or not to take numerical de
 params.scale            = 0.9;      % scale down all state to be in range [-scale , scale]
 params.nd               = 1;        % number of delays to include in the snapshot pairs
 
-params.systemName          = 'larmv4_3val300s_16sid_sc09_54000pts_1del_Ts083';  % name of current system
+params.systemName          = 'larmv4_3val300s_16sid-clean_sc09_54000pts_1del_Ts083';  % name of current system
 % params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 params.filterWindow        = floor( [1, 1] );  % no smoothing
 % params.filterWindow        = floor( [6, 6] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
@@ -45,7 +45,7 @@ params.naug = params.n + params.p; % dimension of augmented state (DNE)
 params.nzeta = params.n + params.nd * (params.naug);    % dimensinon of zeta (DNE)
 
 % select maximum "degree" for basis elements
-params.maxDegree = 3;   % maximum degree of vector field monomial basis
+params.maxDegree = 4;   % maximum degree of vector field monomial basis
 
 % only do this if the Basis is not already defined. Will need to clear before running with a different basis or maxDegree
 if ~isfield(params , 'Basis')   
@@ -67,7 +67,7 @@ end
 
 
 % Koopman sysid tuning parameters
-params.t        = 10 * params.N; % penalty on model complexity
+params.t        = 1e3 * params.N; % penalty on model complexity
 params.epsilon  = 1; % model accuracy tolerance (larger value = less accurate)
 params.percSat  = 0.75;  % percentage of snapshot pairs that must satisfy accuracy tolerance
 
