@@ -1108,7 +1108,8 @@ classdef sysid
             if length(lasso) < 2
                 obj.koopData = obj.get_Koopman( obj.snapshotPairs , lasso );
                 if obj.liftinput == 1
-                    obj.candidates = obj.get_NLmodel( obj.koopData );
+                    [ temp , obj ] = obj.get_NLmodel( obj.koopData );
+                    obj.candidates = temp;
                 else
                     obj.candidates = obj.get_model( obj.koopData );
                 end
@@ -1120,7 +1121,8 @@ classdef sysid
                 for i = 1 : length(lasso)
                     obj.koopData{i} = obj.get_Koopman( obj.snapshotPairs , lasso(i) );
                     if obj.liftinput == 1
-                        obj.candidates{i} = obj.get_NLmodel( obj.koopData{i} );
+                        [ temp , obj ] = obj.get_NLmodel( obj.koopData{i} );
+                        obj.candidates{i} = temp;
                     else
                         obj.candidates{i} = obj.get_model( obj.koopData{i} );
                     end
@@ -1206,8 +1208,9 @@ classdef sysid
             end
             
             % set initial condition
-            y0 = obj.yreal( 1, : )';
+            y0 = yreal( 1, : )';
             zx0 = obj.lift.zx( y0 );
+            zu0 = obj.lift.zu( y0 , ureal(1,:)' );
             
             % simulate lifted linear model
 %             [ ysim , tsim , zsim ] = lsim(model.sys, ureal , treal , z0); % Don't use lsim. Might be doing weird stuff
@@ -1216,11 +1219,12 @@ classdef sysid
             ysim = zeros( size( yreal ) ); % preallocate
 %             zsim = zeros( size( zreal ) ); % preallocate
             ysim(1,:) = yreal(1,:); % initialize
-            zxsim(1,:) = zx0';        % initialize
-            for j = 1 : length(treal)-1
-                zusim(j,:) = obj.lift.zu( ysim(j,:)' , usim(j,:)' )';
+            zxsim(1,:) = zx0';      % initialize
+            zusim(1,:) = zu0';      % initialize
+            for j = 1 : length(treal)-1      
                 zxsim(j+1,:) = ( model.A * zxsim(j,:)' + model.B * zusim(j,:)' );
-                ysim(j+1,:) = ( model.C * zsim(j+1,:)' )';
+                ysim(j+1,:) = ( model.C * zxsim(j+1,:)' )';
+                zusim(j+1,:) = obj.lift.zu( ysim(j+1,:)' , usim(j+1,:)' )';
             end
             
             % save simulations in output struct
@@ -1229,7 +1233,8 @@ classdef sysid
             results.sim.t = tsim;
             results.sim.u = usim;
             results.sim.y = ysim;
-            results.sim.z = zsim;
+            results.sim.zx = zxsim;
+            results.sim.zu = zusim;
             results.real.t = treal;
             results.real.u = ureal;
             results.real.y = yreal;
@@ -1292,7 +1297,11 @@ classdef sysid
             results = cell( size(obj.valdata) );    % store results in a cell array
             err = cell( size(obj.valdata) );    % store error in a cell array
             for i = 1 : length(obj.valdata)
-                results{i} = obj.val_model( mod , obj.valdata{i} );
+                if obj.liftinput == 1
+                    results{i} = obj.val_NLmodel( mod , obj.valdata{i} );
+                else
+                    results{i} = obj.val_model( mod , obj.valdata{i} );
+                end
                 err{i} = obj.get_error( results{i}.sim , results{i}.real );
                 obj.plot_comparison( results{i}.sim , results{i}.real , ['Lasso: ' , num2str(mod.lasso)] );
             end
