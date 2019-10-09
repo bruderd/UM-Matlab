@@ -375,10 +375,10 @@ classdef sysid
             zeta = [x ; xd; ud];    % state variable with delays
             u = sym('u', [obj.params.m, 1] , 'real');   % input vector u
             if obj.liftinput == 1    % if the includes input in unlifted state
-                zeta = [ zeta ; u ];
-                obj.params.nzeta = obj.params.nzeta + obj.params.m;
+                zeta = [ zeta ; u ];    % just so lifting function works
+%                 obj.params.nzeta = obj.params.nzeta + obj.params.m;
             end
-            obj.params.zeta = zeta;
+            obj.params.zeta = zeta; % needed for defining lifting function
             obj.params.x = x;
             obj.params.u = u;
             
@@ -416,6 +416,11 @@ classdef sysid
             obj.basis.full = fullBasis;
             obj.lift.full = matlabFunction( fullBasis , 'Vars' , {zeta} );
             obj.params.N = length( fullBasis ); % the dimension of the lifted state
+            
+            % remove current input from zeta
+            if obj.liftinput == 1
+                obj.params.zeta = zeta(1 : obj.params.nzeta);
+            end
             
 %             % save the sysid class object (may not want to include this here, better done externally)
 %             obj = obj.save_class( 0 );
@@ -762,9 +767,9 @@ classdef sysid
                     udel(1 , fillrange_u) = data_in.u( i - j , : );
                 end
                 zetak = [ y , ydel , udel ];
-                if obj.liftinput == 1     % include input in zeta
-                    zetak = [ zetak , u ];
-                end
+%                 if obj.liftinput == 1     % include input in zeta
+%                     zetak = [ zetak , u ];
+%                 end
                 data_out.zeta( ind , : ) = zetak;
                 data_out.uzeta( ind , : ) = data_in.u( i , : );    % current timestep with zeta (input starting at current timestep)
             end
@@ -861,12 +866,14 @@ classdef sysid
                 Py = zeros(length(x), Nm);
             end
             for i = 1:length(x)
-                psix = obj.lift.full( x(i,:)' )';   
-                psiy = obj.lift.full( y(i,:)' )';
                 if obj.liftinput == 1    % don't append input if it already is lifted nonlinearly
+                    psix = obj.lift.full( [ x(i,:) , u(i,:) ]' )';   
+                    psiy = obj.lift.full( [ y(i,:) , u(i,:) ]' )';
                     Px(i,:) = psix;
                     Py(i,:) = psiy;
                 else
+                    psix = obj.lift.full( x(i,:)' )';   
+                    psiy = obj.lift.full( y(i,:)' )';
                     Px(i,:) = [ psix , u(i,:) ];
                     Py(i,:) = [ psiy , zeros(1,m) ];     % exclude u from Py (could also use same u as Px)
                 end
@@ -1055,8 +1062,8 @@ classdef sysid
             obj.lift.zu = matlabFunction(obj.basis.zu, 'Vars', { obj.params.x , obj.params.u});
             
             % separate components of dynamics that do/don't include inputs
-            A = UT( ~u_terms_index , ~u_terms_index );
-            B = UT( ~u_terms_index , u_terms_index );
+            A = 2 * UT( ~u_terms_index , ~u_terms_index );
+            B = 2 * UT( ~u_terms_index , u_terms_index );
            
             % Cy selects the first n entries of the lifted state
             Cy = [eye(obj.params.n), zeros(obj.params.n , length( obj.basis.zx ) - obj.params.n)]; 
@@ -1078,10 +1085,8 @@ classdef sysid
 %             M = Mtranspose';
             
             % define outputs
-            out.A = A;  % edited to include projection M, 12/11/2018
-            out.B = B;  % edited to include projection M, 12/11/2018
-            out.Asim = A;
-            out.Bsim = B;
+            out.A = A;  
+            out.B = B; 
             out.C = Cy;
 %             out.M = M;
 %             out.sys = ss( out.A , out.B , Cy , 0 , obj.params.Ts );  % discrete state space system object
@@ -1204,7 +1209,7 @@ classdef sysid
             [ ~ , zetareal ] = obj.get_zeta( valdata );
             zreal = zeros( size( zetareal , 2 ) , obj.params.N );
             for i = 1 : size( zetareal , 1 )
-                zreal(i,:) = obj.lift.full( zetareal(i,:)' );
+                zreal(i,:) = obj.lift.full( [ zetareal(i,:) , ureal(i,:) ]' );
             end
             
             % set initial condition

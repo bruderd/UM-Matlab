@@ -861,12 +861,14 @@ classdef sysid
                 Py = zeros(length(x), Nm);
             end
             for i = 1:length(x)
-                psix = obj.lift.full( x(i,:)' )';   
-                psiy = obj.lift.full( y(i,:)' )';
                 if obj.liftinput == 1    % don't append input if it already is lifted nonlinearly
+                    psix = obj.lift.full( [ x(i,:) ; u(i,:) ] )';   
+                    psiy = obj.lift.full( y(i,:)' )';
                     Px(i,:) = psix;
                     Py(i,:) = psiy;
                 else
+                    psix = obj.lift.full( x(i,:)' )';   
+                    psiy = obj.lift.full( y(i,:)' )';
                     Px(i,:) = [ psix , u(i,:) ];
                     Py(i,:) = [ psiy , zeros(1,m) ];     % exclude u from Py (could also use same u as Px)
                 end
@@ -1219,8 +1221,8 @@ classdef sysid
             ysim = zeros( size( yreal ) ); % preallocate
 %             zsim = zeros( size( zreal ) ); % preallocate
             ysim(1,:) = yreal(1,:); % initialize
-            zxsim(1,:) = zx0';        % initialize
-            zusim(1,:) = zu0';
+            zxsim(1,:) = zx0';      % initialize
+            zusim(1,:) = zu0';      % initialize
             for j = 1 : length(treal)-1      
                 zxsim(j+1,:) = ( model.A * zxsim(j,:)' + model.B * zusim(j,:)' );
                 ysim(j+1,:) = ( model.C * zxsim(j+1,:)' )';
@@ -1298,9 +1300,10 @@ classdef sysid
             err = cell( size(obj.valdata) );    % store error in a cell array
             for i = 1 : length(obj.valdata)
                 if obj.liftinput == 1
-                    
+                    results{i} = obj.val_NLmodel( mod , obj.valdata{i} );
                 else
-                results{i} = obj.val_model( mod , obj.valdata{i} );
+                    results{i} = obj.val_model( mod , obj.valdata{i} );
+                end
                 err{i} = obj.get_error( results{i}.sim , results{i}.real );
                 obj.plot_comparison( results{i}.sim , results{i}.real , ['Lasso: ' , num2str(mod.lasso)] );
             end
