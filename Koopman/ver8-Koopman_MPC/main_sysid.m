@@ -20,7 +20,7 @@
 if ~exist('params' ,'var')  % recycle struct from previous run 
     params = struct;
 end
-params.getData = 'file';            % ('exp' or 'file')
+params.getData = 'exp';            % ('exp' or 'file')
 params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).

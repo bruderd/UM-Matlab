@@ -49,24 +49,49 @@ classdef sysid_unl < sysid
             %   data_in - struct containing time series data or snapshot
             %     pairs
             
-            if isfield( data_in , 't' )     % assume time series data
-                if ~isfield( data_in , 'zeta' )
-                    [ data_in , zeta ] = obj.get_zeta( data_in );
+            data_out = data_in;
+            
+            if obj.liftinput == 1   % input is lifted not just linearly appended
+                if isfield( data_in , 't' )     % assume time series data
+                    e = zeros( length(data_in.t) - 1 , size(obj.basis.zx,1) );
+                    for i = 1 : length(data_in.t) - 1
+                        zu_now = obj.lift.zu( data_in.y(i,:)' , data_in.u(i,:)' );
+                        zx_alpha = obj.lift.zx( data_in.y(i,:)' );
+                        zx_beta = obj.lift.zx( data_in.y(i+1,:)' );
+                        e(i,:) = ( zx_beta - obj.model.A * zx_alpha )';
+                        zx(i,:) = zx_alpha';
+                        zu(i,:) = zu_now';
+                    end
+                else    % assume snapshot pairs
+                    e = zeros( size( data_in.alpha , 1 ) , size(obj.basis.zx,1) );
+                    for i = 1 : size( data_in.alpha , 1 )
+                        zu_now = obj.lift.zu( data_in.y(i,:)' , data_in.u(i,:)' );
+                        zx_alpha = obj.lift.zx( data_in.alpha(i,:)' );
+                        zx_beta = obj.lift.zx( data_in.beta(i,:)' );
+                        e(i,:) = ( zx_beta - obj.model.A * zx_alpha )';
+                        zx(i,:) = zx_alpha';
+                        zu(i,:) = zu_now';
+                    end
                 end
-                e = zeros( size( zeta , 1 ) - 1 , obj.params.N );
-                for i = 1 : size( zeta , 1 ) - 1
-                    e(i,:) = ( obj.lift.full( zeta(i+1,:)' ) - obj.model.A * obj.lift.full( zeta(i,:)' ) )';
+                data_out.zx = zx;
+                data_out.zu = zu;
+            else
+                if isfield( data_in , 't' )     % assume time series data
+                    if ~isfield( data_in , 'zeta' )
+                        [ data_in , zeta ] = obj.get_zeta( data_in );
+                    end
+                    e = zeros( size( zeta , 1 ) - 1 , obj.params.N );
+                    for i = 1 : size( zeta , 1 ) - 1
+                        e(i,:) = ( obj.lift.full( zeta(i+1,:)' ) - obj.model.A * obj.lift.full( zeta(i,:)' ) )';
+                    end
+                else    % assume snapshot pairs
+                    e = zeros( size( data_in.alpha , 1 ) , obj.params.N );
+                    for i = 1 : size( data_in.alpha , 1 )
+                        e(i,:) = ( data_in.beta(i,:)' - obj.model.A * data_in.alpha(i,:)' )';
+                    end
                 end
-                data_out = data_in;
-                data_out.e = e;
-            else    % assume snapshot pairs
-                e = zeros( size( data_in.alpha , 1 ) , obj.params.N );
-                for i = 1 : size( data_in.alpha , 1 )
-                    e(i,1) = ( data_in.beta(i,:)' - obj.model.A * data_in.alpha(i,:)' )';
-                end
-                data_out = data_in;
-                data_out.e = e;
             end
+            data_out.e = e;
         end
         
         % get_nu: calculate a reduced dimension version of e using pca
@@ -83,7 +108,7 @@ classdef sysid_unl < sysid
             
             % take enough components to explain > 90% of the data
             num_pcs = 1;
-            while sum( explained(1:num_pcs) ) < 90
+            while sum( explained(1:num_pcs) ) < 95
                 num_pcs = num_pcs + 1;
             end
             

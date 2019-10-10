@@ -390,7 +390,7 @@ classdef sysid
                     fullBasis = [ fullBasis ; obj.basis.armshape ];
                 elseif strcmp( type{i} , 'poly' )
                     obj = obj.def_polyLift( degree(i) );
-                    fullBasis = [ fullBasis ; obj.basis.poly( obj.params.nzeta+1 : end ) ]; % don't include first nzeta states because they will be repeats
+                    fullBasis = [ fullBasis ; obj.basis.poly( size(zeta,1)+1 : end ) ]; % don't include first nzeta states because they will be repeats
                 elseif strcmp( type{i} , 'fourier' )
                     obj = obj.def_fourierLift( degree(i) );
                     fullBasis = [ fullBasis ; obj.basis.fourier ];
@@ -927,7 +927,6 @@ classdef sysid
 %             S( find(abs(S) < 1e-10) ) = 0;
 %             PxTPx = U * S * V';
 
-
             PxTPy = Px' * Py;
             ATA = kron(speye(Nm) , PxTPx);  % repeat blocks diagonally N times
             ATb = reshape(PxTPy, [Nm^2 , 1]);
@@ -1062,8 +1061,8 @@ classdef sysid
             obj.lift.zu = matlabFunction(obj.basis.zu, 'Vars', { obj.params.x , obj.params.u});
             
             % separate components of dynamics that do/don't include inputs
-            A = 2 * UT( ~u_terms_index , ~u_terms_index );
-            B = 2 * UT( ~u_terms_index , u_terms_index );
+            A = UT( ~u_terms_index , ~u_terms_index );
+            B = UT( ~u_terms_index , u_terms_index );
            
             % Cy selects the first n entries of the lifted state
             Cy = [eye(obj.params.n), zeros(obj.params.n , length( obj.basis.zx ) - obj.params.n)]; 

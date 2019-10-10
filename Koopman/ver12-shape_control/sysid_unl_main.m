@@ -15,9 +15,9 @@ data4sysid = load( [datafile_path , datafile_name] );
 options = {};
 sysid_unl = sysid_unl( data4sysid, options ,...
     'obs_type' , { 'poly'} ,...
-    'obs_degree' , [ 3 ] ,...
+    'obs_degree' , [ 2 ] ,...
     'snapshots' , Inf ,...
-    'lasso' , [ 0.4 , 0.6 , 0.8 , 1 ] ,...
+    'lasso' , [ 10 ] ,...
     'delays' , 0 ,...
     'isupdate' , false,...
     'armclass' , [] ,...
@@ -25,7 +25,8 @@ sysid_unl = sysid_unl( data4sysid, options ,...
 
 %% calculate the  no-input-model error on the training data
 
-[ e , sysid_unl.traindata ] = sysid_unl.get_e( sysid_unl.traindata );
+% [ e , sysid_unl.snapshotPairs ] = sysid_unl.get_e( sysid_unl.snapshotPairs );   % use snapshot pairs
+[ e , sysid_unl.traindata ] = sysid_unl.get_e( sysid_unl.traindata );   % use timeseries data
 
 % get a reduced order version of nu
 [ nu , Beta , sysid_unl.traindata ] = sysid_unl.get_nu( sysid_unl.traindata );
@@ -38,7 +39,8 @@ end
 
 %% train neural network to map from nu to u
 
-[ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [ sysid_unl.traindata.nu ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , : )  );
+[ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [ sysid_unl.traindata.nu , sysid_unl.traindata.y(1:end-1,:) ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , : )  );
+% [ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [ sysid_unl.traindata.nu ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , : )  );
 
 %% modify model so that it will work with mpc
 
@@ -78,6 +80,7 @@ else
     [ results{1} , err{1} ] = sysid_unl.valNplot_model;
 end
     
+
 
 %% save model(s)
 

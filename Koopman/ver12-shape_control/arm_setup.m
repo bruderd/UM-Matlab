@@ -48,7 +48,7 @@ params.umax = 7*pi/8; % maximum input value (scalar for all modules, vector for 
 % 
 %% Create class for this system
 
-arm = arm( params , 'output_type' , 'endeff');   % choice is 'angles' or 'markers' or 'endeff'
+arm = arm( params , 'output_type' , 'markers');   % choice is 'angles' or 'markers' or 'endeff'
 
 % save this system for later use
 dirname = [ 'systems' , filesep , params.sysName ];
