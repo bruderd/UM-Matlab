@@ -45,9 +45,11 @@ end
 %% modify model so that it will work with mpc
 
 sysid_unl.model.Beta = Beta;
-sysid_unl.model.B = pinv(Beta);
+sysid_unl.model.Beta_pinv = pinv(Beta);
 sysid_unl.model.params.mnu = size( nu , 2 );
 sysid_unl.params.mnu = size( nu , 2 );
+sysid_unl.params.nzx = size( sysid_unl.basis.zx , 1 );
+sysid_unl.params.nzu = size( sysid_unl.basis.zu , 1 );
 
 sysid_unl.params.NLinput = sysid_unl.e2u.fun;
 

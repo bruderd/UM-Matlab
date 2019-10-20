@@ -181,27 +181,27 @@ classdef mpcsim
                 if isfield( obj.mpc.params , 'NLinput' )
                     [ E , z ] = obj.mpc.get_mpcInput_unl( current , refhor , shapehor );
                     NU = E * obj.mpc.model.Beta';   % convert to nu
-                    u_k_sc = obj.mpc.params.NLinput( [ NU(2,:) , current.y ]' )';
+                    U = obj.mpc.params.NLinput( NU' ,  )';
                 else
                     [ U , z ] = obj.mpc.get_mpcInput( current , refhor , shapehor );
-                    
-                    % if a solution was not found, break out of while loop
-                    if any( isnan(U) )
-                        break;
-                    end
-                    
-                    % isolate input for this step (may need to make it U(1,:)
-                    u_k_sc = U( 2 , : );
                 end
                 
 %                 % compute the one step model error
 %                 e = z - obj.mpc.model.A * results.Z(end,:)';
+                
+                % if a solution was not found, break out of while loop
+                if any( isnan(U) )
+                    break;
+                end
                 
 %                 % if the model is using a nonliner input, convert it
 %                 if isfield( obj.mpc.params , 'NLinput' )
 %                     unl = U(2,:);   % save the pseudoinput
 %                     U = obj.mpc.params.NLinput( U' )';
 %                 end
+                
+                % isolate input for this step (may need to make it U(1,:)
+                u_k_sc = U( 2 , : );
                 
                 % scaleup the input for the system simulation
                 u_k = obj.scaleup.u( u_k_sc )';       % (no scaling) NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

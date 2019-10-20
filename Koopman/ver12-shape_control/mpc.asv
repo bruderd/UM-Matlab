@@ -504,7 +504,7 @@ classdef mpc
             
             % check that reference trajectory has correct dimensions
             if size( ref , 2 ) ~= size( obj.projmtx , 1 )
-%                 error('Reference trajectory is not the correct dimension');   % removed just for now ( 2019-10-19 )
+                error('Reference trajectory is not the correct dimension');
             elseif size( ref , 1 ) > Np + 1
                 ref = ref( 1 : Np + 1 , : );    % remove points over horizon
             elseif size( ref , 1 ) < Np + 1
