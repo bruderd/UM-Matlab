@@ -503,8 +503,8 @@ classdef mpc
             zx = obj.lift.zx( statenow.y' );
             
             % check that reference trajectory has correct dimensions
-            if size( ref , 2 ) ~= size( obj.projmtx , 1 )
-%                 error('Reference trajectory is not the correct dimension');   % removed just for now ( 2019-10-19 )
+            if size( ref , 2 ) ~= obj.params.n    % size( obj.projmtx , 1 )
+                error('Reference trajectory is not the correct dimension');   % removed just for now ( 2019-10-19 )
             elseif size( ref , 1 ) > Np + 1
                 ref = ref( 1 : Np + 1 , : );    % remove points over horizon
             elseif size( ref , 1 ) < Np + 1
@@ -513,7 +513,7 @@ classdef mpc
                 ref = ref_temp;     % repeat last point for remainer of horizon
             end
             
-            % lift the reference trajectory (try to vectorize by modifying the zx liftin function
+            % lift the reference trajectory (try to vectorize by modifying the zx lifting function
             ref_zx = zeros( size(ref,1) , length(zx) );
             for i = 1 : size( ref , 1 )
                 ref_zx(i,:) = obj.lift.zx( ref(i,:)' )';
@@ -531,17 +531,17 @@ classdef mpc
             A = obj.constraints.L;
             b = - obj.constraints.M * zx + c;
             
-%             % tack on "memory" constraint to fix initial input u_0
-%             Atack = [ [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - obj.params.m ) ];
-% %             Atack_bot = [ sparse( 2*obj.params.m , obj.params.m) , [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - 2*obj.params.m ) ];
-% %             Atack = [ Atack_top ; Atack_bot ];
-%             if isfield( traj , 'unl' )
-%                 btack = [ traj.unl(end,:)' ; -traj.unl(end,:)' ];
-%             else
-%                 btack = [ traj.u(end,:)' ; -traj.u(end,:)' ];
-%             end
-%             A = [A ; Atack];    % tack on memory constraint
-%             b = [b ; btack];
+            % tack on "memory" constraint to fix initial input u_0
+            Atack = [ [ speye( obj.params.nzx ) ; -speye( obj.params.nzx ) ] , sparse( 2*obj.params.nzx , size(A,2) - obj.params.nzx ) ];
+%             Atack_bot = [ sparse( 2*obj.params.m , obj.params.m) , [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - 2*obj.params.m ) ];
+%             Atack = [ Atack_top ; Atack_bot ];
+            if isfield( traj , 'e' )
+                btack = [ traj.e(end,:)' ; -traj.e(end,:)' ];
+            else
+                btack = [ traj.u(end,:)' ; -traj.u(end,:)' ];
+            end
+            A = [A ; Atack];    % tack on memory constraint
+            b = [b ; btack];
             
             % solve the MPC problem
             Evec = quadprog_gurobi( H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)

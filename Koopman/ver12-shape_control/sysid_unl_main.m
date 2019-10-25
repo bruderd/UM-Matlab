@@ -14,14 +14,28 @@ data4sysid = load( [datafile_path , datafile_name] );
 %% construct sysid class
 options = {};
 sysid_unl = sysid_unl( data4sysid, options ,...
-    'obs_type' , { 'poly'} ,...
+    'obs_type' , { 'fourier_sparser' } ,...
     'obs_degree' , [ 2 ] ,...
     'snapshots' , Inf ,...
-    'lasso' , [ 10 ] ,...
+    'lasso' , [ 1 10 100 ] ,...
     'delays' , 0 ,...
     'isupdate' , false,...
     'armclass' , [] ,...
     'liftinput' , 1 );
+
+%% validate model(s)
+% could also manually do this for one model at a time
+
+results = cell( size(sysid_unl.candidates) );    % store results in a cell array
+err = cell( size(sysid_unl.candidates) );    % store error in a cell array 
+
+if iscell(sysid_unl.candidates)
+    for i = 1 : length(sysid_unl.candidates)
+        [ results{i} , err{i} ] = sysid_unl.valNplot_model( i );
+    end
+else
+    [ results{1} , err{1} ] = sysid_unl.valNplot_model;
+end
 
 %% calculate the  no-input-model error on the training data
 
@@ -39,8 +53,9 @@ end
 
 %% train neural network to map from nu to u
 
-[ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [ sysid_unl.traindata.nu , sysid_unl.traindata.y(1:end-1,:) ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , : )  );
+[ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [sysid_unl.traindata.nu , sysid_unl.traindata.y(1:end-1,:) ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , : )  );           %train from nu and state
 % [ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [ sysid_unl.traindata.nu ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , : )  );
+% [ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [ sysid_unl.traindata.zu , sysid_unl.traindata.y(1:end-1,:) ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , : )  );    % train from zu and state
 
 %% modify model so that it will work with mpc
 
@@ -66,22 +81,7 @@ sysid_unl.params.NLinput = sysid_unl.e2u.fun;
 % 
 % sysid_unl.params.NLinput = sysid_unl.e2u.fun;
 
-%NEED TO MODIFY BELOW THIS LINE--------------------------------------------  
-
-%% validate model(s)
-% could also manually do this for one model at a time
-
-results = cell( size(sysid_unl.candidates) );    % store results in a cell array
-err = cell( size(sysid_unl.candidates) );    % store error in a cell array 
-
-if iscell(sysid_unl.candidates)
-    for i = 1 : length(sysid_unl.candidates)
-        [ results{i} , err{i} ] = sysid_unl.valNplot_model( i );
-    end
-else
-    [ results{1} , err{1} ] = sysid_unl.valNplot_model;
-end
-    
+%NEED TO MODIFY BELOW THIS LINE--------------------------------------------      
 
 
 %% save model(s)
