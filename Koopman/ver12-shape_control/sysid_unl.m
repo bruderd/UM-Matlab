@@ -10,6 +10,7 @@ classdef sysid_unl < sysid
         e2u_lift;       % function for evaluating basis functions
         
         e2u;            % struct to hold e2u function and nnetwork
+        nu2u;           % struct to hold nu2u function and nnetwork
     end
     
     methods

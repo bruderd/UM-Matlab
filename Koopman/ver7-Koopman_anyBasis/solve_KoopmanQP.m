@@ -47,8 +47,9 @@ Aq = [ -speye(2*params.N^2) ; ones(1 , 2*params.N^2) ];
 bq = [ zeros(2*params.N^2 , 1) ; t ];
 
 % Solve the quadratic program
-options = optimoptions('quadprog', 'Display', 'iter');
-[ x, fval, exitflag ] = quadprog(H, f, Aq, bq, [], [], [], [], [], options);
+% options = optimoptions('quadprog', 'Display', 'iter');
+% [ x, fval, exitflag ] = quadprog(H, f, Aq, bq, [], [], [], [], [], options);
+[ x, fval, exitflag ] = quadprog(H, f, Aq, bq, [], [], [], [], []);
 
 % Recover Uvec from the optimization variable
 xout = M * x;

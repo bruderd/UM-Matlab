@@ -5,14 +5,17 @@ function plot_state_eval( data , koopsim , params)
 
 fig = figure;
 
+range = 1 : 12*150;  % data index range 
+
 % f(x) = x_1
 subplot(2,1,1)
 hold on
-plot( data.val1.t , data.val1.x(:,1) , 'Color', [0.5 , 0.5 , 0.5] , 'LineWidth' , 2);  % real data
-plot( koopsim.val1.t , koopsim.val1.x(:,1) , 'b' , 'LineWidth' , 1);  % koopman simulation
+plot( data.val1.t(range) , data.val1.x(range,1) , 'Color', [0.5 , 0.5 , 0.5] , 'LineWidth' , 2);  % real data
+plot( koopsim.val1.t(range) , koopsim.val1.x(range,1) , 'b:' , 'LineWidth' , 2);  % koopman simulation
 hold off
-ylabel( '$ x_1 $' , 'interpreter' , 'latex' );
+ylabel( '$ y $' , 'interpreter' , 'latex' );
 xlabel( 'Time (s)' , 'interpreter' , 'latex' );
+yticks([]);
 
 % create legend for the plots
 legend({ 'Validation Data' , 'Koopman Prediction' } , 'Location' , 'northeast');
@@ -20,12 +23,12 @@ legend({ 'Validation Data' , 'Koopman Prediction' } , 'Location' , 'northeast');
 % f(x) = x_2
 subplot(2,1,2)
 hold on
-plot( data.val1.t , data.val1.x(:,2) , 'Color', [0.5 , 0.5 , 0.5] , 'LineWidth' , 2);  % real data
-plot( koopsim.val1.t , koopsim.val1.x(:,2) , 'b' , 'LineWidth' , 1);  % koopman simulation
+plot( data.val1.t(range) , data.val1.x(range,2) , 'Color', [0.5 , 0.5 , 0.5] , 'LineWidth' , 2);  % real data
+plot( koopsim.val1.t(range) , koopsim.val1.x(range,2) , 'b:' , 'LineWidth' , 2);  % koopman simulation
 hold off
-ylabel( '$ x_2 $' , 'interpreter' , 'latex' );
+ylabel( '$ z $' , 'interpreter' , 'latex' );
 xlabel( 'Time (s)' , 'interpreter' , 'latex' );
-
+yticks([]);
 
 
 % % change y-axis of all plots in figure

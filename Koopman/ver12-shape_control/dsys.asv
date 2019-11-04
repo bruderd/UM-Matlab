@@ -16,11 +16,13 @@ classdef dsys
             params.m = 1;       % input dimension
             params.Ts = 0.01;   % sampling time
             params.umax = 4;    % maxabs input value
-            % other needed parameters (try to remove extranneous ones)
-            params.nx = params.n;   % dimension of the full state (joint angles and joing velocities)
-            params.ny = 1;   % dimension of measured output (mocap coordinates + end effector orientation)
-            params.nu = params.m;  % dimension of the input (reference angle at each joint)
             obj.params = params;
+            
+            % other needed parameters (try to remove extranneous ones)
+            % general system parameters (make sure to include these an any system class)
+            params.nx = params.Nlinks * 2;   % dimension of the full state (joint angles and joing velocities)
+            params.ny = 2 * (params.Nlinks ) + 2;   % dimension of measured output (mocap coordinates + end effector orientation)
+            params.nu = params.Nlinks;  % dimension of the input (reference angle at each joint)
             
             % replace default values with user input values
             obj = obj.parse_args( varargin{:} );
@@ -80,7 +82,7 @@ classdef dsys
             %   y - array containing the corresponding output values. Each
             %    row is an output.
             
-            y = x(:,2);
+            y = x;
         end
             
         %% simulation

@@ -24,15 +24,15 @@ params.getData = 'file';            % ('exp' or 'file')
 params.basisID = 'poly';   % ('fourier' or 'poly' or 'fourier_sparser' or 'thinplate' or 'gaussian')
 
 % parameters for reading in data (these affect how shapshot pairs built from raw data).
-params.numTrials        = 13;        % numer of sysid trials
-params.numVals          = 13;        % number of validation trials
+params.numTrials        = 15;        % numer of sysid trials
+params.numVals          = 1;        % number of validation trials
 params.Ts               = 0.083;     % sampling period
-params.K                = 12*300*13;     % numer of snapshotPairs to take
+params.K                = 12*300*14;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 params.scale            = 0.9;      % scale down all state to be in range [-scale , scale]
 params.nd               = 1;        % number of delays to include in the snapshot pairs
 
-params.systemName          = 'larmv5_poly2_13val300s_13sid_sc09_46800pts_1del_Ts083';  % name of current system
+params.systemName          = 'forTOWNER_larmv5_poly2_13val300s_13sid_sc09_46800pts_1del_Ts083';  % name of current system
 % params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 params.filterWindow        = floor( [1, 1] );  % no smoothing
 % params.filterWindow        = floor( [6, 6] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.

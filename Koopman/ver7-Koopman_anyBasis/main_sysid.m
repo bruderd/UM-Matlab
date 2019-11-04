@@ -53,7 +53,7 @@ params.Ts               = 0.02;     % sampling period
 params.K                = 5000;     % numer of snapshotPairs to take
 params.numericalDerivs  = false;    % choose whether or not to take numerical derivatives of states (boolean)
 
-params.systemName          = 'snake_5000pts_scale1_polyBasis_3sData';  % name of current system
+params.systemName          = 'snake_5000pts_scale1_polyBasis_3sData_new';  % name of current system
 params.filterWindow        = floor( [1/params.Ts, 1/params.Ts] );  % if taking numerical derivatives, specifies the moving mean window before and after derivatives taken.
 
 % output parameters

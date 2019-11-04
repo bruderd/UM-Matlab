@@ -53,8 +53,8 @@ end
 
 %% train neural network to map from nu to u
 
-[ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [sysid_unl.traindata.nu , sysid_unl.traindata.y(1:end-1,:) ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , : )  );           %train from nu and state
-% [ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [sysid_unl.traindata.nu ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , :) );    % train from nu
+[ sysid_unl.e2u.nnet , sysid_unl.nu2u.fun ] = train_nnet( [sysid_unl.traindata.nu , sysid_unl.traindata.y(1:end-1,:) ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , : )  );           %train from nu and state
+% [ sysid_unl.nu2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [sysid_unl.traindata.nu ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , :) );    % train from nu
 % [ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [sysid_unl.traindata.e , sysid_unl.traindata.y(1:end-1,:) ] , sysid_unl.traindata.u( 1 : size( e , 1 ) , : )  );           %train from e and state
 
 %% modify model so that it will work with mpc
