@@ -570,7 +570,7 @@ classdef mpc
             end
             
             % B
-            Bhere = speye( N );
+            Bhere = speye( N ); % identity matrix so MPC will output "error" as the pseudoinput
             Bheight = N*(obj.horizon+1);
             Bcolwidth = size(Bhere,2);
             Bcol = sparse( Bheight , Bcolwidth );    % first column of B matrix
@@ -609,7 +609,7 @@ classdef mpc
             obj.cost.A = A; obj.cost.B = B; obj.cost.C = C; obj.cost.Q = Q; obj.cost.R = R; % component matrices
         end
         
-        % get_constraintMatrices: Constructs the constraint matrices
+        % get_constraintMatrices_unl: Constructs the constraint matrices
         function obj = get_constraintMatrices_unl( obj )
             %get_constraintMatrices: Constructs the constraint matrices for
             % the mpc optimization problem.

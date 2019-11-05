@@ -46,7 +46,7 @@ end
 [ nu , Beta , sysid_unl.traindata ] = sysid_unl.get_nu( sysid_unl.traindata );
 
 % also calculate nu for the validation data
-for i = 1 : size( sysid_unl.valdata , 1 )
+for i = 1 : size( sysid_unl.valdata , 2 )
     [ ~ , sysid_unl.valdata{i} ] = sysid_unl.get_e( sysid_unl.valdata{i} );
     sysid_unl.valdata{i}.nu = sysid_unl.valdata{i}.e * Beta';
 end

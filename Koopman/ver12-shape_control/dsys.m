@@ -15,10 +15,10 @@ classdef dsys
             params.n = 2;       % state dimension
             params.m = 1;       % input dimension
             params.Ts = 0.01;   % sampling time
-            params.umax = 4;    % maxabs input value
+            params.umax = 1;    % maxabs input value
             % other needed parameters (try to remove extranneous ones)
             params.nx = params.n;   % dimension of the full state (joint angles and joing velocities)
-            params.ny = 1;   % dimension of measured output (mocap coordinates + end effector orientation)
+            params.ny = 2;   % dimension of measured output (mocap coordinates + end effector orientation)
             params.nu = params.m;  % dimension of the input (reference angle at each joint)
             obj.params = params;
             
@@ -55,18 +55,23 @@ classdef dsys
         function f = vf( obj , t , x , u )
             %vf: Explicit dynamics for system
             
-            % Bilinear motor from Korda/Mezic MPC paper
-            La = 0.314;
-            Ra = 12.345;
-            km = 0.253;
-            J = 0.00441;
-            B = 0.00732;
-            tau1 = 1.47;
-            ua = 60;
+%             % Bilinear motor from Korda/Mezic MPC paper
+%             La = 0.314;
+%             Ra = 12.345;
+%             km = 0.253;
+%             J = 0.00441;
+%             B = 0.00732;
+%             tau1 = 1.47;
+%             ua = 60;
+%             
+%             f = zeros(2,1);
+%             f(1) = -( Ra / La ) * x(1) - ( km / La ) * x(2) * u(1) + ua / La;
+%             f(2) = -( B / J ) * x(2) + ( km / J ) * x(1) * u(1) - tau1 / J; 
             
+            % simple bilinear system
             f = zeros(2,1);
-            f(1) = -( Ra / La ) * x(1) - ( km / La ) * x(2) * u(1) + ua / La;
-            f(2) = -( B / J ) * x(2) + ( km / J ) * x(1) *u(1) - tau1 / J; 
+            f(1) = x(2);
+            f(2) = -0.5*x(2) + x(1) * u(1) + 0.1 * u(1);
         end
         
         %% sensing
@@ -80,7 +85,8 @@ classdef dsys
             %   y - array containing the corresponding output values. Each
             %    row is an output.
             
-            y = x(:,2);
+            y = x;
+%             y = x(:,2);
         end
             
         %% simulation
@@ -115,7 +121,9 @@ classdef dsys
             x0 = zeros( obj.params.n , 1 );
             
             % simulate system
-            [ t , x ] = ode45( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , tsteps , x0);
+            [ t , x ] = ode45( @(t,x) obj.vf( t , x , u(floor(t/obj.params.Ts) + 1 , : )' ) , tsteps , x0);  %variable time step
+%             x = ode5( @(t,x) obj.vf( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , tsteps , x0);    % fixed time step 
+%             t = tsteps;
             
             % define output
             sim.t = t;  % time vector
