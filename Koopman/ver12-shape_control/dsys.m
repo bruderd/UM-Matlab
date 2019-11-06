@@ -11,7 +11,7 @@ classdef dsys
             %CLASS CONSTRUCTOR
             
             % set default parameter values
-            params.sysName = 'bilinear-motor';
+            params.sysName = 'simple-bilinear';
             params.n = 2;       % state dimension
             params.m = 1;       % input dimension
             params.Ts = 0.01;   % sampling time
