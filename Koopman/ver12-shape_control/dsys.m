@@ -11,7 +11,7 @@ classdef dsys
             %CLASS CONSTRUCTOR
             
             % set default parameter values
-            params.sysName = 'simple-bilinear';
+            params.sysName = 'bilinear-motor';
             params.n = 2;       % state dimension
             params.m = 1;       % input dimension
             params.Ts = 0.01;   % sampling time
@@ -55,23 +55,23 @@ classdef dsys
         function f = vf( obj , t , x , u )
             %vf: Explicit dynamics for system
             
-%             % Bilinear motor from Korda/Mezic MPC paper
-%             La = 0.314;
-%             Ra = 12.345;
-%             km = 0.253;
-%             J = 0.00441;
-%             B = 0.00732;
-%             tau1 = 1.47;
-%             ua = 60;
-%             
-%             f = zeros(2,1);
-%             f(1) = -( Ra / La ) * x(1) - ( km / La ) * x(2) * u(1) + ua / La;
-%             f(2) = -( B / J ) * x(2) + ( km / J ) * x(1) * u(1) - tau1 / J; 
+            % Bilinear motor from Korda/Mezic MPC paper
+            La = 0.314;
+            Ra = 12.345;
+            km = 0.253;
+            J = 0.00441;
+            B = 0.00732;
+            tau1 = 1.47;
+            ua = 60;
             
-            % simple bilinear system
             f = zeros(2,1);
-            f(1) = x(2);
-            f(2) = -0.5*x(2) + x(1) * u(1) + 0.1 * u(1);
+            f(1) = -( Ra / La ) * x(1) - ( km / La ) * x(2) * u(1) + ua / La;
+            f(2) = -( B / J ) * x(2) + ( km / J ) * x(1) * u(1) - tau1 / J; 
+            
+%             % simple bilinear system
+%             f = zeros(2,1);
+%             f(1) = x(2);
+%             f(2) = -0.5*x(2) + x(1) * u(1) + 0.1 * u(1);
         end
         
         %% sensing
@@ -85,8 +85,8 @@ classdef dsys
             %   y - array containing the corresponding output values. Each
             %    row is an output.
             
-            y = x;
-%             y = x(:,2);
+%             y = x;
+            y = x(:,2);
         end
             
         %% simulation

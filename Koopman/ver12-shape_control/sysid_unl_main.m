@@ -53,7 +53,8 @@ end
 
 %% train neural network to map from nu to u
 
-[ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [sysid_unl.traindata.nu , sysid_unl.traindata.y(1:end-1,:) ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , : )  );           %train from nu and state
+noise = 0.1 * ( rand( size(sysid_unl.traindata.nu) ) - 0.5 );   % add noise to make the neural network more robust to disturbances
+[ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [sysid_unl.traindata.nu + noise, sysid_unl.traindata.y(1:end-1,:) ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , : )  );           %train from nu and state
 % [ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [sysid_unl.traindata.nu ] , sysid_unl.traindata.u( 1 : size( nu , 1 ) , :) );    % train from nu
 % [ sysid_unl.e2u.nnet , sysid_unl.e2u.fun ] = train_nnet( [sysid_unl.traindata.e , sysid_unl.traindata.y(1:end-1,:) ] , sysid_unl.traindata.u( 1 : size( e , 1 ) , : )  );           %train from e and state
 
