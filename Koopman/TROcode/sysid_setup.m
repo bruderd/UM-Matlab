@@ -1,9 +1,7 @@
-% sysid_main
+% sysid_setup
 %
 % Creates a sysid class and walks through all of the steps of building a
 % model from data, validating its performance, and saving it (if desired)
-% HEAVILY MODIFIED 8/17/2019. Still have commented out peices but should
-% delete most of the code later...
 
 
 %% gather training data (need to prepare data file before running this)
