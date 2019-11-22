@@ -418,20 +418,20 @@ classdef sysid
             % add a constant term to the end of the set
             fullBasis = [ fullBasis ; sym(1) ];
             
-            % define outputs
-            obj.basis.full = fullBasis;
-            obj.basis.jacobian = jacobian( fullBasis , x );
-            obj.lift.full = matlabFunction( fullBasis , 'Vars' , {zeta} );
-            obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , {x,u} );
-            obj.params.N = length( fullBasis ); % the dimension of the lifted state
-            
             % remove current input from zeta
             if obj.liftinput == 1
-                obj.params.zeta = zeta(1 : obj.params.nzeta);
+                zeta_u = zeta;
+                zeta = zeta(1 : obj.params.nzeta);
             end
             
-%             % save the sysid class object (may not want to include this here, better done externally)
-%             obj = obj.save_class( 0 );
+            % define outputs
+            obj.params.zeta = zeta;
+            obj.basis.full = fullBasis;
+            obj.basis.jacobian = jacobian( fullBasis , zeta );
+            obj.lift.full = matlabFunction( fullBasis , 'Vars' , { zeta_u } );
+            obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { zeta , u } );
+            obj.params.N = length( fullBasis ); % the dimension of the lifted state
+
         end
         
         % def_polyLift (defines polynomial basis functions)
@@ -869,29 +869,31 @@ classdef sysid
             Aq = [ -speye(2*Nm^2) ; ones(1 , 2*Nm^2) ];
             bq = [ zeros(2*Nm^2 , 1) ; t ];
             
-            % enforce delay constraint (see notebook from 2019-8-22)
-            if nd >= 1
-                Ad_pos = speye( Nm^2 );
-                Ad_pos = Ad_pos( n*Nm+1 : Nm*( n*(nd+1) + mnd ) , : );  % remove unused rows
-                bd_pos = zeros( Nm * ( nnd + mnd ) , 1 );
-                for i = 1 : nnd     % state delays
-                    index = (Nm+1) * (i-1) + 1;
-                    bd_pos(index,1) = 1;
+            if obj.liftinput == 0   % only do this for linear models
+                % enforce delay constraint (see notebook from 2019-8-22)
+                if nd >= 1
+                    Ad_pos = speye( Nm^2 );
+                    Ad_pos = Ad_pos( n*Nm+1 : Nm*( n*(nd+1) + mnd ) , : );  % remove unused rows
+                    bd_pos = zeros( Nm * ( nnd + mnd ) , 1 );
+                    for i = 1 : nnd     % state delays
+                        index = (Nm+1) * (i-1) + 1;
+                        bd_pos(index,1) = 1;
+                    end
+                    for i = 1 : m   % first input delay
+                        index = Nm * nnd + N + (Nm+1) * (i-1) + 1;
+                        bd_pos(index,1) = 1;
+                    end
+                    for i = 1 : m*(nd-1)    % subsequent input delays (nd > 1)
+                        index = Nm * (nnd+m) + nnd + (Nm+1) * (i-1) + 1;
+                        bd_pos(index,1) = 1;
+                    end
+                    Ad = [ Ad_pos ; -Ad_pos ] * M;
+                    bd = [ bd_pos ; -bd_pos ];
+                    
+                    % tack on the the delay constraint
+                    Aq = [ Aq ; Ad ];
+                    bq = [ bq ; bd ];
                 end
-                for i = 1 : m   % first input delay
-                    index = Nm * nnd + N + (Nm+1) * (i-1) + 1;
-                    bd_pos(index,1) = 1;
-                end
-                for i = 1 : m*(nd-1)    % subsequent input delays (nd > 1)
-                    index = Nm * (nnd+m) + nnd + (Nm+1) * (i-1) + 1;
-                    bd_pos(index,1) = 1;
-                end
-                Ad = [ Ad_pos ; -Ad_pos ] * M;
-                bd = [ bd_pos ; -bd_pos ];
-                
-                % tack on the the dely constraint
-                Aq = [ Aq ; Ad ];
-                bq = [ bq ; bd ];
             end
             
             % Solve the quadratic program
@@ -966,6 +968,12 @@ classdef sysid
             %       F_func = function handle for function that evaluates F(x,u)
             %   obj.model - property of struct which stores the model
            
+            % Ensure Koopman is PSD by adding constant along diagonal
+            [ ~ , Dpx ] = eig( koopData.K );
+            if any( diag(Dpx) < 0 )
+                koopData.K = koopData.K + eye( size(koopData.K,1) ) * 1e-7;
+            end
+            
             % Calculate the infiniesimal generator as funtion of coeffients, and from data (DNE)
             G = ( 1 / obj.params.Ts) * logm( koopData.K );     % infinitesimal generator from data
   
@@ -978,7 +986,7 @@ classdef sysid
             F = W * obj.basis.full;
             
             out.F_sym = F;
-            out.F_func = matlabFunction( F , 'Vars', {obj.params.x, obj.params.u} );
+            out.F_func = matlabFunction( F , 'Vars', {obj.params.zeta, obj.params.u} );
             out.params = obj.params;    % save local copy of model parameters
             
             % add model substruct to the class
@@ -990,18 +998,18 @@ classdef sysid
             %calc_W: Calculates the coefficient matrix W that satisfies xdot = W*psi(x,u)
             %   Detailed explanation goes here
             
-            n = params.n;       % dimension of state, x
+            nzeta = params.nzeta;       % dimension of state, x
             N = params.N;       % length of the basis
             K = size(dataPoints,1);     % total number of datapoints
             
             Ldiag = kron( ones(K,1) , L');    % diagonally stack the transpose of L
             
             % evaluate the basis jacobian at each point and stack the result
-            dpsi_dx = zeros(K*N, n);
+            dpsi_dx = zeros(K*N, nzeta);
             for i = 1 : K
-                x = dataPoints.alpha( i , 1:n )';
+                zeta = dataPoints.alpha( i , 1:nzeta )';
                 u = dataPoints.u( i , : )';
-                dpsi_dx( (i-1)*N+1 : i*N , : ) =  obj.lift.jacobian(x,u);
+                dpsi_dx( (i-1)*N+1 : i*N , : ) =  obj.lift.jacobian(zeta,u);
             end
             
             W = dpsi_dx \ Ldiag;
@@ -1123,11 +1131,12 @@ classdef sysid
             end
             
             % set initial condition
-            y0 = yreal( 1, : )';
+            zeta0 = zetareal( 1, : )';
             
             % simulate nonlinear model
-            [ tsim , ysim ] = ode45( @(t,y) model.F_func( y , ureal( floor(t/obj.params.Ts)+1 ,:)' ) , treal , y0 );
+            [ tsim , zetasim ] = ode45( @(t,y) model.F_func( y , ureal( floor(t/obj.params.Ts)+1 ,:)' ) , treal , zeta0 );
             usim = ureal;
+            ysim = zetasim( : , 1 : obj.params.n );
             
             % save simulations in output struct
             results = struct;
