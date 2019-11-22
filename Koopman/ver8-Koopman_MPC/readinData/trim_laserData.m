@@ -9,7 +9,8 @@ function [t,x,u] = trim_laserData(tstart, tend)
 
 % Prompt user to identify data file
 disp(['Please select .mat file corresponding to raw data.']);
-[data_file,data_path] = uigetfile('C:\Users\danie\Google Drive\PhD\Research\TRI\Labview\KoopmanMPC\Matlab\sysid\dataFiles\v5_12hz');
+% [data_file,data_path] = uigetfile('C:\Users\danie\Google Drive\PhD\Research\TRI\Labview\KoopmanMPC\Matlab\sysid\dataFiles\v5_12hz');
+[data_file,data_path] = uigetfile('rawdataFiles_v5');
 [data_filepath,data_name,data_ext] = fileparts([data_path, data_file]);
 foo = load([data_path, data_file]);
 rawdata = foo.sysidData;

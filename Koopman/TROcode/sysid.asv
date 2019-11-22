@@ -420,9 +420,8 @@ classdef sysid
             
             % define outputs
             obj.basis.full = fullBasis;
-            obj.basis.jacobian = jacobian( fullBasis , x );
             obj.lift.full = matlabFunction( fullBasis , 'Vars' , {zeta} );
-            obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , {x,u} );
+            obj.lift.jacobian = matlabFunction( jacobian( fullBasis , x ) , 'Vars' , {x,u} );
             obj.params.N = length( fullBasis ); % the dimension of the lifted state
             
             % remove current input from zeta
@@ -972,7 +971,7 @@ classdef sysid
             % solve for the coefficients, i.e. Eq. (18) from Mauroy and Gonclaves (DNE)
             
             % matrix of coefficents of monomials
-            W = obj.calc_W( G , obj.snapshotPairs , obj.params );
+            W = obj.calc_W( G , obj.snapshotPairs.alpha , obj.params );
             
             % dynamics (gives symbolic expression in terms of state and input)
             F = W * obj.basis.full;
@@ -999,8 +998,8 @@ classdef sysid
             % evaluate the basis jacobian at each point and stack the result
             dpsi_dx = zeros(K*N, n);
             for i = 1 : K
-                x = dataPoints.alpha( i , 1:n )';
-                u = dataPoints.u( i , : )';
+                x = dataPoints( i , 1:n )';
+                u = dataPoints( i , (n+1):end )';
                 dpsi_dx( (i-1)*N+1 : i*N , : ) =  obj.lift.jacobian(x,u);
             end
             
@@ -1126,7 +1125,8 @@ classdef sysid
             y0 = yreal( 1, : )';
             
             % simulate nonlinear model
-            [ tsim , ysim ] = ode45( @(t,y) model.F_func( y , ureal( floor(t/obj.params.Ts)+1 ,:)' ) , treal , y0 );
+%             tspan = 0 : koopmodel.params.Ts : mpcParams.Np * koopmodel.params.Ts;
+            [ tsim , ysim ] = ode45( @(t,x) model.F_func( x , ureal( floor(t/obj.params.Ts)+1 ,:)' ) , treal , y0 );
             usim = ureal;
             
             % save simulations in output struct

@@ -80,15 +80,15 @@ classdef data
             if iscell( datafile_name )  % check if it's cell array
                 data_merged = cell( 1 , length(datafile_name) );
                 for i = 1 : length(datafile_name)
-%                     data_merged{i} = load( [datafile_path , datafile_name{i}] );
-                    temp = load( [datafile_path , datafile_name{i}] );
-                    data_merged{i} = temp.sysidData;
+                    data_merged{i} = load( [datafile_path , datafile_name{i}] );
+%                     temp = load( [datafile_path , datafile_name{i}] );
+%                     data_merged{i} = temp.sysidData;
                 end
             else    % if not a cell array, turn it into 1x1 cell array
                 data_merged = cell(1,1);
-%                 data_merged{1} = load( [datafile_path , datafile_name] );
-                temp = load( [datafile_path , datafile_name] );
-                data_merged{1} = temp.sysidData;
+                data_merged{1} = load( [datafile_path , datafile_name] );
+%                 temp = load( [datafile_path , datafile_name] );
+%                 data_merged{1} = temp.sysidData;
                 disp('FYI, you only selected one file so your output cell array will have dimension 1.');
             end   
             
@@ -106,9 +106,9 @@ classdef data
                     data_merged{i}.u = data_merged{i}.U;
                     data_merged{i} = rmfield( data_merged{i} , 'U' );
                 end
-                if ismember( 'X' , fields( data_merged{i} ) )
-                    data_merged{i}.x = data_merged{i}.X;
-                    data_merged{i} = rmfield( data_merged{i} , 'X' );
+                if ismember( 'x' , fields( data_merged{i} ) )
+                    data_merged{i}.y = data_merged{i}.x;
+%                     data_merged{i} = rmfield( data_merged{i} , 'y' );
                 end
             end
         end
