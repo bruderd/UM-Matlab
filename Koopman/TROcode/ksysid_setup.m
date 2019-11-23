@@ -1,4 +1,4 @@
-% sysid_setup
+% ksysid_setup
 %
 % Creates a sysid class and walks through all of the steps of building a
 % model from data, validating its performance, and saving it (if desired)
@@ -12,32 +12,32 @@ data4sysid = load( [datafile_path , datafile_name] );
 
 
 %% construct sysid class
-sysid = sysid( data4sysid, ...
+ksysid = ksysid( data4sysid, ...
         'model_type' , 'linear' ,...
         'obs_type' , { 'poly' } ,...
         'obs_degree' , [ 2 ] ,...
         'snapshots' , Inf ,...
-        'lasso' , [ 1 ] ,...
+        'lasso' , [ 10 ] ,...
         'delays' , 1 ,...
         'isupdate' , false );
 
     
 %% train model(s)
-sysid = sysid.train_models;
+ksysid = ksysid.train_models;
 
 
 %% validate model(s)
 % could also manually do this for one model at a time
 
-results = cell( size(sysid.candidates) );    % store results in a cell array
-err = cell( size(sysid.candidates) );    % store error in a cell array 
+results = cell( size(ksysid.candidates) );    % store results in a cell array
+err = cell( size(ksysid.candidates) );    % store error in a cell array 
 
-if iscell(sysid.candidates)
-    for i = 1 : length(sysid.candidates)
-        [ results{i} , err{i} ] = sysid.valNplot_model( i );
+if iscell(ksysid.candidates)
+    for i = 1 : length(ksysid.candidates)
+        [ results{i} , err{i} ] = ksysid.valNplot_model( i );
     end
 else
-    [ results{1} , err{1} ] = sysid.valNplot_model;
+    [ results{1} , err{1} ] = ksysid.valNplot_model;
 end
     
 

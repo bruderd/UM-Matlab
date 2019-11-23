@@ -1,5 +1,5 @@
-classdef mpc
-    %mpc: Model predictive controller class
+classdef kmpc
+    %kmpc: Model predictive controller class
     %   Detailed explanation goes here
     
     properties
@@ -27,7 +27,7 @@ classdef mpc
     
     methods
         % CLASS CONSTRUCTOR
-        function obj = mpc( sysid_class , varargin )
+        function obj = kmpc( sysid_class , varargin )
             %mpc: Construct an instance of this class
             %   sysid_class - sysid class object with a model and params
             %    properties
@@ -728,7 +728,7 @@ classdef mpc
         end
         
         % run_simulation: Runs a simulation of system under mpc controller
-        function results = run_simulation( obj , ref , x0 , u0)
+        function results = run_simulation( obj , ref , y0 , u0)
             %run_trial: Runs a simulation of system under mpc controller.
             %   Tries to follow the trajectory in ref and impose the
             %   shape constraints in shape_bounds.
@@ -738,11 +738,7 @@ classdef mpc
             %   ref - struct containing reference trajectory with fields:
             %       t - vector of timesteps
             %       y - each row is a desired point at the corresponding timestep
-            %     (note that ref must be scaled same as model).
-            %   shape_bounds - [ TotSteps (or 1) , 2*num_shapeParams ]
-            %     min and max of shape parameters arranged in rows. First
-            %     half of row is min values, 2nd half is max values.
-            %   x0 - [1,n] initial condtion (state of underlying sys not output)
+            %   x0 - [1,n] initial condtion
             %   u0 - [1,m] initial input
             
             % shorthand
@@ -751,13 +747,13 @@ classdef mpc
             
             % set value of initial conditions to zero if none provided
             if nargin < 3
-                x0 = zeros( nd+1 , obj.params.n );
+                y0 = zeros( nd+1 , obj.params.n );
                 u0 = zeros( nd+1 , obj.params.m );
             elseif nargin < 4
-                x0 = kron( ones( nd+1 , 1 ) , x0 );
+                y0 = kron( ones( nd+1 , 1 ) , y0 );
                 u0 = zeros( nd+1 , obj.params.m );
             else
-                x0 = kron( ones( nd+1 , 1 ) , x0 );
+                y0 = kron( ones( nd+1 , 1 ) , y0 );
                 u0 = kron( ones( nd+1 , 1 ) , u0 );
             end
             
@@ -766,7 +762,6 @@ classdef mpc
             ref_sc = obj.scaledown.y( ref_Ts );
             
             % set initial condition
-            y0 = x0;   % outputs same as state since model was learned on data
             initial.y = y0; initial.u = u0;
             [ initial , zeta0 ] = obj.get_zeta( initial );    % LINE NOT NEEDED
             
@@ -777,7 +772,7 @@ classdef mpc
             results.Y = [ y0( end , : ) ];
             results.K = [ 0 ];
             results.R = [ ref.y(1,:) ];
-            results.X = [ x0( end , : ) ];
+            results.X = [ y0( end , : ) ];
             results.Z = [ obj.lift.full( zeta0' )' ]; % lifted states
             
             k = 1;

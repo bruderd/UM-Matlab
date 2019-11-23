@@ -1,5 +1,5 @@
-classdef sysid
-    %sysid: Class for doing Koopman-based sysid
+classdef ksysid
+    %ksysid: Class for doing Koopman-based sysid
     %   Constructed from a sample set of data from an experiment or simulation.
     
     properties
@@ -31,7 +31,7 @@ classdef sysid
     end
     
     methods
-        function obj = sysid( data4sysid , varargin )
+        function obj = ksysid( data4sysid , varargin )
             %CLASS CONSTRUCTOR
             %   data - struct with fields t,x,u,y. Contains results of a
             %   simuation or experiment of the system to be identified
@@ -781,7 +781,7 @@ classdef sysid
             [x,y,u] = deal( snapshotPairs.alpha , snapshotPairs.beta , snapshotPairs.u );
             
             % Build matrices
-            [n, m] = deal( obj.params.n , obj.params.m );
+            [~, m] = deal( obj.params.n , obj.params.m );
             Nm = obj.params.N + m;   % dimension of z plus input
             N = obj.params.N;       % dimension of z (i.e. lifted state)
             
