@@ -420,7 +420,6 @@ classdef sysid
             
             % remove current input from zeta
             if obj.liftinput == 1
-                zeta_u = zeta;
                 zeta = zeta(1 : obj.params.nzeta);
             end
             
@@ -428,7 +427,7 @@ classdef sysid
             obj.params.zeta = zeta;
             obj.basis.full = fullBasis;
             obj.basis.jacobian = jacobian( fullBasis , zeta );
-            obj.lift.full = matlabFunction( fullBasis , 'Vars' , { zeta_u } );
+            obj.lift.full = matlabFunction( fullBasis , 'Vars' , { [ zeta ; u ] } );
             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { zeta , u } );
             obj.params.N = length( fullBasis ); % the dimension of the lifted state
 
@@ -921,15 +920,7 @@ classdef sysid
             B = UT( 1 : obj.params.N , obj.params.N+1 : end );
             
             % Cy selects the first n entries of the lifted state
-            Cy = [eye(obj.params.n), zeros(obj.params.n , obj.params.N - obj.params.n)]; 
-            
-            % Cshape selects the observables related to shape (assumes they come right after observed state y and the delays of y and u)
-            if isfield( obj.basis , 'armshape' )
-                nshape = length( obj.basis.armshape );
-                Cshape = [ zeros( nshape , obj.params.nzeta ) , eye( nshape ) , zeros( nshape , obj.params.N - obj.params.nzeta - nshape ) ];
-            else
-                Cshape = [];
-            end
+            Cy = [eye(obj.params.n), zeros(obj.params.n , obj.params.N - obj.params.n)];
             
             % find M matrix that (approximately) projects a lifted point onto the subset of all legitimate lifted points in R^N
             Px = koopData.Px; Py = koopData.Py;
@@ -949,7 +940,6 @@ classdef sysid
             out.A = M*A;  % edited to include projection M, 12/11/2018
             out.B = M*B;  % edited to include projection M, 12/11/2018
             out.C = Cy;
-            out.Cshape = Cshape;
             out.M = M;
             out.sys = ss( out.A , out.B , Cy , 0 , obj.params.Ts );  % discrete state space system object
             out.params = obj.params;    % save system parameters as part of system struct    
