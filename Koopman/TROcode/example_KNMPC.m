@@ -53,6 +53,17 @@ else
     [ results{1} , err{1} ] = ksysid.valNplot_model;
 end
 
+% Save the nonlinear system vector field F as a function in local directory
+matlabFunction( ksysid.model.F_sym , 'File' , 'vf_koopman' , 'Vars' , ...
+    { ksysid.params.x , ksysid.params.u } );
+
+
+%%
+%-------------------------------------------------------------------------%
+%----------- Construct Koopman NMPC controller (open-loop) ---------------%
+%-------------------------------------------------------------------------%
+
+% Choose reference trajectory for the controller to follow
 [t_sample,t_ref, traj_ref, traj_ref_sc] = load_files( ksysid );
 
 steps =(t_ref(end)-t_ref(1))/t_sample; 
@@ -66,12 +77,6 @@ xmax = 1;
 
 slp_min = -0.1;
 slp_max = 0.1;
-
-%%
-%-------------------------------------------------------------------------%
-%----------- Construct Koopman NMPC controller (open-loop) ---------------%
-%-------------------------------------------------------------------------%
-
 
 %-------------------------------------------------------------------------%
 %----------------- Provide All Bounds for Problem ------------------------%
@@ -238,17 +243,17 @@ for i = 1:phase_num
     state = [state; solution.phase(i).state];
     
 end
-?
+
 control = solution.parameter;
 control = reshape(control,[3,steps]);
-?
+
 % scale trajectories and inputs back up to real-world values
 state = ksysid.scaleup.y( state );
 traj_ref = ksysid.scaleup.y( traj_ref_sc );
 x0 = ksysid.scaleup.y( x0 );
 xf = ksysid.scaleup.y( xf );
 control = ksysid.scaleup.u( control' )';
-?
+
 % plot control vs. reference trajectory
 figure;
 plot(state(:,1),state(:,2),'LineWidth',1.25);
@@ -262,8 +267,8 @@ xlabel('x');
 ylabel('y');
 legend('trajectory','reference_traj','starting point','ending point');
 title('trajectory comparison');
-?
-?% plot open-loop inputs
+
+% plot open-loop inputs
 figure;
 plot(control(1,:),'Linewidth',1.25);
 hold on;

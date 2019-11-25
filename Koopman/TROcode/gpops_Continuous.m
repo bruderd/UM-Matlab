@@ -1,4 +1,4 @@
-function phaseout = gpops_Continuous( input , ksysid )
+function phaseout = gpops_Continuous( input )
 
     phase_num = input.auxdata.phase_num;
     xf = input.auxdata.xf;
@@ -32,7 +32,7 @@ function phaseout = gpops_Continuous( input , ksysid )
         x = [x_1, x_2]';
         u = [u_1, u_2, u_3]';
         
-        vf2 = ksysid.F_func(x,u);
+        vf2 = vf_koopman(x,u);
 
         dynamics = vf2';
 
