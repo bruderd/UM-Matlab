@@ -235,7 +235,6 @@ elapsed_time = toc;
 
 % Define color(s)
 cb_orange = [255,127,0] ./ 255;   % orange
-cb_grey = [0.25 0.25 0.25 1]; % grey
 
 solution = output.result.solution;
 time = [];
@@ -261,7 +260,7 @@ control = ksysid.scaleup.u( control' )';
 figure;
 plot(state(:,1),state(:,2),'color' , cb_orange , 'LineWidth' , 2);
 hold on;
-plot(traj_ref(:,1),traj_ref(:,2),'color' , cb_grey , 'LineWidth' , 2);
+plot(traj_ref(:,1),traj_ref(:,2),'color' , [0.25 0.25 0.25 1] , 'LineWidth' , 2);
 hold on;
 plot(x0(1),x0(2),'o','MarkerSize',8);
 hold on;
@@ -270,7 +269,6 @@ xlabel('x');
 ylabel('y');
 legend('trajectory','reference_traj','starting point','ending point');
 title('trajectory comparison');
-grid on; box on;
 
 % plot open-loop inputs
 figure;

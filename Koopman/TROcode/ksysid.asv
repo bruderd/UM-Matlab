@@ -123,8 +123,6 @@ classdef ksysid
             obj.lasso = 1e6;
         end
         
-        end
-        
         %% operations on simulation/experimental data (some are redundant and found in the data class)
         
         function [ data_scaled , obj ] = get_scale( obj , data )
