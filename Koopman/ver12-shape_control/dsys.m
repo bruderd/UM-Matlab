@@ -85,8 +85,8 @@ classdef dsys
             %   y - array containing the corresponding output values. Each
             %    row is an output.
             
-%             y = x;
-            y = x(:,2);
+            y = x;
+%             y = x(:,2);
         end
             
         %% simulation

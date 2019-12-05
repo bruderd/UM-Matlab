@@ -15,7 +15,7 @@ u_fromnnet = zeros( Ne-1 , m );
 for i = 1 : Ne-nd
     now = i+nd;
     current.y = sysid_unl.traindata.y(i:i+nd,:);
-    current.u = sysid_unl.traindata.u(i:i+nd,:);
+    current.e = sysid_unl.traindata.e(i:i+nd,:);
     current.unl = sysid_unl.traindata.e(i+nd,:);
     
     Nh = mpc.horizon;
@@ -29,20 +29,20 @@ for i = 1 : Ne-nd
     end
     
     % find the pseudoinput that mpc calculates
-    [ Unl , z ] = mpc.get_mpcInput( current , refhor );
-    U = mpc.params.NLinput(Unl')';  % convert to regular input
+    [ Unl , z ] = mpc.get_mpcInput_unl( current , refhor );
+%     U = mpc.params.NLinput(Unl')';  % convert to regular input
     
     % compare the pseudoinput to the actual error
     upseudo_mpc(i,:) = Unl(2,:);
     upseudo_real(i,:) = sysid_unl.traindata.e(i+1,:);
     upseudo_diff(i,:) = abs( Unl(2,:) - sysid_unl.traindata.e(i+1,:) ); 
     
-    % compare the real input to the input computed from mpc pseudoinput
-    u_mpc(i,:) = U(2,:);
-    u_real(i,:) = sysid_unl.traindata.u(i+1,:);
-    u_diff(i,:) = abs( u_mpc(i,:) - u_real(i,:) );
+%     % compare the real input to the input computed from mpc pseudoinput
+%     u_mpc(i,:) = U(2,:);
+%     u_real(i,:) = sysid_unl.traindata.u(i+1,:);
+%     u_diff(i,:) = abs( u_mpc(i,:) - u_real(i,:) );
     
-    % sanity check: make sure neural network is actually working on perfect pseudoinput data
-    u_fromnnet(i,:) = mpc.params.NLinput(sysid_unl.traindata.e(i,:)')';  % convert to regular input
+%     % sanity check: make sure neural network is actually working on perfect pseudoinput data
+%     u_fromnnet(i,:) = mpc.params.NLinput(sysid_unl.traindata.e(i,:)')';  % convert to regular input
     
 end

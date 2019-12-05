@@ -106,24 +106,27 @@ classdef sysid_unl < sysid
             
             % use pca to find most important components
             [ coeffs , ~ , ~ , ~ , explained , ~ ] = pca( e );
+            emean = mean( e );  % mean value for centering data
             
             % take enough components to explain > 90% of the data
             num_pcs = 1;
-            while sum( explained(1:num_pcs) ) < 95
+            while sum( explained(1:num_pcs) ) < 90
                 num_pcs = num_pcs + 1;
             end
+%             num_pcs = 10;   % DEBUGGING ONLY MUST REMOVE LATER
             
             % define projection matrix from e to nu
             Beta = coeffs( : , 1 : num_pcs )';
 %             Beta = eye( size(e,2) );  % make nu same as e  % MUST UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!
             
             % calculate nu for each value of e in data_in
-            nu = e * Beta';
+            nu = ( e - emean ) * Beta';
             
             % add nu as a field to data_in (if it is a struct)
             data_out = data_in; % just pass through
             if isfield( data_in , 'e' ) % assume data_in is struct containing time series or snapshot pairs 
                 data_out.nu = nu;
+                data_out.emean = emean;
             end
         end
         
