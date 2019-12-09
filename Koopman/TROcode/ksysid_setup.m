@@ -18,7 +18,7 @@ ksysid = ksysid( data4sysid, ...
         'obs_degree' , [ 2 ] ,...       % "degree" of basis functions
         'snapshots' , Inf ,...          % Number of snapshot pairs
         'lasso' , [ 10 ] ,...           % L1 regularization term
-        'delays' , 1 );                 % Numer of state/input delays
+        'delays' , 0 );                 % Numer of state/input delays
 
     
 %% train model(s)

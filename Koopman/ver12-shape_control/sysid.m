@@ -1012,13 +1012,14 @@ classdef sysid
             % find M matrix that (approximately) projects a lifted point onto the subset of all legitimate lifted points in R^N
             Px = koopData.Px; Py = koopData.Py;
             U = koopData.u;
-            L = zeros( size(Px,1) , obj.params.N + obj.params.m);
+%             L = zeros( size(Px,1) , obj.params.N + obj.params.m);  % with input (for sysid_unl)
+            L = zeros( size(Px,1) , obj.params.N); % without input (for sysid)
             for i = 1 : size( Px , 1)
-                L(i,:) = ( A * Px(i,:)' + B * U(i,:)' )' ;        % with input
-%                     L(i,:) = ( A * Px(i,:)' )' ;        % without input
-%                 L(i,:) = ( UT * [ Px(i,:) , U(i,:) ]' )';   % TRO way 2019-11-5 UNDO LATER
+%                 L(i,:) = ( A * Px(i,:)' + B * U(i,:)' )' ;        % with input (for sysid_unl)
+                L(i,:) = ( A * Px(i,:)' )' ;        % without input (for sysid)
             end
-            R = zeros( size(L,1) , obj.params.N + obj.params.m );
+%             R = zeros( size(L,1) , obj.params.N + obj.params.m );     % with input (for sysid_unl)
+            R = zeros( size(L,1) , obj.params.N  );        % without input (for sysid)
             for i = 1 : size( L , 1 )
                 %     R(i,:) = ( stateLift( Cz * L(1,:)' ) )' ;
                 R(i,:) = Py(i,:) ;
