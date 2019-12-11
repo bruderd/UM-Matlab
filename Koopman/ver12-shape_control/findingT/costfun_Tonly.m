@@ -14,7 +14,7 @@ m = params.m;
 T = reshape( arg( 1 : N^2 ) , [N,N] );
 
 % error for each snapshot pair
-err = ( data.Px * T' * A' + data.u * B' - data.Py * T' ) * model.C';
+err = ( data.Px * T' * A' + data.u * B' - data.Py * T' );
 L2err = vecnorm( err , 2 , 2 );
 L1err = sum( abs( err ) , 2 );
 
