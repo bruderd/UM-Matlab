@@ -10,7 +10,7 @@
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm-markers_1-mods_1-links_05-Ts';
+params.sysName = 'arm-angles_1-mods_1-links_05-Ts';
 
 params.Nmods = 1;   % number of modules (actuated sections)
 params.nlinks = 1;      % number of links in each module
@@ -18,7 +18,7 @@ params.Nlinks = params.Nmods * params.nlinks;   % total number of links in robot
 
 % general system parameters (make sure to include these an any system class)
 params.nx = params.Nlinks * 2;   % dimension of the full state (joint angles and joing velocities)
-params.ny = 2 * (params.Nlinks ) + 2;   % dimension of measured output (mocap coordinates + end effector orientation)
+params.ny = 2 * (params.Nlinks ); % + 2;   % dimension of measured output (mocap coordinates + end effector orientation)
 params.nu = params.Nlinks;  % dimension of the input (reference angle at each joint)
 
 % manipulator parameters
@@ -38,7 +38,7 @@ params.ku = 1e-3; % effective input stiffness
 
 % simulation parameters
 params.Ts = 0.05;   % sampling time (for 20 hz)
-params.umax = 7*pi/8; % maximum input value (scalar for all modules, vector for different limits per module)
+params.umax = 4*pi/8; % maximum input value (scalar for all modules, vector for different limits per module)
 
 %% Derive the equations of motion
 % EOM = arm_set_EOM(params);
@@ -48,7 +48,7 @@ params.umax = 7*pi/8; % maximum input value (scalar for all modules, vector for 
 % 
 %% Create class for this system
 
-arm = arm( params , 'output_type' , 'markers');   % choice is 'angles' or 'markers' or 'endeff'
+arm = arm( params , 'output_type' , 'angles');   % choice is 'angles' or 'markers' or 'endeff'
 
 % save this system for later use
 dirname = [ 'systems' , filesep , params.sysName ];

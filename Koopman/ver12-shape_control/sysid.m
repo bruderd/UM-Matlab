@@ -1015,8 +1015,8 @@ classdef sysid
 %             L = zeros( size(Px,1) , obj.params.N + obj.params.m);  % with input (for sysid_unl)
             L = zeros( size(Px,1) , obj.params.N); % without input (for sysid)
             for i = 1 : size( Px , 1)
-%                 L(i,:) = ( A * Px(i,:)' + B * U(i,:)' )' ;        % with input (for sysid_unl)
-                L(i,:) = ( A * Px(i,:)' )' ;        % without input (for sysid)
+                L(i,:) = ( A * Px(i,:)' + B * U(i,:)' )' ;        % with input
+%                 L(i,:) = ( A * Px(i,:)' )' ;        % without input (for sysid_unl maybe? I'm not sure)
             end
 %             R = zeros( size(L,1) , obj.params.N + obj.params.m );     % with input (for sysid_unl)
             R = zeros( size(L,1) , obj.params.N  );        % without input (for sysid)
