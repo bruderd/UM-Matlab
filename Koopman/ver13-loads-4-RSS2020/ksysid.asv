@@ -24,6 +24,7 @@ classdef ksysid
         delays;     % number of delays to include
         liftinput;  % if 1, input is lifted along with state, yielding nonlinear model
         model_type; % 'linear' or 'nonlinear'
+        loaded;     % true or false. Does the system include loads?
         
         traindata;  % scaled exp/sim data for training the model
         valdata;    % scaled exp/sim data for validating the model
@@ -55,6 +56,9 @@ classdef ksysid
             obj.params.m = size( data.u , 2 );  % dimension of input
             obj.params.Ts = mean( data.t(2:end) - data.t(1:end-1) );    % sampling time
             obj.params.isfake = false;  % assume system is real
+            if isfield( data , 'w' )
+                obj.params.nw = size( data.w , 2 );
+            end
             
             % if data has a params field save it as sysParams
             if isfield( data , 'params' )
@@ -72,24 +76,35 @@ classdef ksysid
             obj.obs_degree = [ 1 ];
             obj.snapshots = Inf;
             obj.lasso = [ 1e6 ]; % default is least squares solution
-            obj.delays = 1; % default 1 to ensure model is dynamic
+            obj.delays = 0; % default 0 (was 1 to ensure model is dynamic)
             obj.model_type = 'linear';
+            obj.loaded = false;
             
             % replace default values with user input values
             obj = obj.parse_args( varargin{:} );
             obj.params.nd = obj.delays;  % saves copy in params (for consistency with mpc class)
             obj.params.nzeta = obj.params.n * ( obj.delays + 1 ) + obj.params.m * obj.delays;
             
+            % verify specified model type is valid
             if strcmp( obj.model_type , 'linear' )
                 obj.liftinput = 0;  % default is not to lift input
             elseif strcmp( obj.model_type , 'nonlinear' )
                 obj.liftinput = 1;  % lift the input
             else
                 error('Invalid model_type chosen. Must be linear or nonlinear.');
-            end
+            end    
             
+            % make sure if user specifies a "loaded" model the data has a load field (w)
+            if obj.loaded && ~isfield( data , 'w' )
+                error('You have specified a loaded system, but your training data does not have the required load field (w)');
+            end
+        
             % define the set of observables
-            obj = obj.def_observables( obj.obs_type , obj.obs_degree );
+            if obj.loaded   % observables must include loads
+                obj = obj.def_observables_loaded( obj.obs_type , obj.obs_degree );
+            else
+                obj = obj.def_observables( obj.obs_type , obj.obs_degree );
+            end
             
             % merge the training data into a single big file (requred for training function to work)
             data4train_merged = obj.merge_trials( data4train );
@@ -186,6 +201,20 @@ classdef ksysid
                 obj.scaleup.x = matlabFunction( x_scaleup , 'Vars' , {x} );
             end
             
+            % do same for w if it is part of data struct
+            if ismember( 'w' , fields(data) )
+                w_min = min( data.w );
+                w_max = max( data.w );
+                w_dc = ( w_max + w_min ) ./ 2;
+                scale_w = ( w_max - w_min ) ./ 2;
+                data_scaled.w = ( data.w - w_dc ) ./ scale_w;
+                w = sym( 'w' , [ 1 , size(data.w,2) ] );
+                w_scaledown = ( w - w_dc ) ./ scale_w;
+                obj.scaledown.w = matlabFunction( w_scaledown , 'Vars' , {w} );
+                w_scaleup = ( w .* scale_w ) + w_dc;
+                obj.scaleup.w = matlabFunction( w_scaleup , 'Vars' , {w} );
+            end
+            
             % create scaling functions for zeta
             zeta = sym( 'zeta' , [ 1 , obj.params.nzeta ] );
             zeta_scaledown = sym( zeros( size(zeta) ) );
@@ -222,6 +251,9 @@ classdef ksysid
             if ismember( 'x' , fields(data) )
                 data_resampled.x = interp1( data.t , data.x , tq );
             end
+            if ismember( 'w' , fields(data) )
+                data_resampled.w = interp1( data.t , data.w , tq );
+            end
         end
         
         % scale_data (scale sim/exp data to be in range [-1 , 1])
@@ -245,6 +277,9 @@ classdef ksysid
                 if ismember( 'x' , fields(data) )
                     data_scaled.x = obj.scaledown.x( data.x );  %data.x * obj.params.scaledown.x;
                 end
+                if ismember( 'w' , fields(data) )
+                    data_scaled.w = obj.scaledown.w( data.w );
+                end
             else
                 data_scaled = struct;    % initialize
                 data_scaled.t = data.t;  % time is not scaled
@@ -252,6 +287,9 @@ classdef ksysid
                 data_scaled.u = obj.scaleup.u( data.u );    %data.u * obj.params.scaleup.u;
                 if ismember( 'x' , fields(data) )
                     data_scaled.x = data.scaleup.x( data.x );    %data.x * obj.params.scaleup.x;
+                end
+                if ismember( 'w' , fields(data) )
+                    data_scaled.w = data.scaleup.w( data.w );    %data.x * obj.params.scaleup.x;
                 end
             end
         end
@@ -386,7 +424,7 @@ classdef ksysid
             ud = sym('ud', [obj.params.nd * obj.params.m, 1] , 'real');   % input delays i.e. for 2 delays: [u_i-1, u_i-2]'
             zeta = [x ; xd; ud];    % state variable with delays
             u = sym('u', [obj.params.m, 1] , 'real');   % input vector u
-            if obj.liftinput == 1    % if the includes input in unlifted state
+            if strcmp( obj.model_type , 'nonlinear' )    % if the includes input in unlifted state
                 zeta = [ zeta ; u ];    % just so lifting function works
 %                 obj.params.nzeta = obj.params.nzeta + obj.params.m;
             end
@@ -419,7 +457,7 @@ classdef ksysid
             fullBasis = [ fullBasis ; sym(1) ];
             
             % remove current input from zeta
-            if obj.liftinput == 1
+            if strcmp( obj.model_type , 'nonlinear' )
                 zeta = zeta(1 : obj.params.nzeta);
             end
             
@@ -456,7 +494,7 @@ classdef ksysid
             zeta = [x ; xd; ud];    % state variable with delays
             u = sym('u', [obj.params.m, 1] , 'real');   % input vector u
             w = sym('w', [obj.params.nw, 1] , 'real');  % load vector w
-            if obj.liftinput == 1    % if the includes input in unlifted state
+            if strcmp( obj.model_type , 'nonlinear' )    % if the includes input in unlifted state
                 zeta = [ zeta ; u ];    % just so lifting function works
 %                 obj.params.nzeta = obj.params.nzeta + obj.params.m;
             end
@@ -490,21 +528,24 @@ classdef ksysid
             fullBasis = [ fullBasis ; sym(1) ];
             
             % incorporate the loads into the basis set
-            zw = [ 1 ; w ]';    % load vector, with 1 appended to beginning
+            zw = [ 1 ; w ];    % load vector, with 1 appended to beginning
             Omega = kron( eye( length(zw) ) , fullBasis );
-            
-            
+            fullBasis_loaded = Omega * zw;  % basis with load included
             
             % remove current input from zeta
-            if obj.liftinput == 1
+            if strcmp( obj.model_type , 'nonlinear' )
                 zeta = zeta(1 : obj.params.nzeta);
             end
             
             % define outputs
             obj.params.zeta = zeta;
-            obj.basis.full = fullBasis;
+            obj.params.noload = fullBasis;
+            obj.basis.full = fullBasis_loaded;
+            obj.basis.Omega = Omega;
             obj.basis.jacobian = jacobian( fullBasis , zeta );
-            obj.lift.full = matlabFunction( fullBasis , 'Vars' , { [ zeta ; u ] } );
+            obj.lift.noload = matlabFunction( fullBasis , 'Vars' , { [ zeta ; u ] } );
+            obj.lift.full = matlabFunction( fullBasis_loaded , 'Vars' , { [ zeta ; u ] , w } );
+            obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ zeta ; u ] } );
             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { zeta , u } );
             obj.params.N = length( fullBasis ); % the dimension of the lifted state
 
@@ -771,11 +812,14 @@ classdef ksysid
                     udel(1 , fillrange_u) = data_in.u( i - j , : );
                 end
                 zetak = [ y , ydel , udel ];
-%                 if obj.liftinput == 1     % include input in zeta
+%                 if strcmp( obj.model_type , 'nonlinear' )     % include input in zeta
 %                     zetak = [ zetak , u ];
 %                 end
                 data_out.zeta( ind , : ) = zetak;
                 data_out.uzeta( ind , : ) = data_in.u( i , : );    % current timestep with zeta (input starting at current timestep)
+                if isfield( data_in , 'w' )
+                    data_out.wzeta( ind , : ) = data_in.w( i , : );
+                end
             end
             zeta = data_out.zeta;
         end
@@ -813,6 +857,12 @@ classdef ksysid
             after.zeta = after.zeta( goodpts , : );
             u = u( goodpts , : );
             
+            % if system is loaded, include the load
+            if isfield( data , 'w' )
+                w = data.wzeta( 1:end-1 , : );    % load that happens between before.zeta and after.zeta
+                w = w( goodpts , : );
+            end
+            
             % set the number of snapshot pairs to be taken
             num_max = size( before.zeta , 1 ) - 1; % maximum number of snapshot pairs
             if length(varargin) == 1
@@ -834,6 +884,7 @@ classdef ksysid
             snapshotPairs.alpha = before.zeta( index , : ); 
             snapshotPairs.beta = after.zeta( index , : );
             snapshotPairs.u = u( index , : );
+            snapshotPairs.w = w( index , : );
         end
         
         % get_Koopman (Find the best possible koopman operator from snapshot pairs)
@@ -856,28 +907,45 @@ classdef ksysid
             
             % Extract snapshot pairs
             [x,y,u] = deal( snapshotPairs.alpha , snapshotPairs.beta , snapshotPairs.u );
+            if isfield( snapshotPairs , 'w' )
+                w = snapshotPairs.w;
+                nw = obj.params.nw;
+            else
+                nw = 0; % null nw for when there is no load
+            end
             
             % Build matrices
             [~, m] = deal( obj.params.n , obj.params.m );
             Nm = obj.params.N + m;   % dimension of z plus input
             N = obj.params.N;       % dimension of z (i.e. lifted state)
             
-            if obj.liftinput == 1    % don't append input
-                Px = zeros(length(x), obj.params.N);
-                Py = zeros(length(x), obj.params.N);
+            % preallocation
+            if strcmp( obj.model_type , 'nonlinear' )    % don't append input
+                Px = zeros(length(x), N * (nw+1) );
+                Py = zeros(length(x), N * (nw+1) );
             else    % append input to end of lifted state
-                Px = zeros(length(x), Nm);
-                Py = zeros(length(x), Nm);
+                Px = zeros( length(x), N * (nw+1) + m );
+                Py = zeros( length(x), N * (nw+1) + m );
             end
             for i = 1:length(x)
-                if obj.liftinput == 1    % don't append input if it already is lifted nonlinearly
-                    psix = obj.lift.full( [ x(i,:) , u(i,:) ]' )';   
-                    psiy = obj.lift.full( [ y(i,:) , u(i,:) ]' )';
+                if strcmp( obj.model_type , 'nonlinear' )    % don't append input if it already is lifted nonlinearly
+                    if isfield( snapshotPairs , 'w' )
+                        psix = obj.lift.full( [ x(i,:) , u(i,:) ]' , w(i,:)' )';   
+                        psiy = obj.lift.full( [ y(i,:) , u(i,:) ]' , w(i,:)' )'; 
+                    else
+                        psix = obj.lift.full( [ x(i,:) , u(i,:) ]' )';   
+                        psiy = obj.lift.full( [ y(i,:) , u(i,:) ]' )';    
+                    end
                     Px(i,:) = psix;
                     Py(i,:) = psiy;
                 else
-                    psix = obj.lift.full( x(i,:)' )';   
-                    psiy = obj.lift.full( y(i,:)' )';
+                    if isfield( snapshotPairs , 'w' )
+                        psix = obj.lift.full( x(i,:)' , w(i,:)' )';   
+                        psiy = obj.lift.full( y(i,:)' , w(i,:)' )';
+                    else
+                        psix = obj.lift.full( x(i,:)' )';   
+                        psiy = obj.lift.full( y(i,:)' )';
+                    end
                     Px(i,:) = [ psix , u(i,:) ];
                     Py(i,:) = [ psiy , zeros(1,m) ];     % exclude u from Py (could also use same u as Px)
                 end
@@ -885,18 +953,21 @@ classdef ksysid
             
             % Call function that solves QP problem
             Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
-            if obj.liftinput == 1
-                Umtx = reshape(Uvec, [N,N]); % Koopman operator matrix
+            if strcmp( obj.model_type , 'nonlinear' )
+                Umtx = reshape(Uvec, [ N*(nw+1) , N*(nw+1) ]); % Koopman operator matrix
             else
-                Umtx = reshape(Uvec, [Nm,Nm]); % Koopman operator matrix
+                Umtx = reshape(Uvec, [ N*(nw+1)+m , N*(nw+1)+m ]); % Koopman operator matrix
             end
             K = Umtx;   % switching to K convention to not confuse with input
             
             % other usefule outputs
             koopData.K = K; % Koopman operator matrix (note the switch to K)
-            koopData.Px = Px( : , 1 : obj.params.N );   % only want state, not input
-            koopData.Py = Py( : , 1 : obj.params.N );
+            koopData.Px = Px( : , 1 : N*(nw+1) );   % only want state, not input
+            koopData.Py = Py( : , 1 : N*(nw+1) );
             koopData.u = u; % input
+            if isfield( snapshotPairs , 'w' )
+                koopData.w = w; % load(s)
+            end
             koopData.alpha = snapshotPairs.alpha;
         end
         
@@ -993,20 +1064,27 @@ classdef ksysid
             
             UT = koopData.K';    % transpose of koopman operator
             
-            A = UT( 1 : obj.params.N , 1 : obj.params.N );
-            B = UT( 1 : obj.params.N , obj.params.N+1 : end );
+            if isfield( koopData , 'w' )
+                nw = obj.params.nw;
+            else
+                nw = 0; % null nw for when there is no load
+            end
+            
+            % Extract the A and B system matrices
+            A = UT( 1 : obj.params.N * (nw+1) , 1 : obj.params.N * (nw+1) );
+            B = UT( 1 : obj.params.N * (nw+1) , obj.params.N * (nw+1) + 1 : end );
             
             % Cy selects the first n entries of the lifted state
-            Cy = [eye(obj.params.n), zeros(obj.params.n , obj.params.N - obj.params.n)];
+            Cy = [eye(obj.params.n), zeros(obj.params.n , obj.params.N*(nw+1) - obj.params.n)];
             
             % find M matrix that (approximately) projects a lifted point onto the subset of all legitimate lifted points in R^N
             Px = koopData.Px; Py = koopData.Py;
             U = koopData.u;
-            L = zeros( size(Px,1) , obj.params.N );
+            L = zeros( size(Px,1) , obj.params.N * (nw+1) );
             for i = 1 : size( Px , 1)
                 L(i,:) = ( A * Px(i,:)' + B * U(i,:)' )' ;        % with input
             end
-            R = zeros( size(L,1) , obj.params.N );
+            R = zeros( size(L,1) , obj.params.N * (nw+1));
             for i = 1 : size( L , 1 )
                 R(i,:) = Py(i,:) ;
             end
@@ -1097,7 +1175,7 @@ classdef ksysid
             
             if length(lasso) < 2
                 obj.koopData = obj.get_Koopman( obj.snapshotPairs , lasso );
-                if obj.liftinput == 1
+                if strcmp( obj.model_type , 'nonlinear' )
                     [ temp , obj ] = obj.get_NLmodel( obj.koopData );
                     obj.candidates = temp;
                 else
@@ -1110,7 +1188,7 @@ classdef ksysid
                 obj.candidates = cell( length(lasso) , 1 );
                 for i = 1 : length(lasso)
                     obj.koopData{i} = obj.get_Koopman( obj.snapshotPairs , lasso(i) );
-                    if obj.liftinput == 1
+                    if strcmp( obj.model_type , 'nonlinear' )
                         [ temp , obj ] = obj.get_NLmodel( obj.koopData{i} );
                         obj.candidates{i} = temp;
                     else
@@ -1140,15 +1218,26 @@ classdef ksysid
             yreal = valdata.y(index0 : end , :);
             ureal = valdata.u(index0 : end , :);
             [ ~ , zetareal ] = obj.get_zeta( valdata );
-            zreal = zeros( size( zetareal , 2 ) , obj.params.N );
-            for i = 1 : size( zetareal , 1 )
-                zreal(i,:) = obj.lift.full( zetareal(i,:)' );
+            if obj.loaded 
+                wreal = valdata.w(index0 : end , :);
+                zreal = zeros( size( zetareal , 2 ) , obj.params.N * (obj.params.nw+1) );
+                for i = 1 : size( zetareal , 1 )
+                    zreal(i,:) = obj.lift.full( zetareal(i,:)' , wreal(i,:)' );
+                end
+            else
+                zreal = zeros( size( zetareal , 2 ) , obj.params.N );
+                for i = 1 : size( zetareal , 1 )
+                    zreal(i,:) = obj.lift.full( zetareal(i,:)' );
+                end
             end
             
             % set initial condition
-            valdata_wzeta = get_zeta( obj , valdata );
-            zeta0 = valdata_wzeta.zeta(1,:)';    % initial state with delays
-            z0 = obj.lift.full( zeta0 );    % initial lifted state
+            zeta0 = zetareal(1,:)';    % initial state with delays
+            if obj.loaded
+                z0 = obj.lift.full( zeta0 , wreal(1,:)' );    % initial lifted state
+            else
+                z0 = obj.lift.full( zeta0 );    % initial lifted state
+            end
             
             % simulate lifted linear model
 %             [ ysim , tsim , zsim ] = lsim(model.sys, ureal , treal , z0); % Don't use lsim. Might be doing weird stuff
@@ -1174,6 +1263,10 @@ classdef ksysid
             results.real.u = ureal;
             results.real.y = yreal;
             results.real.z = zreal;
+            if obj.loaded
+                results.sim.w = zsim(:,end-obj.params.nw+1:end);
+                results.real.w = wreal;
+            end
             
             % save error info (optional, could get rid of this)
             results.error = obj.get_error( results.sim , results.real );
@@ -1272,7 +1365,7 @@ classdef ksysid
             results = cell( size(obj.valdata) );    % store results in a cell array
             err = cell( size(obj.valdata) );    % store error in a cell array
             for i = 1 : length(obj.valdata)
-                if obj.liftinput == 1
+                if strcmp( obj.model_type , 'nonlinear' )
                     results{i} = obj.val_NLmodel( mod , obj.valdata{i} );
                 else
                     results{i} = obj.val_model( mod , obj.valdata{i} );
@@ -1286,6 +1379,47 @@ classdef ksysid
             if strcmp( saveModel , 'Yes' )
                 obj.save_class;
             end
+        end
+        
+        
+        %% infer the load based on learned dynamics
+        
+        % observer_load (infer the load based on dynamics)
+        function what = observer_load( obj , ypast , upast )
+            % observer_load: Estimate the load given measurements over a 
+            % past horizon.
+            %   ypast - [hor x n], output measurements over previous hor steps
+            %   upast - [hor x m], inputs over previous hor steps 
+            
+            hor = size( ypast , 1 ); % length of past horizon
+            if size(upast,1) ~= hor
+                error('Input arguments must have the same number of rows');
+            end
+            
+            % stack Omega and u vertically
+            Omega = zeros( obj.params.N * (obj.params.nw+1) * (hor-1) , obj.params.nw+1 );
+            for i = 1 : hor-1
+                Omega_i = obj.basis.lift.Omega( ypast(i,:)' );
+                ind1 = (obj.params.N*(obj.params.nw+1))*(i-1)+1;
+                ind2 = (obj.params.N*(obj.params.nw+1))*i;
+                Omega( ind1 : ind2 , : ) = Omega_i; 
+            end
+            U = reshape( upast(1:end-1,:)' , [ obj.params.m * hor , 1 ] );
+            Y = reshape( ypast(2:end,:)' , [ obj.params.n * hor , 1 ] );
+            
+            CAstack = kron(eye(hor) , obj.model.Cy * obj.model.A);
+            CBstack = kron(eye(hor) , obj.model.Cy * obj.model.B);
+            
+            % cost function matrices
+            Clsqlin = CAstack * Wk;
+        dlsqlin = Ykp1 - CBstack * UK;
+            
+            % linear constraint matrices
+            Aeq = blkdiag( 1 , zeros(obj.params.nw , obj.params.nw) );
+            beq = [ 1 ; zeros(obj.params.nw,1) ]; % ensure first elements is 1
+            lb = -ones(obj.params.nw+1,1);  % load should be in [-1,1]
+            ub = ones(obj.params.nw+1,1);   % load should be in [-1,1]
+            
         end
         
     end

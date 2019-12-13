@@ -14,6 +14,7 @@ Tall = cell( niter , 1 );
 
 % Use linear A and B matrices for initial condition
 T0 = eye( N );  % diag( rand(N,1) ); 
+T0(1,:) = [ -3 0 0 2 0 0 ];
 A0 = sysid.model.A; % eye(N);
 B0 = sysid.model.B; % zeros( N,m );
 
