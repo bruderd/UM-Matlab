@@ -1208,7 +1208,7 @@ classdef ksysid
         % val_model (compares model simulation to real data)
         function results = val_model( obj , model , valdata )
             %val_model: Compares a model simulation to real data
-            %   liftedSys - struct with fields A, B, C, sys, ...
+            %   model - struct with fields A, B, C, sys, ...
             %   valdata - struct with fields t, y, u (at least)
             %   results - struct with simulation results and error calculations
             
@@ -1385,11 +1385,13 @@ classdef ksysid
         %% infer the load based on learned dynamics
         
         % observer_load (infer the load based on dynamics)
-        function what = observer_load( obj , ypast , upast )
+        function what = observer_load( obj , ypast , upast , whatpast )
             % observer_load: Estimate the load given measurements over a 
             % past horizon.
             %   ypast - [hor x n], output measurements over previous hor steps
-            %   upast - [hor x m], inputs over previous hor steps 
+            %   upast - [hor x m], inputs over previous hor steps
+            %   whatpast - [1 x nw], load estimate at previous step (optional)
+            % Note: This doesn't work for delays yet...
             
             hor = size( ypast , 1 ); % length of past horizon
             if size(upast,1) ~= hor
@@ -1413,15 +1415,60 @@ classdef ksysid
             Clsqlin = CAstack * Omega;
             dlsqlin = Y - CBstack * U;
             
-            % linear constraint matrices
+            % optional: make sure new load estimate is close to last one
+            if nargin < 4
+                A = zeros( obj.params.nw + 1 , obj.params.nw + 1 );
+                b = zeros( obj.params.nw + 1 , 1 );
+            else
+                % inequality contsraints (acts as slope constraint)
+                A = [ -whatpast(end,:)' , eye( obj.params.nw );...
+                    whatpast(end,:)' , -eye( obj.params.nw )];
+                b = 0.01 * ones( obj.params.nw + 1 , 1 );
+            end
+            
+            % equality constraint matrices
             Aeq = blkdiag( 1 , zeros(obj.params.nw , obj.params.nw) );
             beq = [ 1 ; zeros(obj.params.nw,1) ]; % ensure first elements is 1
             lb = -ones(obj.params.nw+1,1);  % load should be in [-1,1]
             ub = ones(obj.params.nw+1,1);   % load should be in [-1,1]
             
             % solve for what
-            sol = lsqlin( Clsqlin , dlsqlin , [] , [] , Aeq , beq , lb , ub );  % solve for what using constrained least squares solver
+            sol = lsqlin( Clsqlin , dlsqlin , A , b , Aeq , beq , lb , ub );  % solve for what using constrained least squares solver
             what = sol(2:end);
+        end
+        
+        % val_observer_load (evaluate the accuracy of observer)
+        function [ what , wreal , werr ] = val_observer_load( obj , hor , valdata )
+            %val_observer_load: Compares load estimates to real data
+            %   hor - length of backward looking horizon
+            %   model - struct with fields A, B, C, sys, ...
+            %   valdata - struct with fields t, y, u (at least)
+            %   results - struct with simulation results and error calculations
+            
+            what = zeros( length( valdata.t ) , obj.params.nw );
+            yhor = zeros( hor , obj.params.n );
+            uhor = zeros( hor , obj.params.m );
+            for i = 1 : length( valdata.t ) - 1
+                % Measure current output (with some noise)
+                mu = 0; % mean of measurement noise
+                sigma = 0.005;  % standard deviation of measurement noise
+                y_i = valdata.y(i,:) + normrnd(mu,sigma);
+                u_i = valdata.u(i,:);
+                
+                % Integrate new measurement into past horizon of measurements
+                yhor = [ yhor(2:end,:) ; y_i ];   % newest at end
+                uhor = [ uhor(2:end,:) ; u_i ];   % newest at end
+                
+                ysmooth = smoothdata(yhor); % this may be slow, consider replacing
+                
+                % Estimate the load
+%                 what(i+1,:) = obj.observer_load( ysmooth , uhor , what(i,:) )'; % with max change limitation
+                what(i+1,:) = obj.observer_load( ysmooth , uhor )';
+            end
+            
+            % Compare estimate to real load
+            wreal = valdata.w;
+            werr = abs( wreal - what );
         end
         
     end
