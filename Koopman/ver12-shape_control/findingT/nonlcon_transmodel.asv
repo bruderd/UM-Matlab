@@ -28,6 +28,8 @@ eye_vec = eye_mtx(:);
   
 % Equality constraints ( ceq = 0 )
 ceq = [ T(:,end) ;... % last column should be zeros
+        T(1,:)' - T(2,:)';...
+        T(3,:)' - T()
         cor_vec - eye_vec];
 
 % % Set the first row equal to known Taylor series coefficients (specific to

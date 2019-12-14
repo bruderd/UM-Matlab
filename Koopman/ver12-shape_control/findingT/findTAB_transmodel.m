@@ -1,7 +1,7 @@
 %% find transformed model (i.e. "double lift")
 
 % USER EDIT
-niter = 2; % number of iterations/alternations
+niter = 8; % number of iterations/alternations
 
 % rename some workspace variables (for convenience)
 N = sysid.params.N;
