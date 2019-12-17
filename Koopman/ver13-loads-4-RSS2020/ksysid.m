@@ -884,7 +884,9 @@ classdef ksysid
             snapshotPairs.alpha = before.zeta( index , : ); 
             snapshotPairs.beta = after.zeta( index , : );
             snapshotPairs.u = u( index , : );
-            snapshotPairs.w = w( index , : );
+            if isfield( data , 'w' )
+                snapshotPairs.w = w( index , : );
+            end
         end
         
         % get_Koopman (Find the best possible koopman operator from snapshot pairs)

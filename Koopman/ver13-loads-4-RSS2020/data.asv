@@ -232,11 +232,11 @@ classdef data
         
         % process_rawdata (take raw data from experiments and turn it into 
         % a data file that can be used for sysid)
-        function data4sysid = process_rawdata( len_val , name )
+        function data4sysid = process_rawdata( num_val , len_val)
             %process_rawdata: take raw data from experiments and turn it into 
             % a data file that can be used for sysid.
+            %   num_val - number of validation trials to create
             %   len_val - length of validation trials to create (in sec)
-            %   name - string describing the system
             
             % Select raw data files and merge into one cell array
             data_merged = data.merge_files;
@@ -244,18 +244,13 @@ classdef data
             % Remove outliears from the raw data
             data_filt = cell( size(data_merged) );
             for i = 1 : length( data_merged )
-                data_filt{i} = data.raw2filt( data_merged{i} );
+                data_filt{i} = raw2filt( data_merged{i} );
             end
             
-            % Partition each trial into training and validation parts
-            train = cell( size( data_filt ) );
-            val = cell( size( data_filt ) );
-            for i = 1 : length( data_filt )
-                [ train{i} , val{i} ] = data.partition( data_filt{i} , len_val );
-            end
             
-            % combine into a single struct and save file
-            data4sysid = data.get_data4sysid( train , val , 1 , name );
+            
+            
+            
         end
         
     end

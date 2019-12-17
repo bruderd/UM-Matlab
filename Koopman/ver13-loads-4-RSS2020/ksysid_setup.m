@@ -19,7 +19,7 @@ ksysid = ksysid( data4sysid, ...
         'snapshots' , Inf ,...          % Number of snapshot pairs
         'lasso' , [ Inf ] ,...           % L1 regularization term
         'delays' , 0 ,...               % Numer of state/input delays
-        'loaded' , true);             % Does system include loads?
+        'loaded' , false);             % Does system include loads?
 
     
 %% train model(s)
