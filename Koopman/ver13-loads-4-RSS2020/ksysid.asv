@@ -961,7 +961,7 @@ classdef ksysid
 %                 Umtx = reshape(Uvec, [ N*(nw+1)+m , N*(nw+1)+m ]); % Koopman operator matrix
 %             end
 %             K = Umtx;   % switching to K convention to not confuse with input
-            K = Px \ Py;    % least-squares solution (very efficient, but no L1 penalty)
+            K = Px \ Py;    % least
             
             % other usefule outputs
             koopData.K = K; % Koopman operator matrix (note the switch to K)
