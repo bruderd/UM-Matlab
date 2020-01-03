@@ -31,17 +31,17 @@ ksysid = ksysid.train_models;
 %% validate model(s)
 % could also manually do this for one model at a time
 
-results = cell( size(ksysid.candidates) );    % store results in a cell array
-err = cell( size(ksysid.candidates) );    % store error in a cell array 
-
-if iscell(ksysid.candidates)
-    for i = 1 : length(ksysid.candidates)
-        [ results{i} , err{i} ] = ksysid.valNplot_model( i );
-    end
-else
-    [ results{1} , err{1} ] = ksysid.valNplot_model;
-end
-    
+% results = cell( size(ksysid.candidates) );    % store results in a cell array
+% err = cell( size(ksysid.candidates) );    % store error in a cell array 
+% 
+% if iscell(ksysid.candidates)
+%     for i = 1 : length(ksysid.candidates)
+%         [ results{i} , err{i} ] = ksysid.valNplot_model( i );
+%     end
+% else
+%     [ results{1} , err{1} ] = ksysid.valNplot_model;
+% end
+%     
 
 %% save model(s)
 
