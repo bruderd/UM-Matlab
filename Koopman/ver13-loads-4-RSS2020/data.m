@@ -91,15 +91,20 @@ classdef data
             part1.t = data_in.t( 1 : index ) - data_in.t( 1 );
             part1.y = data_in.y( 1 : index , : );
             part1.u = data_in.u( 1 : index , : );
-            if ismember( 'x' , fields(data_in) )
-                part1.x = data_in.x( 1 : index , : );
-            end
+          
             
             part2.t = data_in.t( index+1 : end ) - data_in.t( index+1 );
             part2.y = data_in.y( index+1 : end , : );
             part2.u = data_in.u( index+1 : end , : );
+            
+            % if state (x) or load (w) fields are there, include them
             if ismember( 'x' , fields(data_in) )
+                part1.x = data_in.x( 1 : index , : );
                 part2.x = data_in.x( index+1 : end , : );
+            end
+            if ismember( 'w' , fields(data_in) )
+                part1.w = data_in.w( 1 : index , : );
+                part2.w = data_in.w( index+1 : end , : );
             end
         end
         
@@ -141,6 +146,10 @@ classdef data
                 if ismember( 'U' , fields( data_merged{i} ) )
                     data_merged{i}.u = data_merged{i}.U;
                     data_merged{i} = rmfield( data_merged{i} , 'U' );
+                end
+                if ismember( 'W' , fields( data_merged{i} ) )
+                    data_merged{i}.w = data_merged{i}.W;
+                    data_merged{i} = rmfield( data_merged{i} , 'W' );
                 end
                 if ismember( 'x' , fields( data_merged{i} ) )
                     data_merged{i}.y = data_merged{i}.x;
@@ -220,6 +229,10 @@ classdef data
                 data.u = data.U;
                 data = rmfield( data , 'U' );
             end
+            if ismember( 'W' , fields( data ) )
+                data.w = data.W;
+                data = rmfield( data , 'W' );
+            end
             if ismember( 'x' , fields( data ) )
                 data.y = data.x;
             end
@@ -228,6 +241,9 @@ classdef data
             data_filt.y = filloutliers( data.y , 'linear' );
             data_filt.t = data.t;
             data_filt.u = data.u;
+            if ismember( 'w' , fields( data ) )
+                data_filt.w = data.w;
+            end
         end
         
         % process_rawdata (take raw data from experiments and turn it into 

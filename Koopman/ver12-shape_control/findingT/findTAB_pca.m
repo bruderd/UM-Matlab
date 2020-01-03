@@ -6,8 +6,8 @@ m = sysid.params.m;
 n = sysid.params.n;
 
 % take difference between before/after snapshots
-% dif = sysid.koopData.Py - sysid.koopData.Px;
-dif = sysid.koopData.Px;
+dif = sysid.koopData.Py - sysid.koopData.Px;
+% dif = sysid.koopData.Px;
 
 % do pca on this difference
 [ coeffs , ~ , ~ , ~ , explained , ~ ] = pca( dif );

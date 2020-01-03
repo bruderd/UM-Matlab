@@ -1,7 +1,7 @@
 %% Find T, A, B using alternation and a linear least squares formulation
 
 % USER EDIT
-niter = 2; % number of iterations/alternations
+niter = 6; % number of iterations/alternations
 
 % rename some workspace variables (for convenience)
 N = sysid.params.N;
@@ -40,10 +40,16 @@ for i = 2 : niter
     
 %     % update dif with new A matrix
 %     dif = sysid.koopData.Px * Aall{i-1}' - sysid.koopData.Px;
-    
+
     % solve for T with linear least squares
     T_trans = dif \ ( data_i.u * Ball{i-1}' );
     Tall{i} = T_trans';
+    
+%     % different version: make inner product as close to 1 as possible
+%     T_trans_Bu = dif \ eye( size(dif,1) );
+%     T_ = ( data_i.u * Ball{i-1}' ) \ T_trans_Bu';
+%     T_trans = T_';
+%     Tall{i} = T_;
     
     % transform data 
     data_i.Px = sysid.koopData.Px * T_trans;

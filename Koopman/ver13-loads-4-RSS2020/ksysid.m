@@ -1453,7 +1453,7 @@ classdef ksysid
             for i = 1 : length( valdata.t ) - 1
                 % Measure current output (with some noise)
                 mu = 0; % mean of measurement noise
-                sigma = 0.005;  % standard deviation of measurement noise
+                sigma = 0.00;  % 0.005 standard deviation of measurement noise
                 y_i = valdata.y(i,:) + normrnd(mu,sigma);
                 u_i = valdata.u(i,:);
                 
@@ -1461,7 +1461,8 @@ classdef ksysid
                 yhor = [ yhor(2:end,:) ; y_i ];   % newest at end
                 uhor = [ uhor(2:end,:) ; u_i ];   % newest at end
                 
-                ysmooth = smoothdata(yhor); % this may be slow, consider replacing
+%                 ysmooth = smoothdata(yhor); % this may be slow, consider replacing
+                ysmooth = yhor;
                 
                 % Estimate the load
 %                 what(i+1,:) = obj.observer_load( ysmooth , uhor , what(i,:) )'; % with max change limitation
