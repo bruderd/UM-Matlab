@@ -945,7 +945,7 @@ classdef ksysid
                 Px = zeros( length(x), N * (nw+1) + m );
                 Py = zeros( length(x), N * (nw+1) + m );
             end
-            disp('Evaluating smaller set of basis functions on snapshots');
+            disp('Evaluating basis functions on snapshots...');
             for i = 1:length(x)
                 obj.loop_progress( i , length(x) );
                 if strcmp( obj.model_type , 'nonlinear' )    % don't append input if it already is lifted nonlinearly
@@ -1282,14 +1282,14 @@ classdef ksysid
             
             % new symbolic observables
             phi_sym = pcs' * [ obj.basis.poly ; 1 ];
-            fullBasis= [ obj.params.zeta ; phi_sym ];
+            fullBasis = [ obj.params.zeta ; phi_sym ];   % preprend unlifted state
             
             % incorporate the loads into the basis set
             Omega = kron( eye( length(obj.params.zw) ) , fullBasis );
             fullBasis_loaded = Omega * obj.params.zw;  % basis with load included
             
             % overwrite a bunch of stuff
-            obj.params.noload = fullBasis;
+            obj.basis.noload = fullBasis;
             obj.basis.full = fullBasis_loaded;
             obj.basis.Omega = Omega;
             obj.basis.jacobian = jacobian( fullBasis , obj.params.zeta );
