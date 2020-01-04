@@ -24,6 +24,10 @@ ksysid = ksysid( data4sysid, ...
         'loaded' , true);             % Does system include loads?
 
     
+%% basis dimensional reduction (beta)
+Px = ksysid.lift_snapshots( ksysid.snapshotPairs );
+ksysid = ksysid.get_econ_observables( Px );    
+    
 %% train model(s)
 ksysid = ksysid.train_models;
 

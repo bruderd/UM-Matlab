@@ -24,9 +24,6 @@ ksysid = ksysid( data4sysid, ...
 %% basis dimensional reduction (beta)
 Px = ksysid.lift_snapshots( ksysid.snapshotPairs );
 ksysid = ksysid.get_econ_observables( Px );
-
-% %% replace snapshot pairs
-% ksysid.snapshotPairs = ksysid.get_snapshotPairs( ksysid.traindata , ksysid.snapshots );
     
 %% train model(s)
 ksysid = ksysid.train_models;
