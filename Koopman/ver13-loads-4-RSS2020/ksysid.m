@@ -947,7 +947,9 @@ classdef ksysid
             end
             disp('Evaluating basis functions on snapshots...');
             for i = 1:length(x)
-                obj.loop_progress( i , length(x) );
+                if ~mod( i , floor(length(x)/10) )  % only update progress once in a while
+                    obj.loop_progress( i , length(x) );
+                end
                 if strcmp( obj.model_type , 'nonlinear' )    % don't append input if it already is lifted nonlinearly
                     if isfield( snapshotPairs , 'w' )
                         psix = obj.lift.full( [ x(i,:) , u(i,:) ]' , w(i,:)' )';   
@@ -1246,7 +1248,9 @@ classdef ksysid
             Px = zeros(length(x), N );
             disp('Evaluating all basis functions on snapshots...');
             for i = 1:length(x)
-                obj.loop_progress( i , length(x) );  % display progress
+                if ~mod( i , floor(length(x)/10) )  % only update progress once in a while
+                    obj.loop_progress( i , length(x) );  % display progress
+                end
                 if strcmp( obj.model_type , 'nonlinear' )    % don't append input if it already is lifted nonlinearly
                     if isfield( snapshotPairs , 'w' )
                         psix = obj.lift.full( [ x(i,:) , u(i,:) ]' , w(i,:)' )';   
