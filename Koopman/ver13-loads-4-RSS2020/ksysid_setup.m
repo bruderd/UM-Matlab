@@ -15,12 +15,18 @@ data4sysid = load( [datafile_path , datafile_name] );
 ksysid = ksysid( data4sysid, ...
         'model_type' , 'linear' ,...    % model type (linear or nonlinear)
         'obs_type' , { 'poly' } ,...    % type of basis functions
-        'obs_degree' , [ 2 ] ,...       % "degree" of basis functions
+        'obs_degree' , [ 4 ] ,...       % "degree" of basis functions
         'snapshots' , Inf ,...          % Number of snapshot pairs
         'lasso' , [ Inf ] ,...           % L1 regularization term
         'delays' , 0 ,...               % Numer of state/input delays
         'loaded' , true);             % Does system include loads?
+    
+%% basis dimensional reduction (beta)
+Px = ksysid.lift_snapshots( ksysid.snapshotPairs );
+ksysid = ksysid.get_econ_observables( Px );
 
+% %% replace snapshot pairs
+% ksysid.snapshotPairs = ksysid.get_snapshotPairs( ksysid.traindata , ksysid.snapshots );
     
 %% train model(s)
 ksysid = ksysid.train_models;

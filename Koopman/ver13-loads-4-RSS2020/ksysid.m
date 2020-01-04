@@ -539,6 +539,7 @@ classdef ksysid
             
             % define outputs
             obj.params.zeta = zeta;
+            obj.params.zw = zw;
             obj.params.noload = fullBasis;
             obj.basis.full = fullBasis_loaded;
             obj.basis.Omega = Omega;
@@ -1205,6 +1206,80 @@ classdef ksysid
             end
         end
         
+        %% Reduce dimension of the set of basis functions (only works for poly and loades systems)
+        
+        % lift_snapshots (lift the snapshots)
+        function Px = lift_snapshots( obj , snapshotPairs )
+            
+            % Extract snapshot pairs
+            [x,y,u] = deal( snapshotPairs.alpha , snapshotPairs.beta , snapshotPairs.u );
+            if isfield( snapshotPairs , 'w' )
+                w = snapshotPairs.w;
+                nw = obj.params.nw;
+            else
+                nw = 0; % null nw for when there is no load
+            end
+            
+            % Build matrices
+            [~, m] = deal( obj.params.n , obj.params.m );
+            Nm = obj.params.N + m;   % dimension of z plus input
+            N = obj.params.N;       % dimension of z (i.e. lifted state)
+            
+            % preallocation
+            Px = zeros(length(x), N );
+            for i = 1:length(x)
+                if strcmp( obj.model_type , 'nonlinear' )    % don't append input if it already is lifted nonlinearly
+                    if isfield( snapshotPairs , 'w' )
+                        psix = obj.lift.full( [ x(i,:) , u(i,:) ]' , w(i,:)' )';   
+                    else
+                        psix = obj.lift.full( [ x(i,:) , u(i,:) ]' )';      
+                    end
+                    Px(i,:) = psix;
+                else
+                    if isfield( snapshotPairs , 'w' )
+                        psix = obj.lift.poly( x(i,:)' )';   
+                    else
+                        psix = obj.lift.full( x(i,:)' )';   
+                    end
+                    Px(i,:) = [ psix , ones( size(psix,1) , 1 ) ];  % add constant to the end
+                end
+            end 
+        end
+        
+        % get_econ_observables (get a lower dimensional set of observables)
+        function obj = get_econ_observables( obj , Px )
+            
+            % take pca of lifted snapshots
+            [ coeffs , ~ , ~ , ~ , explained , ~ ] = pca( Px );
+            
+            % take enough components to explain > 99% of the data
+            num_pcs = 1;
+            while sum( explained(1:num_pcs) ) < 99
+                num_pcs = num_pcs + 1;
+            end
+            
+            % extract first num_pcs columns 
+            pcs = coeffs( : , 1 : num_pcs );
+            
+            % new symbolic observables
+            phi_sym = pcs' * [ obj.basis.poly ; 1 ];
+            fullBasis= [ obj.params.zeta ; phi_sym ];
+            
+            % incorporate the loads into the basis set
+            Omega = kron( eye( length(obj.params.zw) ) , fullBasis );
+            fullBasis_loaded = Omega * obj.params.zw;  % basis with load included
+            
+            % overwrite a bunch of stuff
+            obj.params.noload = fullBasis;
+            obj.basis.full = fullBasis_loaded;
+            obj.basis.Omega = Omega;
+            obj.basis.jacobian = jacobian( fullBasis , obj.params.zeta );
+            obj.lift.noload = matlabFunction( fullBasis , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
+            obj.lift.full = matlabFunction( fullBasis_loaded , 'Vars' , { [ obj.params.zeta ; obj.params.u ] , obj.params.w } );
+            obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
+            obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { obj.params.zeta , obj.params.u } );
+            obj.params.N = length( fullBasis ); % the dimension of the lifted state 
+        end
         
         %% validate performance of a fitted model
         
