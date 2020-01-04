@@ -125,10 +125,6 @@ classdef ksysid
             obj.snapshotPairs = obj.get_snapshotPairs( obj.traindata , obj.snapshots );
         end
         
-        % basis dimensional reduction (BETA)
-        Px = obj.lift_snapshots( snapshotPairs );
-        obj = obj.get_econ_observables( Px );
-        
         % parse_args: Parses the Name, Value pairs in varargin
         function obj = parse_args( obj , varargin )
             %parse_args: Parses the Name, Value pairs in varargin of the
@@ -142,6 +138,20 @@ classdef ksysid
             obj.lasso = 1e6;
         end
         
+        end
+        
+        % loop_progress: visually display the progress of a for loop
+        function loop_progress( obj, now , total )
+             %loop_progress: display progress in execution of for loop
+             
+             prog = now / total;
+             numdots = floor( prog * 10 );
+             perc = prog * 100;
+             
+             
+             
+             fprintf(repmat('\b',1,28));
+             fprintf(['Loop progress: [' , repmat('#',1,numdots) , repmat('.',1,10-numdots) , ']\n']);
         end
         
         %% operations on simulation/experimental data (some are redundant and found in the data class)
@@ -1210,7 +1220,7 @@ classdef ksysid
             end
         end
         
-        %% Reduce dimension of the set of basis functions (only works for poly)
+        %% Reduce dimension of the set of basis functions (only works for poly and loades systems)
         
         % lift_snapshots (lift the snapshots)
         function Px = lift_snapshots( obj , snapshotPairs )
@@ -1230,12 +1240,10 @@ classdef ksysid
             N = obj.params.N;       % dimension of z (i.e. lifted state)
             
             % preallocation
-            if strcmp( obj.model_type , 'nonlinear' )    % don't append input
-                Px = zeros(length(x), N * (nw+1) );
-            else    % append input to end of lifted state
-                Px = zeros( length(x), N * (nw+1) + m );
-            end
+            Px = zeros(length(x), N );
+            disp('Evaluating all basis functions on snapshots...');
             for i = 1:length(x)
+                obj.loop_progress( i , length(x) );  % display progress
                 if strcmp( obj.model_type , 'nonlinear' )    % don't append input if it already is lifted nonlinearly
                     if isfield( snapshotPairs , 'w' )
                         psix = obj.lift.full( [ x(i,:) , u(i,:) ]' , w(i,:)' )';   
@@ -1249,7 +1257,7 @@ classdef ksysid
                     else
                         psix = obj.lift.full( x(i,:)' )';   
                     end
-                    Px(i,:) = psix;
+                    Px(i,:) = [ psix , ones( size(psix,1) , 1 ) ];  % add constant to the end
                 end
             end 
         end
@@ -1270,7 +1278,7 @@ classdef ksysid
             pcs = coeffs( : , 1 : num_pcs );
             
             % new symbolic observables
-            phi_sym = pcs' * obj.basis.poly;
+            phi_sym = pcs' * [ obj.basis.poly ; 1 ];
             fullBasis= [ obj.params.zeta ; phi_sym ];
             
             % incorporate the loads into the basis set

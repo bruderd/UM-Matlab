@@ -140,6 +140,21 @@ classdef ksysid
         
         end
         
+        % loop_progress: visually display the progress of a for loop
+        function loop_progress( obj, now , total )
+             %loop_progress: display progress in execution of for loop
+             
+             prog = now / total;
+             numdots = floor( prog * 10 );
+             
+             if now == 1
+                fprintf(['Loop progress: [' , repmat('.',1,10) , ']\n']);
+             end
+             
+             fprintf(repmat('\b',1,28));
+             fprintf(['Loop progress: [' , repmat('#',1,numdots) , repmat('.',1,10-numdots) , ']\n']);
+        end
+        
         %% operations on simulation/experimental data (some are redundant and found in the data class)
         
         function [ data_scaled , obj ] = get_scale( obj , data )
@@ -930,7 +945,9 @@ classdef ksysid
                 Px = zeros( length(x), N * (nw+1) + m );
                 Py = zeros( length(x), N * (nw+1) + m );
             end
+            disp('Evaluating smaller set of basis functions on snapshots');
             for i = 1:length(x)
+                obj.loop_progress( i , length(x) );
                 if strcmp( obj.model_type , 'nonlinear' )    % don't append input if it already is lifted nonlinearly
                     if isfield( snapshotPairs , 'w' )
                         psix = obj.lift.full( [ x(i,:) , u(i,:) ]' , w(i,:)' )';   
@@ -1227,7 +1244,9 @@ classdef ksysid
             
             % preallocation
             Px = zeros(length(x), N );
+            disp('Evaluating all basis functions on snapshots...');
             for i = 1:length(x)
+                obj.loop_progress( i , length(x) );  % display progress
                 if strcmp( obj.model_type , 'nonlinear' )    % don't append input if it already is lifted nonlinearly
                     if isfield( snapshotPairs , 'w' )
                         psix = obj.lift.full( [ x(i,:) , u(i,:) ]' , w(i,:)' )';   
