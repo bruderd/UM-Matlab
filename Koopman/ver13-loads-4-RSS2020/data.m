@@ -280,9 +280,8 @@ classdef data
             %isolate_states: isolate a few of the measured states
             %   data_in - struct with fields t , y , (x)
             %   selmtx - selection matrix for desired states
-           
-            data_out.t = data_in.t;
-            data_out.u = data_in.u;
+            
+            data_out = data_in;
             data_out.y = data_in.y * selmtx';
         end
         
@@ -309,7 +308,7 @@ classdef data
             data_iso = cell( size(data_filt) );
             for i = 1 : length( data_filt )
                 data_iso{i} = data.isolate_states( data_filt{i} , selmtx ); 
-                [ train{i} , val{i} ] = data.partition( data_filt{i} , len_val );
+                [ train{i} , val{i} ] = data.partition( data_iso{i} , len_val );
             end
             
             % combine into a single struct and save file
