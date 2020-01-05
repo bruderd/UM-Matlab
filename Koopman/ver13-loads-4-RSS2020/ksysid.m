@@ -962,7 +962,7 @@ classdef ksysid
                     Py(i,:) = psiy;
                 else
                     if isfield( snapshotPairs , 'w' )
-                        psix = obj.lift.full( x(i,:)' , w(i,:)' )';   
+                        psix = obj.lift.full( x(i,:)' , w(i,:)' )';
                         psiy = obj.lift.full( y(i,:)' , w(i,:)' )';
                     else
                         psix = obj.lift.full( x(i,:)' )';   
@@ -1294,15 +1294,30 @@ classdef ksysid
             fullBasis_loaded = vpa( fullBasis_loaded , 2 ); % round to save memory
             
             % overwrite a bunch of stuff
+            obj.basis.pcs = pcs;    % principal components
             obj.basis.noload = fullBasis;
-            obj.basis.full = fullBasis_loaded;
+%             obj.basis.full = fullBasis_loaded;
+            obj.basis.econ = fullBasis_loaded;
             obj.basis.Omega = Omega;
             obj.basis.jacobian = jacobian( fullBasis , obj.params.zeta );
             obj.lift.noload = matlabFunction( fullBasis , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
-            obj.lift.full = matlabFunction( fullBasis_loaded , 'Vars' , { [ obj.params.zeta ; obj.params.u ] , obj.params.w } );
+%             obj.lift.full = matlabFunction( fullBasis_loaded , 'Vars' , { [ obj.params.zeta ; obj.params.u ] , obj.params.w } );
             obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { obj.params.zeta , obj.params.u } );
+            obj.lift.full = @(zeta_in,w_in)obj.econ_lift(zeta_in,w_in);     % could also call it econ
             obj.params.N = length( fullBasis ); % the dimension of the lifted state 
+        end
+        
+        % def_econ_lift (define new lifting function for lower dim basis)
+        % BETA! Only works for polynomial bases
+        function zwecon = econ_lift( obj , zeta , w)
+            %def_econ_lift: define new lifting function for lower dim basis
+            %   zeta - unlifted state with input appended
+            %   w - load
+            
+            phi = obj.basis.pcs' * [ obj.lift.poly( zeta ) ; 1]; % lift to full size
+            fullBasis = [ zeta ; phi ]; % prepend unlifted states
+            zwecon = [ fullBasis ; w * fullBasis ]; % reduce to just principle components
         end
         
         %% validate performance of a fitted model

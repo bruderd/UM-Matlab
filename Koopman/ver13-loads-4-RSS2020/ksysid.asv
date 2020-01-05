@@ -146,9 +146,10 @@ classdef ksysid
              
              prog = now / total;
              numdots = floor( prog * 10 );
-             perc = prog * 100;
              
-             
+             if now == 1
+                fprintf(['Loop progress: [' , repmat('.',1,10) , ']\n']);
+             end
              
              fprintf(repmat('\b',1,28));
              fprintf(['Loop progress: [' , repmat('#',1,numdots) , repmat('.',1,10-numdots) , ']\n']);
@@ -944,7 +945,11 @@ classdef ksysid
                 Px = zeros( length(x), N * (nw+1) + m );
                 Py = zeros( length(x), N * (nw+1) + m );
             end
+            disp('Evaluating basis functions on snapshots...');
             for i = 1:length(x)
+                if ~mod( i , floor(length(x)/10) )  % only update progress once in a while
+                    obj.loop_progress( i , length(x) );
+                end
                 if strcmp( obj.model_type , 'nonlinear' )    % don't append input if it already is lifted nonlinearly
                     if isfield( snapshotPairs , 'w' )
                         psix = obj.lift.full( [ x(i,:) , u(i,:) ]' , w(i,:)' )';   
@@ -968,7 +973,7 @@ classdef ksysid
                 end
             end
             
-            % Call function that solves QP problem
+%             % Call function that solves QP problem
 %             Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
 %             if strcmp( obj.model_type , 'nonlinear' )
 %                 Umtx = reshape(Uvec, [ N*(nw+1) , N*(nw+1) ]); % Koopman operator matrix
@@ -1243,7 +1248,9 @@ classdef ksysid
             Px = zeros(length(x), N );
             disp('Evaluating all basis functions on snapshots...');
             for i = 1:length(x)
-                obj.loop_progress( i , length(x) );  % display progress
+                if ~mod( i , floor(length(x)/10) )  % only update progress once in a while
+                    obj.loop_progress( i , length(x) );  % display progress
+                end
                 if strcmp( obj.model_type , 'nonlinear' )    % don't append input if it already is lifted nonlinearly
                     if isfield( snapshotPairs , 'w' )
                         psix = obj.lift.full( [ x(i,:) , u(i,:) ]' , w(i,:)' )';   
@@ -1279,14 +1286,15 @@ classdef ksysid
             
             % new symbolic observables
             phi_sym = pcs' * [ obj.basis.poly ; 1 ];
-            fullBasis= [ obj.params.zeta ; phi_sym ];
+            fullBasis = [ obj.params.zeta ; phi_sym ];   % preprend unlifted state
             
             % incorporate the loads into the basis set
             Omega = kron( eye( length(obj.params.zw) ) , fullBasis );
             fullBasis_loaded = Omega * obj.params.zw;  % basis with load included
+            fullBasis_loaded = vpa( fullBasis_loaded , 2 ); % round to save memory
             
             % overwrite a bunch of stuff
-            obj.params.noload = fullBasis;
+            obj.basis.noload = fullBasis;
             obj.basis.full = fullBasis_loaded;
             obj.basis.Omega = Omega;
             obj.basis.jacobian = jacobian( fullBasis , obj.params.zeta );
@@ -1294,7 +1302,17 @@ classdef ksysid
             obj.lift.full = matlabFunction( fullBasis_loaded , 'Vars' , { [ obj.params.zeta ; obj.params.u ] , obj.params.w } );
             obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { obj.params.zeta , obj.params.u } );
+            obj.lift.econ = @(zeta_in)obj.econ_lift(zeta_in,w_in);
             obj.params.N = length( fullBasis ); % the dimension of the lifted state 
+        end
+        
+        % def_econ_lift (define new lifting function for lower dim basis)
+        function zwecon = econ_lift( obj , zeta , w)
+            %def_econ_lift: define new lifting function for lower dim basis
+            %   pcs - principal component matrix (colums are PCs)
+            
+            zw = obj.basis.lift( zeta , w ); % lift to full size
+            zwecon = pcs' * zw; % reduce to just principle components
         end
         
         %% validate performance of a fitted model
