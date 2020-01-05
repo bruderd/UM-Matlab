@@ -974,14 +974,14 @@ classdef ksysid
             end
             
             % Call function that solves QP problem
-%             Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
-%             if strcmp( obj.model_type , 'nonlinear' )
-%                 Umtx = reshape(Uvec, [ N*(nw+1) , N*(nw+1) ]); % Koopman operator matrix
-%             else
-%                 Umtx = reshape(Uvec, [ N*(nw+1)+m , N*(nw+1)+m ]); % Koopman operator matrix
-%             end
-%             K = Umtx;   % switching to K convention to not confuse with input
-            K = Px \ Py;    % least-squares solution (very efficient, but no L1 penalty)
+            Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
+            if strcmp( obj.model_type , 'nonlinear' )
+                Umtx = reshape(Uvec, [ N*(nw+1) , N*(nw+1) ]); % Koopman operator matrix
+            else
+                Umtx = reshape(Uvec, [ N*(nw+1)+m , N*(nw+1)+m ]); % Koopman operator matrix
+            end
+            K = Umtx;   % switching to K convention to not confuse with input
+%             K = Px \ Py;    % least-squares solution (very efficient, but no L1 penalty)
             
             % other usefule outputs
             koopData.K = K; % Koopman operator matrix (note the switch to K)

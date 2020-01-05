@@ -306,9 +306,7 @@ classdef data
             % Partition each trial into training and validation parts
             train = cell( size( data_filt ) );
             val = cell( size( data_filt ) );
-            data_iso = cell( size(data_filt) );
             for i = 1 : length( data_filt )
-                data_iso{i} = data.isolate_states( data_filt{i} , selmtx ); 
                 [ train{i} , val{i} ] = data.partition( data_filt{i} , len_val );
             end
             
