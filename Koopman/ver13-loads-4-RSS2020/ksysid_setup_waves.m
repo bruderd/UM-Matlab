@@ -18,7 +18,7 @@ ksysid = ksysid( data4sysid, ...
         'model_type' , 'linear' ,...    % model type (linear or nonlinear)
         'obs_type' , { 'poly' } ,...    % type of basis functions
         'obs_degree' , [ 3 ] ,...       % "degree" of basis functions
-        'snapshots' , 20000 ,...          % Number of snapshot pairs
+        'snapshots' , Inf ,...          % Number of snapshot pairs
         'lasso' , [ Inf ] ,...           % L1 regularization term
         'delays' , 0 ,...               % Numer of state/input delays
         'loaded' , true);             % Does system include loads?
@@ -27,11 +27,11 @@ disp(['Number of basis functions: ' , num2str( 2 * ksysid.params.N ) ]);
     
 %% basis dimensional reduction (beta)
 
-disp('Performing dimensional reduction...');
-Px = ksysid.lift_snapshots( ksysid.snapshotPairs );
-ksysid = ksysid.get_econ_observables( Px ); 
-disp(['Number of basis functions: ' , num2str( 2 * ksysid.params.N ) ]);
-clear Px;
+% disp('Performing dimensional reduction...');
+% Px = ksysid.lift_snapshots( ksysid.snapshotPairs );
+% ksysid = ksysid.get_econ_observables( Px ); 
+% disp(['Number of basis functions: ' , num2str( 2 * ksysid.params.N ) ]);
+% clear Px;
     
 %% train model(s)
 ksysid = ksysid.train_models;
