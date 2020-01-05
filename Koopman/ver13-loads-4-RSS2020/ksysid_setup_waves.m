@@ -27,11 +27,11 @@ disp(['Number of basis functions: ' , num2str( 2 * ksysid.params.N ) ]);
     
 %% basis dimensional reduction (beta)
 
-% disp('Performing dimensional reduction...');
-% Px = ksysid.lift_snapshots( ksysid.snapshotPairs );
-% ksysid = ksysid.get_econ_observables( Px ); 
-% disp(['Number of basis functions: ' , num2str( 2 * ksysid.params.N ) ]);
-% clear Px;
+disp('Performing dimensional reduction...');
+Px = ksysid.lift_snapshots( ksysid.snapshotPairs );
+ksysid = ksysid.get_econ_observables( Px ); 
+disp(['Number of basis functions: ' , num2str( 2 * ksysid.params.N ) ]);
+clear Px;
     
 %% train model(s)
 ksysid = ksysid.train_models;

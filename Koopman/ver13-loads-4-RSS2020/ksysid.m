@@ -1291,6 +1291,7 @@ classdef ksysid
             % incorporate the loads into the basis set
             Omega = kron( eye( length(obj.params.zw) ) , fullBasis );
             fullBasis_loaded = Omega * obj.params.zw;  % basis with load included
+            fullBasis_loaded = vpa( fullBasis_loaded , 2 ); % round to save memory
             
             % overwrite a bunch of stuff
             obj.basis.noload = fullBasis;
