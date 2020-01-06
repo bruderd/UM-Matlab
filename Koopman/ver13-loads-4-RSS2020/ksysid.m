@@ -558,11 +558,11 @@ classdef ksysid
             obj.params.noload = fullBasis;
             obj.basis.full = fullBasis_loaded;
             obj.basis.Omega = Omega;
-            obj.basis.jacobian = jacobian( fullBasis , zeta );
+%             obj.basis.jacobian = jacobian( fullBasis , zeta );
             obj.lift.noload = matlabFunction( fullBasis , 'Vars' , { [ zeta ; u ] } );
             obj.lift.full = matlabFunction( fullBasis_loaded , 'Vars' , { [ zeta ; u ] , w } );
             obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ zeta ; u ] } );
-            obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { zeta , u } );
+%             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { zeta , u } );
             obj.params.N = length( fullBasis ); % the dimension of the lifted state
 
         end
@@ -1299,25 +1299,37 @@ classdef ksysid
 %             obj.basis.full = fullBasis_loaded;
             obj.basis.econ = fullBasis_loaded;
             obj.basis.Omega = Omega;
-            obj.basis.jacobian = jacobian( fullBasis , obj.params.zeta );
+%             obj.basis.jacobian = jacobian( fullBasis , obj.params.zeta );
             obj.lift.noload = matlabFunction( fullBasis , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
 %             obj.lift.full = matlabFunction( fullBasis_loaded , 'Vars' , { [ obj.params.zeta ; obj.params.u ] , obj.params.w } );
-            obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
-            obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { obj.params.zeta , obj.params.u } );
             obj.lift.full = @(zeta_in,w_in)obj.econ_lift(zeta_in,w_in);     % could also call it econ
+%             obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
+            obj.lift.Omega = @(zeta_in)obj.econ_Omega(zeta_in);
+%             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { obj.params.zeta , obj.params.u } );
             obj.params.N = length( fullBasis ); % the dimension of the lifted state 
         end
         
-        % def_econ_lift (define new lifting function for lower dim basis)
+        % econ_lift (define new lifting function for lower dim basis)
         % BETA! Only works for polynomial bases
         function zwecon = econ_lift( obj , zeta , w)
-            %def_econ_lift: define new lifting function for lower dim basis
+            %econ_lift: define new lifting function for lower dim basis
             %   zeta - unlifted state with input appended
             %   w - load
             
             phi = obj.basis.pcs' * [ obj.lift.poly( zeta ) ; 1]; % lift to full size
             fullBasis = [ zeta ; phi ]; % prepend unlifted states
             zwecon = [ fullBasis ; w * fullBasis ]; % reduce to just principle components
+        end
+        
+        % econ_Omega (function that evaluates Omega without as much
+        % symbolic shit) BETA
+        function Omegaecon = econ_Omega( obj , zeta )
+            %econ_Omega: evaluate Omega without making an enormous symbolic
+            % matrix
+            
+            phi = obj.basis.pcs' * [ obj.lift.poly( zeta ) ; 1]; % lift to full size
+            fullBasis = [ zeta ; phi ]; % prepend unlifted states
+            Omegaecon = kron( eye( length(obj.params.zw) ) , fullBasis );
         end
         
         %% validate performance of a fitted model
