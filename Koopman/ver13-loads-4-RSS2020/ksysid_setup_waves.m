@@ -12,7 +12,7 @@
 % % load in data file(s)
 % data4sysid = load([ 'datafiles' , filesep , 'softarm_3mods_diffvaldata_train-5_val-5_2020-01-03_12-03.mat' ]);  % Xun's first loaded tests
 % data4sysid = load([ 'datafiles' , filesep , 'softarm_3mods_7markers_0p5s-ramp_train-6_val-6_2020-01-06_14-16.mat' ]);  % Xun's loaded tests with faster ramp (0.5s)
-data4sysid = load([ 'datafiles' , filesep , 'softarm_3mods_3markers_0p5-1s-ramps_train-11_val-11_2020-01-06_18-12.mat' ]);  % Xun's loaded tests with slow and faster ramp (0.5s), only 3 rigid bodies for state
+data4sysid = load([ 'datafiles' , filesep , 'softarm_3mods_3markers_0p5-1s-ramps_train-11_val-11_2020-01-06_18-44.mat' ]);  % Xun's loaded tests with slow and faster ramp (0.5s), only 3 rigid bodies for state
 
 
 %% construct sysid class
