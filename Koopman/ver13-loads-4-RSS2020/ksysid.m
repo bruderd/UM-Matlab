@@ -544,8 +544,9 @@ classdef ksysid
             
             % incorporate the loads into the basis set
             zw = [ 1 ; w ];    % load vector, with 1 appended to beginning
-            Omega = kron( eye( length(zw) ) , fullBasis );
-            fullBasis_loaded = Omega * zw;  % basis with load included
+%             Omega = kron( eye( length(zw) ) , fullBasis );
+%             fullBasis_loaded = Omega * zw;  % basis with load included
+%             fullBasis_loaded = [ fullBasis ; w * fullBasis ]; % different version
             
             % remove current input from zeta
             if strcmp( obj.model_type , 'nonlinear' )
@@ -556,12 +557,12 @@ classdef ksysid
             obj.params.zeta = zeta;
             obj.params.zw = zw;
             obj.params.noload = fullBasis;
-            obj.basis.full = fullBasis_loaded;
-            obj.basis.Omega = Omega;
+%             obj.basis.full = fullBasis_loaded;
+%             obj.basis.Omega = Omega;
 %             obj.basis.jacobian = jacobian( fullBasis , zeta );
             obj.lift.noload = matlabFunction( fullBasis , 'Vars' , { [ zeta ; u ] } );
             obj.lift.full = matlabFunction( fullBasis_loaded , 'Vars' , { [ zeta ; u ] , w } );
-            obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ zeta ; u ] } );
+%             obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ zeta ; u ] } );
 %             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { zeta , u } );
             obj.params.N = length( fullBasis ); % the dimension of the lifted state
 
@@ -1285,20 +1286,21 @@ classdef ksysid
             pcs = coeffs( : , 1 : num_pcs );
             
             % new symbolic observables
-            phi_sym = pcs' * [ obj.basis.poly ; 1 ];
+            phi_sym = pcs' * [ obj.basis.poly ; sym(1) ];
             fullBasis = [ obj.params.zeta ; phi_sym ];   % preprend unlifted state
+            fullBasis = vpa( fullBasis , 2 );  % round to save memory
             
             % incorporate the loads into the basis set
-            Omega = kron( eye( length(obj.params.zw) ) , fullBasis );
-            fullBasis_loaded = Omega * obj.params.zw;  % basis with load included
-            fullBasis_loaded = vpa( fullBasis_loaded , 2 ); % round to save memory
+%             Omega = kron( eye( length(obj.params.zw) ) , fullBasis );
+%             fullBasis_loaded = Omega * obj.params.zw;  % basis with load included
+%             fullBasis_loaded = vpa( fullBasis_loaded , 2 ); % round to save memory
             
             % overwrite a bunch of stuff
             obj.basis.pcs = pcs;    % principal components
             obj.basis.noload = fullBasis;
 %             obj.basis.full = fullBasis_loaded;
-            obj.basis.econ = fullBasis_loaded;
-            obj.basis.Omega = Omega;
+%             obj.basis.full = fullBasis_loaded;
+%             obj.basis.Omega = Omega;
 %             obj.basis.jacobian = jacobian( fullBasis , obj.params.zeta );
             obj.lift.noload = matlabFunction( fullBasis , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
 %             obj.lift.full = matlabFunction( fullBasis_loaded , 'Vars' , { [ obj.params.zeta ; obj.params.u ] , obj.params.w } );
