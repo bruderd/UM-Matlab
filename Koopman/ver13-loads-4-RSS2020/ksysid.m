@@ -557,7 +557,7 @@ classdef ksysid
             % define outputs
             obj.params.zeta = zeta;
             obj.params.zw = zw;
-            obj.params.noload = fullBasis;
+%             obj.params.noload = fullBasis;
 %             obj.basis.full = fullBasis_loaded;
 %             obj.basis.Omega = Omega;
 %             obj.basis.jacobian = jacobian( fullBasis , zeta );
@@ -1287,9 +1287,9 @@ classdef ksysid
             pcs = coeffs( : , 1 : num_pcs );
             
             % new symbolic observables
-            phi_sym = pcs' * [ obj.basis.poly ; sym(1) ];
-            fullBasis = [ obj.params.zeta ; phi_sym ];   % preprend unlifted state
-            fullBasis = vpa( fullBasis , 2 );  % round to save memory
+%             phi_sym = pcs' * [ obj.basis.poly ; sym(1) ];
+%             fullBasis = [ obj.params.zeta ; phi_sym ];   % preprend unlifted state
+%             fullBasis = vpa( fullBasis , 2 );  % round to save memory
             
             % incorporate the loads into the basis set
 %             Omega = kron( eye( length(obj.params.zw) ) , fullBasis );
@@ -1298,18 +1298,19 @@ classdef ksysid
             
             % overwrite a bunch of stuff
             obj.basis.pcs = pcs;    % principal components
-            obj.basis.noload = fullBasis;
+%             obj.basis.noload = fullBasis;
 %             obj.basis.full = fullBasis_loaded;
 %             obj.basis.full = fullBasis_loaded;
 %             obj.basis.Omega = Omega;
 %             obj.basis.jacobian = jacobian( fullBasis , obj.params.zeta );
-            obj.lift.noload = matlabFunction( fullBasis , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
+%             obj.lift.noload = matlabFunction( fullBasis , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
+            obj.lift.noload = @(zeta_in)obj.econ_noload(zeta_in);
 %             obj.lift.full = matlabFunction( fullBasis_loaded , 'Vars' , { [ obj.params.zeta ; obj.params.u ] , obj.params.w } );
             obj.lift.full = @(zeta_in,w_in)obj.econ_lift(zeta_in,w_in);     % could also call it econ
 %             obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
             obj.lift.Omega = @(zeta_in)obj.econ_Omega(zeta_in);
 %             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { obj.params.zeta , obj.params.u } );
-            obj.params.N = length( fullBasis ); % the dimension of the lifted state 
+            obj.params.N = num_pcs + obj.params.nzeta; % the dimension of the lifted state 
         end
         
         % econ_lift (define new lifting function for lower dim basis)
@@ -1322,6 +1323,15 @@ classdef ksysid
             phi = obj.basis.pcs' * [ obj.lift.poly( zeta ) ; 1]; % lift to full size
             fullBasis = [ zeta ; phi ]; % prepend unlifted states
             zwecon = [ fullBasis ; w * fullBasis ]; % reduce to just principle components
+        end
+        
+        % econ_noload
+        function zecon = econ_noload( obj , zeta )
+            %econ_noload: lift without the input
+            %   zeta - unlifted state with input appended
+            
+            phi = obj.basis.pcs' * [ obj.lift.poly( zeta ) ; 1]; % lift to full size
+            zecon = [ zeta ; phi ]; % prepend unlifted states
         end
         
         % econ_Omega (function that evaluates Omega without as much
