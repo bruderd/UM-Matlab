@@ -518,6 +518,7 @@ classdef ksysid
             obj.params.u = u;
             obj.params.w = w;
             
+            disp('Defining initial set of observables...');
             % construct the observables
             fullBasis = zeta;  % first nzeta observables should always be the measured state and delays
             for i = 1 : length(degree)
@@ -546,7 +547,7 @@ classdef ksysid
             zw = [ 1 ; w ];    % load vector, with 1 appended to beginning
 %             Omega = kron( eye( length(zw) ) , fullBasis );
 %             fullBasis_loaded = Omega * zw;  % basis with load included
-%             fullBasis_loaded = [ fullBasis ; w * fullBasis ]; % different version
+            fullBasis_loaded = [ fullBasis ; w * fullBasis ]; % different version
             
             % remove current input from zeta
             if strcmp( obj.model_type , 'nonlinear' )
