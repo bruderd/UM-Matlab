@@ -10,7 +10,8 @@
 %% gather training data (need to prepare data file before running this)
 
 % % load in data file(s)
-data4sysid = load([ 'datafiles' , filesep , 'softarm_3mods_diffvaldata_train-5_val-5_2020-01-03_12-03.mat' ]);  % Xun's first loaded tests
+% data4sysid = load([ 'datafiles' , filesep , 'softarm_3mods_diffvaldata_train-5_val-5_2020-01-03_12-03.mat' ]);  % Xun's first loaded tests
+data4sysid = load([ 'datafiles' , filesep , 'softarm_3mods_7markers_0p5s-ramp_train-6_val-6_2020-01-06_14-16.mat' ]);  % Xun's loaded tests with faster ramp (0.5s)
 
 
 %% construct sysid class
