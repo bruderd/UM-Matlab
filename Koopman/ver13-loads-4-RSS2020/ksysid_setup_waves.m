@@ -1,3 +1,4 @@
+function ksysid = ksysid_setup_waves( poly_degree )
 % ksysid_setup_waves
 %
 % Creates a sysid class and walks through all of the steps of building a
@@ -5,6 +6,8 @@
 %
 % Modified to work on waves by removing things that require a gui such as
 % 'uigetfile', ...
+%
+%   poly_degree - degree of the desired polynomial basis of observables.
 
 
 %% gather training data (need to prepare data file before running this)
@@ -19,7 +22,7 @@ data4sysid = load([ 'datafiles' , filesep , 'softarm_3mods_3markers_0p5-1s-ramps
 ksysid = ksysid( data4sysid, ...
         'model_type' , 'linear' ,...    % model type (linear or nonlinear)
         'obs_type' , { 'poly' } ,...    % type of basis functions
-        'obs_degree' , [ 4 ] ,...       % "degree" of basis functions
+        'obs_degree' , [ poly_degree ] ,...       % "degree" of basis functions
         'snapshots' , Inf ,...          % Number of snapshot pairs
         'lasso' , [ Inf ] ,...           % L1 regularization term
         'delays' , 0 ,...               % Numer of state/input delays
