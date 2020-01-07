@@ -1310,7 +1310,7 @@ classdef ksysid
 %             obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
             obj.lift.Omega = @(zeta_in)obj.econ_Omega(zeta_in);
 %             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { obj.params.zeta , obj.params.u } );
-            obj.params.N = num_pcs + length( fullBasis ); % the dimension of the lifted state 
+            obj.params.N = num_pcs + obj.params.nzeta; % the dimension of the lifted state 
         end
         
         % econ_lift (define new lifting function for lower dim basis)
@@ -1549,7 +1549,8 @@ classdef ksysid
                 Omega( ind1 : ind2 , : ) = Omega_i; 
             end
             U = reshape( upast(1:end-1,:)' , [ obj.params.m * (hor-1) , 1 ] );
-            Y = reshape( ypast(2:end,:)' , [ obj.params.n * (hor-1) , 1 ] );
+            Y = reshape( ypast( 2:end , 1:obj.params.n )' , [ obj.params.n * (hor-1) , 1 ] );
+%             Y = reshape( ypast(2:end,:)' , [ obj.params.nzeta * (hor-1) , 1 ] );    % make dimensions of y consistent with delays
             
             % cost function matrices
             CAstack = kron(eye(hor-1) , obj.model.C * obj.model.A);
@@ -1586,15 +1587,22 @@ classdef ksysid
             %   model - struct with fields A, B, C, sys, ...
             %   valdata - struct with fields t, y, u (at least)
             %   results - struct with simulation results and error calculations
+            %
+            %   Notation is weird, yhor should actually be called zetahor
+            %   so that delays can be incorporated, but I didn't feel like
+            %   changing everything.
             
             what = zeros( length( valdata.t ) , obj.params.nw );
             yhor = zeros( hor , obj.params.n );
+%             yhor = zeros( hor , obj.params.nzeta );
             uhor = zeros( hor , obj.params.m );
+            [ ~ , zeta ] = obj.get_zeta( valdata );
             for i = 1 : length( valdata.t ) - 1
                 % Measure current output (with some noise)
                 mu = 0; % mean of measurement noise
                 sigma = 0.00;  % 0.005 standard deviation of measurement noise
                 y_i = valdata.y(i,:) + normrnd(mu,sigma);
+%                 y_i = zeta(i,:) + normrnd(mu,sigma);
                 u_i = valdata.u(i,:);
                 
                 % Integrate new measurement into past horizon of measurements
