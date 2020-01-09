@@ -15,7 +15,7 @@ classdef kmpc
         cost_running;
         cost_terminal;
         cost_input;
-        projmtx; % projection matrix from liftes state (z) to reference state   
+        projmtx; % projection matrix from lifted state (z) to reference state   
         cost;   % stores cost matrices
         constraints;    % stores constraint matrices
         set_constRHS;  % function that sets the value of the RHS of constraints
@@ -319,6 +319,68 @@ classdef kmpc
             % solve the MPC problem
 %             Uvec = quadprog_gurobi( H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)
             Uvec = quadprog( H , f , A , b );     % solve using matlab
+            
+            % reshape the output so each input will have one row (first row equals current input)
+            U = reshape( Uvec , [ obj.params.m , Np ] )';
+        end
+        
+         % get_mpcInput_loaded: Solve the mpc problem to get the input over entire horizon
+        function [ U , z ]= get_mpcInput_loaded( obj , traj , ref , load )
+            %get_mpcInput_loaded: Soves the mpc problem to get the input over
+            % entire horizon.
+            %   traj - struct with fields y , u. Contains the measured
+            %    states and inputs for the past ndelay+1 timesteps.
+            %   ref - matrix containing the reference trajectory for the
+            %    system over the horizon (one row per timestep).
+            %   shape_bounds - [min_shape_parameters , max_shape_parameters] 
+            %    This is only requred if system has shape constraints 
+            %   (note: size is num of shape observables x 2)
+            %   z - the lifted state at the current timestep
+            %   load - real value or estimate of load(s)
+            
+            % shorthand variable names
+            Np = obj.horizon;       % steps in the horizon
+            nd = obj.params.nd;     % number of delays
+            nw = obj.params.nw;     % number of loads
+            
+            % construct the current value of zeta
+            [ ~ , zeta_temp ] = obj.get_zeta( traj );
+            zeta = zeta_temp( end , : )';   % want most recent points
+            
+            % lift zeta
+            z = obj.lift.full( zeta , load );
+            
+            % check that reference trajectory has correct dimensions
+            if size( ref , 2 ) ~= size( obj.projmtx , 1 )
+                error('Reference trajectory is not the correct dimension');
+            elseif size( ref , 1 ) > Np + 1
+                ref = ref( 1 : Np + 1 , : );    % remove points over horizon
+            elseif size( ref , 1 ) < Np + 1
+                ref_temp = kron( ones( Np+1 , 1 ) , ref(end,:) );
+                ref_temp( 1 : size(ref,1) , : ) = ref;
+                ref = ref_temp;     % repeat last point for remainer of horizon
+            end
+            
+            % vectorize the reference trajectory
+            Yr = reshape( ref' , [ ( Np + 1 ) * size(ref,2) , 1 ] );
+            
+            % setup matrices for gurobi solver
+            H = obj.cost.H;      % removed factor of 2 on 12/10/2018
+            f = ( z' * obj.cost.G + Yr' * obj.cost.D )';
+            A = obj.constraints.L;
+            b = - obj.constraints.M * z + obj.constraints.c;
+            
+            % tack on "memory" constraint to fix initial input u_0
+            Atack = [ [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - obj.params.m ) ];
+%             Atack_bot = [ sparse( 2*obj.params.m , obj.params.m) , [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - 2*obj.params.m ) ];
+%             Atack = [ Atack_top ; Atack_bot ];
+            btack = [ traj.u(end,:)' ; -traj.u(end,:)' ];
+            A = [A ; Atack];    % tack on memory constraint
+            b = [b ; btack];
+            
+            % solve the MPC problem
+            Uvec = quadprog_gurobi( H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)
+%             Uvec = quadprog( H , f , A , b );     % solve using matlab
             
             % reshape the output so each input will have one row (first row equals current input)
             U = reshape( Uvec , [ obj.params.m , Np ] )';
