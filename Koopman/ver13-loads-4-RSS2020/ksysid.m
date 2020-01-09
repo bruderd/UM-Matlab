@@ -412,7 +412,7 @@ classdef ksysid
             else
                 dirname = [ 'systems' , filesep , 'fromData' ];
                 fname = [ dirname , filesep , classname, '.mat' ];
-                save( fname , 'sysid_class' );
+                save( fname , 'sysid_class' , '-v7.3' );
             end
         end
         
