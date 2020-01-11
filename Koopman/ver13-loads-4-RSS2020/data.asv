@@ -341,7 +341,7 @@ classdef data
         end
         
         % trim_rawdata_fromfile (executes trim_rawdata, but loads and saves the file as well)
-        function data_trimmed = trim_rawdata_fromfile( offstart , offend , saveon )
+        function data_trimmed = trim_rawdata_fromfile( offstart , offend )
             %trim_rawdata_fromfile: executes trim_rawdata, but loads and
             %saves the file as well. This assumes the raw data is saved as
             %a struct called 'sysidData'. Saves trimmed data in folder
@@ -349,47 +349,47 @@ classdef data
             % Can handle multiple files at once via multiselect.
             %   data_trimmed - trimmed data struct, or cell array of data
             %       structs if multiple files were selected.
-            %   saveon - true/false, decides whether to save files or not.
             
             % select data file(s)
             [ datafile_name , datafile_path ] = uigetfile( '*.mat' , 'Choose data file(s) for merging...' , 'multiselect' , 'on' );
             
-            % output file path
-            filepath = [ 'rawdata' , filesep , 'trimmed' , filesep ];
-            
             % trim data from each of the files
             if iscell( datafile_name )
-                data_trimmed = cell( size(datafile_name) );
                 for i = 1 : length( datafile_name )
                     %load datafile
                     temp = load( [datafile_path , datafile_name{i}] );
                     data_raw = temp.sysidData;
-                    data_trimmed{i} = data.trim_rawdata( data_raw , offstart , offend );
+                    sysidData = data.trim_rawdata( data_raw , offstart , offend );
                     
-                    if saveon
-                        % create new file name and save
-                        sysidData = data_trimmed{i};
-                        filename = [ filepath , datafile_name{i}(1:end-4) , '_trimmed.mat' ];
-                        save( filename , 'sysidData' );
-                    end
-                end
-            else
-                %load datafile
-                temp = load( [datafile_path , datafile_name] );
-                data_raw = temp.sysidData;
-                data_trimmed = data.trim_rawdata( data_raw , offstart , offend );
-                
-                if saveon
                     % create new file name and save
-                    sysidData = data_trimmed;
-                    filename = [ filepath , datafile_name(1:end-4) , '_trimmed.mat' ];
+                    sysidData = data_trimmed{i};
+                    filename = [ datafile_name(1:end-4) , '_trimmed.mat' ];
                     save( filename , 'sysidData' );
+                    
                 end
-            end 
+            end
+            
+            
+            % load in the data files
+            if iscell( datafile_name )  % check if it's cell array
+                data_merged = cell( 1 , length(datafile_name) );
+                for i = 1 : length(datafile_name)
+%                     data_merged{i} = load( [datafile_path , datafile_name{i}] );
+                    temp = load( [datafile_path , datafile_name{i}] );
+                    data_merged{i} = temp.sysidData;
+                end
+            else    % if not a cell array, turn it into 1x1 cell array
+                data_merged = cell(1,1);
+%                 data_merged{1} = load( [datafile_path , datafile_name] );
+                temp = load( [datafile_path , datafile_name] );
+                data_merged{1} = temp.sysidData;
+                disp('FYI, you only selected one file so your output cell array will have dimension 1.');
+            end   
+            
+            
         end
-        
     end
-end
+    end
 
 
     
