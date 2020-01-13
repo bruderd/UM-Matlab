@@ -15,7 +15,9 @@
 % data4sysid = load([ 'datafiles' , filesep , 'softarm_3mods_3markers_0p5-1s-ramps_train-11_val-11_2020-01-06_18-44.mat' ]);  % Xun's loaded tests with slow and faster ramp (0.5s), only 3 rigid bodies for state
 % data4sysid = load([ 'datafiles' , filesep , 'softarm_3mods_1markers_0p5-1s-ramps_train-11_val-11_2020-01-07_12-45.mat' ]);  % same data as above, but just the end effector
 % data4sysid = load([ 'datafiles' , filesep , 'softarm_3mods_3marks_0p5-1s-ramps_train-22_val-22_2020-01-09_13-25.mat' ]);    % includes more loads from 0-500g for the 0.5 and 1 sec ramps
-data4sysid = load([ 'datafiles' , filesep , 'softarm_3mods_3marks_0p5-1s-ramps_trim_train-22_val-22_2020-01-10_20-11.mat' ]);   % same as last file, but with start/end cut off from each trial so avoid weird bad stuff
+% data4sysid = load([ 'datafiles' , filesep , 'softarm_3mods_3marks_0p5-1s-ramps_trim_train-22_val-22_2020-01-10_20-11.mat' ]);   % same as last file, but with start/end cut off from each trial so avoid weird bad stuff
+data4sysid = load([ 'datafiles' , filesep , 'softarm_0-300g_3marks_0p5-1s-ramps_trim_train-14_val-14_2020-01-13_11-37.mat' ]);   % only loads from 0-300g
+
 
 %% construct sysid class
 ksysid = ksysid( data4sysid, ...
