@@ -15,26 +15,26 @@
 [ ksysid.valdata{12} , ~ ] = ksysid.get_zeta( ksysid.valdata{12} );
 [ ksysid.valdata{13} , ~ ] = ksysid.get_zeta( ksysid.valdata{13} );
 [ ksysid.valdata{14} , ~ ] = ksysid.get_zeta( ksysid.valdata{14} );
-[ ksysid.valdata{15} , ~ ] = ksysid.get_zeta( ksysid.valdata{15} );
-[ ksysid.valdata{16} , ~ ] = ksysid.get_zeta( ksysid.valdata{16} );
-[ ksysid.valdata{17} , ~ ] = ksysid.get_zeta( ksysid.valdata{17} );
-[ ksysid.valdata{18} , ~ ] = ksysid.get_zeta( ksysid.valdata{18} );
-[ ksysid.valdata{19} , ~ ] = ksysid.get_zeta( ksysid.valdata{19} );
-[ ksysid.valdata{20} , ~ ] = ksysid.get_zeta( ksysid.valdata{20} );
-[ ksysid.valdata{21} , ~ ] = ksysid.get_zeta( ksysid.valdata{21} );
-[ ksysid.valdata{22} , ~ ] = ksysid.get_zeta( ksysid.valdata{22} );
+% [ ksysid.valdata{15} , ~ ] = ksysid.get_zeta( ksysid.valdata{15} );
+% [ ksysid.valdata{16} , ~ ] = ksysid.get_zeta( ksysid.valdata{16} );
+% [ ksysid.valdata{17} , ~ ] = ksysid.get_zeta( ksysid.valdata{17} );
+% [ ksysid.valdata{18} , ~ ] = ksysid.get_zeta( ksysid.valdata{18} );
+% [ ksysid.valdata{19} , ~ ] = ksysid.get_zeta( ksysid.valdata{19} );
+% [ ksysid.valdata{20} , ~ ] = ksysid.get_zeta( ksysid.valdata{20} );
+% [ ksysid.valdata{21} , ~ ] = ksysid.get_zeta( ksysid.valdata{21} );
+% [ ksysid.valdata{22} , ~ ] = ksysid.get_zeta( ksysid.valdata{22} );
 
-% calculate estimates using all trial data
-what = zeros(22,1);
-wreal = zeros(22,1);
-for i = 1 : 22
+%% calculate estimates using all trial data
+what = zeros(14,1);
+wreal = zeros(14,1);
+for i = 1 : 14
     what(i) = ksysid.observer_load( ksysid.valdata{i}.zeta , ksysid.valdata{i}.u(1:end-1,:) );
     wreal(i) = ksysid.valdata{i}.w(end);
 end
 
 % plot comparison
-figure; bar( 1:22 , wreal )
-hold on; bar( 1:22 , what , 'BarWidth', 0.3 );
+figure; bar( 1:14 , wreal )
+hold on; bar( 1:14 , what , 'BarWidth', 0.3 );
 ylabel('Load (normalized so [-1,1] -> [0,500] g');
 xlabel('Trial number');
 legend('Actual','Estimate');
