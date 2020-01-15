@@ -239,7 +239,7 @@ classdef data
             end
             
             % filter out outliers in the measured data
-            data_filt.y = filloutliers( data.y , 'linear' );
+            data_filt.y = filloutliers( data.y , 'linear' , 'movmean', 5 );
             data_filt.t = data.t;
             data_filt.u = data.u;
             if ismember( 'w' , fields( data ) )
@@ -355,7 +355,8 @@ classdef data
             [ datafile_name , datafile_path ] = uigetfile( '*.mat' , 'Choose data file(s) for merging...' , 'multiselect' , 'on' );
             
             % output file path
-            filepath = [ 'rawdata' , filesep , 'trimmed' , filesep ];
+%             filepath = [ 'rawdata' , filesep , 'trimmed' , filesep ];
+            filepath = [ datafile_path , filesep , 'trimmed' , filesep ];
             
             % trim data from each of the files
             if iscell( datafile_name )
