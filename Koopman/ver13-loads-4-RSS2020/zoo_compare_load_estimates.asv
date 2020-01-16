@@ -35,14 +35,12 @@ end
 what = zeros(num,1);
 wreal = zeros(num,1);
 for i = 1 : num
-%     % solve once over whole trial
-%     what(i) = ksysid.observer_load( ksysid.valdata{i}.zeta(1:end,:) , ksysid.valdata{i}.u(2:end,:) );
-%     wreal(i) = ksysid.valdata{i}.w(end);
+    what(i) = ksysid.observer_load( ksysid.valdata{i}.zeta(1:100,:) , ksysid.valdata{i}.u(1:100,:) );
+    wreal(i) = ksysid.valdata{i}.w(end);
     
     % iterative version
-    [ what_ , ~ , ~ , ~ ] = ksysid.val_observer_load_sparse( 50 , 50 , ksysid.valdata{i} );
-    what(i) = what_(end,:);
-    wreal(i) = ksysid.valdata{i}.w(end);
+    [ what_ , ~ , ~ , ~ ] = val_observer_load_sparse( obj ,  , update_hor , valdata );
+    what(i) = what
 end
 
 %% plot comparison
