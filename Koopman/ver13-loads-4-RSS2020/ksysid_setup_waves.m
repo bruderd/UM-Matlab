@@ -19,7 +19,8 @@
 % data4sysid = load([ 'datafiles' , filesep , 'softarm_0-300g_3marks_0p5-1s-ramps_trim_train-14_val-14_2020-01-13_11-37.mat' ]);   % only loads from 0-300g
 % data4sysid = load([ 'datafiles' , filesep , 'softarm_0-300g_3marks_1s-ramps_trim_train-7_val-7_2020-01-13_12-34.mat' ]);   % only loads from 0-300g, only 1s ramp inputs
 % %%%%%%%%%% NEW SYSID DATA AFTER FIXING WIRING %%%%%%%%%%%%%%%%%
-data4sysid = load([ 'datafiles' , filesep , 'softarm_0-300g_3marks_ramp-0p5-2s_trim_train-21_val-21_2020-01-15_11-31.mat' ]);   % only loads from 0-300g, only 1s ramp inputs
+% data4sysid = load([ 'datafiles' , filesep , 'softarm_0-300g_3marks_ramp-0p5-2s_trim_train-21_val-21_2020-01-15_11-31.mat' ]);   
+data4sysid = load([ 'datafiles' , filesep , 'softarm_0-300g_3marks_ramp-0p5-3s_trim_train-49_val-49_2020-01-16_11-23.mat' ]);   % Same as before but wayy more data
 
 
 %% construct sysid class

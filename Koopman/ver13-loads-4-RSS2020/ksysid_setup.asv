@@ -50,15 +50,7 @@ else
 end
     
 % calculate aggregate error accross all trials
-toterr.mean = zeros( size(err{1}{1}.mean) );
-toterr.rmse = zeros( size(err{1}{1}.rmse) );
-toterr.nrmse = zeros( size(err{1}{1}.nrmse) );
-for i = 1:length(err{1})
-    toterr.mean = toterr.mean + err{1}{i}.mean; 
-    toterr.rmse = toterr.rmse + err{1}{i}.rmse;
-    toterr.nrmse = toterr.nrmse + err{1}{i}.nrmse;
-end
-
+toterr.mean = zeros( size(err{1}{1}) )
 %% save model(s)
 
 % You do this based on the validation results.
