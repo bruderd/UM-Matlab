@@ -35,19 +35,19 @@ end
 what = zeros(num,1);
 wreal = zeros(num,1);
 for i = 1 : num
-%     % solve once over whole trial
-%     what(i) = ksysid.observer_load( ksysid.valdata{i}.zeta(1:end,:) , ksysid.valdata{i}.u(2:end,:) );
-%     wreal(i) = ksysid.valdata{i}.w(end);
-    
-    % iterative version
-    [ what_ , ~ , ~ , ~ ] = ksysid.val_observer_load_sparse( 50 , 50 , ksysid.valdata{i} );
-    what(i) = what_(end,:);
+    % solve once over whole trial
+    what(i) = ksysid.observer_load( ksysid.valdata{i}.zeta(1:end,:) , ksysid.valdata{i}.u(2:end,:) );
     wreal(i) = ksysid.valdata{i}.w(end);
+    
+%     % iterative version
+%     [ what_ , ~ , ~ , ~ ] = ksysid.val_observer_load_sparse( 100 , 60 , ksysid.valdata{i} );
+%     what(i) = what_(end,:);
+%     wreal(i) = ksysid.valdata{i}.w(end);
 end
 
 %% plot comparison
-figure; bar( 1:num , wreal )
-hold on; bar( 1:num , what , 'BarWidth', 0.3 );
-ylabel('Load (normalized so [-1,1] -> [0,300] g');
+figure; bar( 1:num , ( wreal + 1 ) * 150 )
+hold on; bar( 1:num , ( what + 1 ) * 150 , 'BarWidth', 0.3 );
+ylabel('Load (g)');
 xlabel('Trial number');
 legend('Actual','Estimate');
