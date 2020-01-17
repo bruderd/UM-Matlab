@@ -27,7 +27,7 @@ data4sysid = load([ 'datafiles' , filesep , 'softarm_0-300g_1marks_ramp-0p5-3s_t
 ksysid = ksysid( data4sysid, ...
         'model_type' , 'linear' ,...    % model type (linear or nonlinear)
         'obs_type' , { 'poly' } ,...    % type of basis functions
-        'obs_degree' , [ 4 ] ,...       % "degree" of basis functions
+        'obs_degree' , [ 3 ] ,...       % "degree" of basis functions
         'snapshots' , Inf ,...          % Number of snapshot pairs
         'lasso' , [ Inf ] ,...           % L1 regularization term
         'delays' , 1 ,...               % Numer of state/input delays
