@@ -56,7 +56,7 @@ classdef ksysid
             obj.params.m = size( data.u , 2 );  % dimension of input
             obj.params.Ts = mean( data.t(2:end) - data.t(1:end-1) );    % sampling time
             obj.params.isfake = false;  % assume system is real
-            if obj.loaded && isfield( data , 'w' )
+            if obj.loaded & isfield( data , 'w' )
                 obj.params.nw = size( data.w , 2 );
             else
                 obj.params.nw = 0;
