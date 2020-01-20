@@ -56,8 +56,10 @@ classdef ksysid
             obj.params.m = size( data.u , 2 );  % dimension of input
             obj.params.Ts = mean( data.t(2:end) - data.t(1:end-1) );    % sampling time
             obj.params.isfake = false;  % assume system is real
-            if isfield( data , 'w' )
+            if obj.loaded && isfield( data , 'w' )
                 obj.params.nw = size( data.w , 2 );
+            else
+                obj.params.nw = 0;
             end
             
             % if data has a params field save it as sysParams
@@ -447,6 +449,7 @@ classdef ksysid
             obj.params.x = x;
             obj.params.u = u;
             
+            disp('Defining initial set of observables...');
             % construct the observables
             fullBasis = zeta;  % first nzeta observables should always be the measured state and delays
             for i = 1 : length(degree)
@@ -479,9 +482,9 @@ classdef ksysid
             % define outputs
             obj.params.zeta = zeta;
             obj.basis.full = fullBasis;
-            obj.basis.jacobian = jacobian( fullBasis , zeta );
+%             obj.basis.jacobian = jacobian( fullBasis , zeta );
             obj.lift.full = matlabFunction( fullBasis , 'Vars' , { [ zeta ; u ] } );
-            obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { zeta , u } );
+%             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { zeta , u } );
             obj.params.N = length( fullBasis ); % the dimension of the lifted state
 
         end
@@ -953,7 +956,7 @@ classdef ksysid
                     obj.loop_progress( i , length(x) );
                 end
                 if strcmp( obj.model_type , 'nonlinear' )    % don't append input if it already is lifted nonlinearly
-                    if isfield( snapshotPairs , 'w' )
+                    if obj.loaded
                         psix = obj.lift.full( [ x(i,:) , u(i,:) ]' , w(i,:)' )';   
                         psiy = obj.lift.full( [ y(i,:) , u(i,:) ]' , w(i,:)' )'; 
                     else
@@ -963,7 +966,7 @@ classdef ksysid
                     Px(i,:) = psix;
                     Py(i,:) = psiy;
                 else
-                    if isfield( snapshotPairs , 'w' )
+                    if obj.loaded
                         psix = obj.lift.full( x(i,:)' , w(i,:)' )';
                         psiy = obj.lift.full( y(i,:)' , w(i,:)' )';
                     else
@@ -1296,21 +1299,32 @@ classdef ksysid
 %             fullBasis_loaded = Omega * obj.params.zw;  % basis with load included
 %             fullBasis_loaded = vpa( fullBasis_loaded , 2 ); % round to save memory
             
-            % overwrite a bunch of stuff
+%             % overwrite a bunch of stuff (VERSION 1)
+%             obj.basis.pcs = pcs;    % principal components
+% %             obj.basis.noload = fullBasis;
+% %             obj.basis.full = fullBasis_loaded;
+% %             obj.basis.full = fullBasis_loaded;
+% %             obj.basis.Omega = Omega;
+% %             obj.basis.jacobian = jacobian( fullBasis , obj.params.zeta );
+% %             obj.lift.noload = matlabFunction( fullBasis , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
+%             obj.lift.noload = @(zeta_in)obj.econ_noload(zeta_in);
+% %             obj.lift.full = matlabFunction( fullBasis_loaded , 'Vars' , { [ obj.params.zeta ; obj.params.u ] , obj.params.w } );
+%             obj.lift.full = @(zeta_in,w_in)obj.econ_lift(zeta_in,w_in);     % could also call it econ
+% %             obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
+%             obj.lift.Omega = @(zeta_in)obj.econ_Omega(zeta_in);
+% %             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { obj.params.zeta , obj.params.u } );
+%             obj.params.N = num_pcs + obj.params.nzeta; % the dimension of the lifted state 
+            
+            % Overwrite old lifting function with the lower dimensional one (VERSION 2)
             obj.basis.pcs = pcs;    % principal components
-%             obj.basis.noload = fullBasis;
-%             obj.basis.full = fullBasis_loaded;
-%             obj.basis.full = fullBasis_loaded;
-%             obj.basis.Omega = Omega;
-%             obj.basis.jacobian = jacobian( fullBasis , obj.params.zeta );
-%             obj.lift.noload = matlabFunction( fullBasis , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
-            obj.lift.noload = @(zeta_in)obj.econ_noload(zeta_in);
-%             obj.lift.full = matlabFunction( fullBasis_loaded , 'Vars' , { [ obj.params.zeta ; obj.params.u ] , obj.params.w } );
-            obj.lift.full = @(zeta_in,w_in)obj.econ_lift(zeta_in,w_in);     % could also call it econ
-%             obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
-            obj.lift.Omega = @(zeta_in)obj.econ_Omega(zeta_in);
-%             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { obj.params.zeta , obj.params.u } );
             obj.params.N = num_pcs + obj.params.nzeta; % the dimension of the lifted state 
+            if obj.loaded
+                obj.lift.noload = @(zeta_in)obj.econ_noload(zeta_in);
+                obj.lift.full = @(zeta_in,w_in)obj.econ_lift(zeta_in,w_in);
+                obj.lift.Omega = @(zeta_in)obj.econ_Omega(zeta_in);
+            else
+                obj.lift.full = @(zeta_in)obj.econ_noload(zeta_in);
+            end
         end
         
         % econ_lift (define new lifting function for lower dim basis)

@@ -20,9 +20,9 @@
 % data4sysid = load([ 'datafiles' , filesep , 'softarm_0-300g_3marks_1s-ramps_trim_train-7_val-7_2020-01-13_12-34.mat' ]);   % only loads from 0-300g, only 1s ramp inputs
 % %%%%%%%%%% NEW SYSID DATA AFTER FIXING WIRING %%%%%%%%%%%%%%%%%
 % data4sysid = load([ 'datafiles' , filesep , 'softarm_0-300g_3marks_ramp-0p5-2s_trim_train-21_val-21_2020-01-15_11-31.mat' ]);   
-% data4sysid = load([ 'datafiles' , filesep , 'softarm_0-300g_3marks_ramp-0p5-3s_trim_train-49_val-49_2020-01-16_11-23.mat' ]);   % Same as before but wayy more data
+data4sysid = load([ 'datafiles' , filesep , 'softarm_0-300g_3marks_ramp-0p5-3s_trim_train-49_val-49_2020-01-16_11-23.mat' ]);   % Same as before but wayy more data
 % data4sysid = load([ 'datafiles' , filesep , 'softarm_0-300g_1marks_ramp-0p5-3s_trim_train-49_val-49_2020-01-17_11-16.mat' ]);   % Same as previous but only end effector
-data4sysid = load([ 'datafiles' , filesep , 'softarm_0-300g_6marks_ramp-0p5-3s_trim_train-49_val-49_2020-01-16_16-53.mat' ]);   % Same data as previous but all rigid bodies!
+% data4sysid = load([ 'datafiles' , filesep , 'softarm_0-300g_6marks_ramp-0p5-3s_trim_train-49_val-49_2020-01-16_16-53.mat' ]);   % Same data as previous but all rigid bodies!
 
 %% construct sysid class
 ksysid = ksysid( data4sysid, ...
@@ -32,7 +32,7 @@ ksysid = ksysid( data4sysid, ...
         'snapshots' , Inf ,...          % Number of snapshot pairs
         'lasso' , [ Inf ] ,...           % L1 regularization term
         'delays' , 1 ,...               % Numer of state/input delays
-        'loaded' , true);             % Does system include loads?
+        'loaded' , false);             % Does system include loads?
 
 disp(['Number of basis functions: ' , num2str( 2 * ksysid.params.N ) ]);
     

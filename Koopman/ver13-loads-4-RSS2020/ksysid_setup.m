@@ -20,8 +20,12 @@ ksysid = ksysid( data4sysid, ...
         'lasso' , [ Inf ] ,...           % L1 regularization term
         'delays' , 0 ,...               % Numer of state/input delays
         'loaded' , true);             % Does system include loads?
-    
-disp(['Number of basis functions: ' , num2str( 2 * ksysid.params.N ) ]);
+
+if ksysid.loaded
+    disp(['Number of basis functions: ' , num2str( (ksysid.params.nw + 1) * ksysid.params.N ) ]);
+else
+   disp(['Number of basis functions: ' , num2str( ksysid.params.N ) ]);
+end
     
 %% basis dimensional reduction (beta)
 
