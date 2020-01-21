@@ -26,50 +26,70 @@ end
 
 %% Generate plot
 
+% set the reference trajectory
+ref = mpcData{1}.R;
+zorigin = ref(3,:);
+trialnames = cell( 1 , length(mpcData) + 1);
+trialnames{1} = 'Reference';
+
 % set axis limits
 xbounds = [-150,150];
 ybounds = [-150,150];
-zbounds = [-700,-400];
+zbounds = [-150,150];
 
 figure;
-subplot(3,2,[1,3,5]);
-hold on;
-plot3( mpcData{1}.R(3:end,1) , mpcData{1}.R(3:end,3) , mpcData{1}.R(3:end,2) , 'LineWidth' , 3 );
-plot3( mpcData{1}.Y(3:end,7) , mpcData{1}.Y(3:end,9) , mpcData{1}.Y(3:end,8) , 'LineWidth' , 3 );
-hold off;
-grid on; box on;
-view(-37.5,10);
-% axis equal;
-xlim([-150,150]);
-ylim([-150,150]);
-zlim([-600,-300]);
 
-subplot(3,2,2); % xy-projection
+subplot(3,3,[1,2,4,5,7,8]);
 hold on;
-plot( mpcData{1}.R(3:end,1) , mpcData{1}.R(3:end,3) , 'LineWidth' , 3 );
-plot( mpcData{1}.Y(3:end,7) , mpcData{1}.Y(3:end,9) , 'LineWidth' , 3 );
+plot3( ref(3:end,1) , ref(3:end,3) , ref(3:end,2) - zorigin , 'LineWidth' , 3 );
+for i = 1 : length( mpcData )
+    plot3( mpcData{i}.Y(3:end,7) , mpcData{i}.Y(3:end,9) , mpcData{i}.Y(3:end,8) - zorigin , 'LineWidth' , 3 );
+    trialnames{i+1} = ['poop', num2str(mpcData{i}.What(end,3))];
+end
 hold off;
 grid on; box on;
-xlim([-150,150]);
-ylim([-150,150]);
-% axis equal;
+view(-37.5,15);
+xlim(xbounds);
+ylim(ybounds);
+zlim(zbounds);
+set(gca,'DataAspectRatio',[1 1 1])
+legend( trialnames , 'Location' , 'southoutside' )
 
-subplot(3,2,4); % xz-projection
+subplot(3,3,3); % xy-projection
 hold on;
-plot( mpcData{1}.R(3:end,1) , mpcData{1}.R(3:end,2) , 'LineWidth' , 3 );
-plot( mpcData{1}.Y(3:end,7) , mpcData{1}.Y(3:end,8) , 'LineWidth' , 3 );
+plot( ref(3:end,1) , ref(3:end,3) , 'LineWidth' , 3 );
+for i = 1 : length( mpcData )
+    plot( mpcData{i}.Y(3:end,7) , mpcData{i}.Y(3:end,9) , 'LineWidth' , 3 );
+end
 hold off;
 grid on; box on;
-xlim([-150,150]);
-ylim([-600,-300]);
-% axis equal;
+xlim(xbounds);
+ylim(ybounds);
+set(gca,'DataAspectRatio',[1 1 1])
+title('xy-projection');
 
-subplot(3,2,6); %yz-projection
+subplot(3,3,6); % xz-projection
 hold on;
-plot( mpcData{1}.R(3:end,3) , mpcData{1}.R(3:end,2) , 'LineWidth' , 3 );
-plot( mpcData{1}.Y(3:end,9) , mpcData{1}.Y(3:end,8) , 'LineWidth' , 3 );
+plot( ref(3:end,1) , ref(3:end,2) - zorigin , 'LineWidth' , 3 );
+for i = 1 : length( mpcData )
+    plot( mpcData{i}.Y(3:end,7) , mpcData{i}.Y(3:end,8) - zorigin , 'LineWidth' , 3 );
+end
 hold off;
 grid on; box on;
-xlim([-150,150]);
-ylim([-600,-300]);
-% axis equal;
+xlim(xbounds);
+ylim(zbounds);
+set(gca,'DataAspectRatio',[1 1 1])
+title('xz-projection');
+
+subplot(3,3,9); %yz-projection
+hold on;
+plot( ref(3:end,3) , ref(3:end,2) - zorigin , 'LineWidth' , 3 );
+for i = 1 : length( mpcData )
+    plot( mpcData{i}.Y(3:end,9) , mpcData{i}.Y(3:end,8) - zorigin , 'LineWidth' , 3 );
+end
+hold off;
+grid on; box on;
+xlim(ybounds);
+ylim(zbounds);
+set(gca,'DataAspectRatio',[1 1 1])
+title('yz-projection');
