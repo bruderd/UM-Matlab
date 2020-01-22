@@ -8,7 +8,7 @@
 %   containing all of (the paths to) the mpcData files you used.
 
 % select data file(s)
-[ datafile_name , datafile_path ] = uigetfile( '*.mat' , 'Choose data file(s) for merging...' , 'multiselect' , 'on' );
+[ datafile_name , datafile_path ] = uigetfile( '*.mat' , 'Choose data file(s)...' , 'multiselect' , 'on' );
 
 % load in the data files
 if iscell( datafile_name )  % check if it's cell array
@@ -44,11 +44,11 @@ hold on;
 plot3( ref(3:end,1) , ref(3:end,3) , ref(3:end,2) - zorigin , 'LineWidth' , 3 );
 for i = 1 : length( mpcData )
     plot3( mpcData{i}.Y(3:end,7) , mpcData{i}.Y(3:end,9) , mpcData{i}.Y(3:end,8) - zorigin , 'LineWidth' , 2 );
-    trialnames{i+1} = ['Actual ($w =$ ', num2str(mpcData{i}.What(end,3)) , ' g)'];    % change to W
+    trialnames{i+1} = ['Actual ($w =$ ', num2str(mpcData{i}.Wreal(3,end)) , ' g)'];    % change to W
 end
 hold off;
 grid on; box on;
-view(-37.5,15);
+view(-37.5+180,15);
 xlim(xbounds);
 ylim(ybounds);
 zlim(zbounds);
