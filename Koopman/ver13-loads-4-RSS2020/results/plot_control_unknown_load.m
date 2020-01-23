@@ -32,6 +32,8 @@ end
 % set the reference trajectory (assumes all trials have same reference)
 ref = mpcData{1}.R(1:min_trial_len,:);
 zorigin = ref(3,:);
+
+% initialze fields for legend
 trials = gobjects( 3 , length(mpcData) + 1);
 trialnames = cell( 1 , length(mpcData) + 1);
 trialnames{1} = 'Reference';
