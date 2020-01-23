@@ -8,7 +8,7 @@
 %   containing all of (the paths to) the mpcData files you used.
 
 % select data file(s)
-[ datafile_name , datafile_path ] = uigetfile( '*.mat' , 'Choose data file(s)...' , 'multiselect' , 'on' );
+[ datafile_name , datafile_path ] = uigetfile( 'C:\Users\danie\Google Drive\PhD\Research\Labview\RSS2020\Matlab\mpc\dataFiles\*.mat' , 'Choose data file(s)...' , 'multiselect' , 'on' );
 
 % load in the data files
 min_trial_len = Inf;    % the length of the shortest trial loaded in (in steps not time)
@@ -73,6 +73,8 @@ for i = 1 : length( mpcData )
 end
 grid on; box on;
 hold off;
+ylim([0,100]);
+xlim([0,60]);
 ylabel('Tracking error (mm)')
 xlabel('Time (seconds)')
 
@@ -86,7 +88,7 @@ for i = 1 : length( mpcData )
 end
 hold off;
 grid on; box on;
-view(-37.5,15);
+view(-37.5+180,15);
 xlim(xbounds);
 ylim(ybounds);
 zlim(zbounds);

@@ -58,6 +58,8 @@ zbounds = [-50,150];
 % set other plot parameters
 espace = 0.01;  % extra space to add between subplots
 dshift = -0.05;  % amount to shift down the projection plots
+sparse_labels = { '' , -100 , '' , 0 , '' , 100 , ''};
+sparse_labels_z = { '' , 0 , '' , 100 , '' };
 
 % set line parameter values
 lwidth = 2;   % line width to use for trajectories
@@ -66,13 +68,13 @@ lalpha = 0.8;   % opacity for trajectories
 
 % create figure
 figure;
-set(gcf, 'Position',  [100, 100, 1000*1, 650*1])
+set(gcf, 'Position',  [100, 100, 900 , 1125])
 colormap lines;
 clr = colormap;
 clr_alpha = [ clr , 0.7 * ones(size(clr,1),1) ];  % same colors but with opacity
 refclr = [1 1 1]*0.4;   % color for reference trajectory
 
-smain = subplot(3,3,[1,2,4,5]);
+smain = subplot(4,3,[1,2,3,4,5,6]); % 3d-plot
 hold on;
 trials(:,1) = plot3( ref(kmin:end,1) , ref(kmin:end,3) , ref(kmin:end,2) - zorigin , 'LineWidth' , 3 , 'Color' , refclr);
 for i = 1 : length( mpcData )
@@ -82,7 +84,7 @@ end
 hold off;
 grid on; box on;
 view(-37.5+180,15);
-set(smain,'Position', get(smain,'Position') + [0,-dshift,0,0]);    % move slightly
+% set(smain,'Position', get(smain,'Position') + [0,-dshift,0,0]);    % move slightly
 xlim(xbounds); 
 ylim(ybounds); 
 zlim(zbounds); 
@@ -94,9 +96,12 @@ zlh = zlabel('z (mm)');
 xlh.Position = xlh.Position + [-60 , -20 , 0];    % change position of x-axis label
 ylh.Position = ylh.Position + [-30 , -60 , 0];    % change position of y-axis label
 xticks( [-150 , -100 , -50 , 0 , 50 , 100 , 150] );
+xticklabels( sparse_labels );
 yticks( [-150 , -100 , -50 , 0 , 50 , 100 , 150] );
+yticklabels( sparse_labels );
+zticklabels( sparse_labels_z );
 
-sxz = subplot(3,3,6); % xz-projection
+sxz = subplot(4,3,8); % xz-projection
 hold on;
 plot( ref(kmin:end,1) , ref(kmin:end,2) - zorigin , 'LineWidth' , 3 , 'Color' , refclr);
 for i = 1 : length( mpcData )
@@ -107,14 +112,16 @@ grid on; box on;
 xlim(xbounds);
 ylim(zbounds);
 xticks( [-150 , -100 , -50 , 0 , 50 , 100 , 150] );
+xticklabels( sparse_labels );
+yticklabels( sparse_labels_z );
 set(gca,'DataAspectRatio',[1 1 1])
 title('xz-projection');
 xlabel('x (mm)');
 ylabel('z (mm)');
 hxzp = get( gca, 'Position' );
-set(sxz,'Position', get(sxz,'Position') + [espace,dshift,0,0]);    % move slightly
+% set(sxz,'Position', get(sxz,'Position') + [espace,dshift,0,0]);    % move slightly
 
-sxy = subplot(3,3,3); % xy-projection
+sxy = subplot(4,3,7); % xy-projection
 hold on;
 plot( ref(kmin:end,1) , ref(kmin:end,3) , 'LineWidth' , 3 , 'Color' , refclr);
 for i = 1 : length( mpcData )
@@ -125,16 +132,18 @@ grid on; box on;
 xlim(xbounds);
 ylim(ybounds);
 hxyp = get( gca, 'Position' );
-set( gca, 'Position', [hxyp(1:2) , hxzp(3) , hxzp(3)] );
+% set( gca, 'Position', [hxyp(1:2) , hxzp(3) , hxzp(3)] );
 % set(gca,'DataAspectRatio',[1 1 1])
 xticks( [-150 , -100 , -50 , 0 , 50 , 100 , 150] );
+xticklabels( sparse_labels );
 yticks( [-150 , -100 , -50 , 0 , 50 , 100 , 150] );
+yticklabels( sparse_labels );
 title('xy-projection');
 xlabel('x (mm)');
 ylabel('y (mm)');
-set(sxy,'Position', get(sxy,'Position') + [espace,dshift,0,0.1]);    % move slightly
+% set(sxy,'Position', get(sxy,'Position') + [espace,dshift,0,0.1]);    % move slightly
 
-syz = subplot(3,3,9); % yz-projection
+syz = subplot(4,3,9); % yz-projection
 hold on;
 plot( ref(kmin:end,3) , ref(kmin:end,2) - zorigin , 'LineWidth' , 3 , 'Color' , refclr);
 for i = 1 : length( mpcData )
@@ -145,24 +154,26 @@ grid on; box on;
 xlim(ybounds);
 ylim(zbounds);
 xticks( [-150 , -100 , -50 , 0 , 50 , 100 , 150] );
+xticklabels( sparse_labels );
+yticklabels( sparse_labels_z );
 set(gca,'DataAspectRatio',[1 1 1])
 title('yz-projection');
 xlabel('y (mm)');
 ylabel('z (mm)');
-set(syz,'Position', get(syz,'Position') + [espace,dshift,0,0]);    % move slightly
+% set(syz,'Position', get(syz,'Position') + [espace,dshift,0,0]);    % move slightly
 
-serr = subplot(3,3,[7,8]);  % error verses time
+serr = subplot(4,3,[10,11,12]);  % error verses time
 hold on;
 % plot( ref(3:end,3) , ref(3:end,2) - zorigin , 'LineWidth' , 3 , 'Color' , refclr);
 for i = 1 : length( mpcData )
     kmax_i = min( kmax , mpcData{i}.K(end) );
-    time = mpcData{i}.T(kmin:kmax_i);
+    time = mpcData{i}.T(kmin:kmax_i) - mpcData{i}.T(kmin);
     terror = sqrt( sum( ( mpcData{i}.Y(kmin:kmax_i,7:9) - ref(kmin:kmax_i,:) ).^2 , 2 ) );
     plot( time , terror , 'LineWidth' , lwidth , 'Color' , clr(i,:));
 end
 hold off;
 grid on; box on;
-set(serr,'Position', get(serr,'Position') + [0,(),0,-dshift]);    % move slightly
+% set(serr,'Position', get(serr,'Position') + [0,(2*dshift)/3,0,-dshift]);    % move slightly
 ylabel('Tracking error (mm)')
 xlabel('Time (seconds)')
 xlim([0,Tref]);   % for 130 second reference trajectory

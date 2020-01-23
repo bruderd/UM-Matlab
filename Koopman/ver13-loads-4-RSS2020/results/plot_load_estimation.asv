@@ -40,6 +40,7 @@ end
 
 figure;
 % set(gcf, 'Position',  [100, 100, 1400, 600])
+% set(0,'defaulttextinterpreter','latex')
 colormap lines;
 clr = colormap;
 refclr = [1 1 1]*0.6;   % color for reference trajectory
@@ -50,26 +51,26 @@ kmin = 3;   % index of first values that arent trash
 kmax = floor( Tref / mpcData{1}.model.params.Ts );  % number of steps to get to the end of the reference trajectory (assuming it never finishes late)
 
 % initialze fields for legend
-% trials = gobjects( 3 , length(mpcData) + 1);
-% trialnames = cell( 1 , length(mpcData) + 1);
-% trialnames{1} = 'Reference';
+trials = gobjects( 1 , length(mpcData) );
+trialnames = cell( 1 , length(mpcData) );
 
 % set axis limits
-xbounds = [-150,150];
-ybounds = [-150,150];
+xbounds = [0,];
+ybounds = [0,300];
 
 % Load estimate verses time
 hold on;
 for i = 1 : length( mpcData )
-    time = mpcData{i}.T(kmin:kmax);
-    plot( time , mpcData{i}.Wreal(3,end) * ones(size(time)) , '--' , 'LineWidth' , 1.5 , 'Color' , clr(i,:) );
-%     trials(i+1) =plot( time , mpcData{i}.W , 'LineWidth' , 2 , 'Color' , clr(i,:));
-%     trialnames{i+1} = ['Actual ($w =$ ', num2str(mpcData{i}.Wreal(3,end)) , ' g)'];    % change to W
+    time = mpcData{i}.T(kmin:kmax) - mpcData{i}.T(kmin);
+    plot( time , mpcData{i}.Wreal(kmin,end) * ones(size(time)) , '--' , 'LineWidth' , 1.5 , 'Color' , clr(i,:) );
+    trials(i) = plot( time , mpcData{i}.W(kmin:kmax) , 'LineWidth' , 2 , 'Color' , clr(i,:));
+    trialnames{i} = ['\textsf{Actual load} $w =$ ', num2str(mpcData{i}.Wreal(kmin,end)) , ' g'];
 end
 grid on; box on;
 hold off;
-ylabel('Load (g)')
-xlabel('Time (seconds)')
+ylabel('\textsf{Load Estimate}, $\hat{w}$ \textsf{(g)}' ,  'Interpreter' , 'Latex');
+xlabel('\textsf{Time (seconds)}' , 'Interpreter' , 'Latex');
+legend( trials(1,:) , trialnames , 'Location' , 'northeast' , 'Interpreter' , 'Latex' );
 
 
 
