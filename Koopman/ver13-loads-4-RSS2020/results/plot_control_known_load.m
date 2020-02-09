@@ -53,55 +53,58 @@ trialnames{1} = 'Reference';
 % set axis limits
 xbounds = [-175,175];
 ybounds = [-175,175];
-zbounds = [-50,150];
+zbounds = [-25,125];
 
 % set other plot parameters
 espace = 0.01;  % extra space to add between subplots
 dshift = -0.03;  % amount to shift down the projection plots
 sparse_labels = { '' , -100 , '' , 0 , '' , 100 , ''};
-sparse_labels_z = { '' , 0 , '' , 100 , '' };
+sparse_labels_z = { 0 , '' , 100 };
 
-% set line parameter values
-lwidth = 2;   % line width to use for trajectories
-rwidth = 2;     % line width to use for reference
-lalpha = 0.8;   % opacity for trajectories
+% set parameter values
+lwidth = 3;   % line width to use for trajectories
+rwidth = 3;     % line width to use for reference
+lalpha = 1;   % opacity for trajectories
+fsize = 28;     % font size for labels
+tfsize = 20;    % font size for tick labels
 
 % create figure
 figure;
-set(gcf, 'Position',  [100, 100, 900 , 1125])
+set(gcf, 'Position',  [100, 100, 800 , 1225])
 colormap lines;
 clr = colormap;
-clr_alpha = [ clr , 0.7 * ones(size(clr,1),1) ];  % same colors but with opacity
+clr_alpha = [ clr , lalpha * ones(size(clr,1),1) ];  % same colors but with opacity
 refclr = [1 1 1]*0.4;   % color for reference trajectory
 
-smain = subplot(4,3,[1,2,3,4,5,6]); % 3d-plot
+smain = subplot(6,2,[1,2,3,4]); % 3d-plot
 hold on;
 trials(:,1) = plot3( ref(kmin:end,1) , ref(kmin:end,3) , ref(kmin:end,2) - zorigin , 'LineWidth' , 3 , 'Color' , refclr);
 for i = 1 : length( mpcData )
     trials(:,i+1) = plot3( mpcData{i}.Y(kmin:end,7) , mpcData{i}.Y(kmin:end,9) , mpcData{i}.Y(kmin:end,8) - zorigin , 'LineWidth' , lwidth , 'Color' , clr_alpha(i,:));
-    trialnames{i+1} = ['Actual ($w =$ ', num2str(mpcData{i}.Wreal(kmin,end)) , ' g)'];    % change to W
+    trialnames{i+1} = ['$w =$ ', num2str(mpcData{i}.Wreal(kmin,end)) , ' g'];    % change to W
 end
 hold off;
 grid on; box on;
 view(-37.5+180,15);
-set(smain,'Position', get(smain,'Position') + [0,-dshift,0,0]);    % move slightly up
+set(smain,'Position', get(smain,'Position') + [0,-dshift,0,0.03]);    % move slightly up and make taller
 xlim(xbounds); 
 ylim(ybounds); 
 zlim(zbounds); 
 set(gca,'DataAspectRatio',[1 1 1])
-legend( trials(1,:) , trialnames , 'Location' , 'northeast' , 'Interpreter' , 'Latex' );
-xlh = xlabel('x (mm)');
-ylh = ylabel('y (mm)');
-zlh = zlabel('z (mm)');
-xlh.Position = xlh.Position + [-60 , -20 , 0];    % change position of x-axis label
-ylh.Position = ylh.Position + [-30 , -60 , 0];    % change position of y-axis label
+% legend( trials(1,:) , trialnames , 'Location' , 'northeast' , 'Interpreter' , 'Latex' ,  'FontSize' , tfsize);
+set(gca,'FontSize',tfsize);      % change tick label font size
 xticks( [-150 , -100 , -50 , 0 , 50 , 100 , 150] );
 xticklabels( sparse_labels );
 yticks( [-150 , -100 , -50 , 0 , 50 , 100 , 150] );
 yticklabels( sparse_labels );
 zticklabels( sparse_labels_z );
+xlh = xlabel('x (mm)' , 'FontSize' , fsize );
+ylh = ylabel('y (mm)' , 'FontSize' , fsize);
+zlh = zlabel('z (mm)' , 'FontSize' , fsize);
+xlh.Position = xlh.Position + [-70 , -50 , 0];    % change position of x-axis label
+ylh.Position = ylh.Position + [-60 , -80 , 0];    % change position of y-axis label
 
-sxz = subplot(4,3,8); % xz-projection
+sxz = subplot(6,2,6); % xz-projection
 hold on;
 plot( ref(kmin:end,1) , ref(kmin:end,2) - zorigin , 'LineWidth' , 3 , 'Color' , refclr);
 for i = 1 : length( mpcData )
@@ -115,13 +118,14 @@ xticks( [-150 , -100 , -50 , 0 , 50 , 100 , 150] );
 xticklabels( {[]} ); %( sparse_labels );
 yticklabels( {[]} ); %( sparse_labels_z );
 set(gca,'DataAspectRatio',[1 1 1])
-title('xz-projection');
-xlabel('x (mm)');
-ylabel('z (mm)');
-hxzp = get( gca, 'Position' );
+% title('xz-projection');
+xlh2 = xlabel('x' , 'FontSize' , fsize);
+ylabel('z' , 'FontSize' , fsize);
+xlh2.Position = xlh2.Position + [0 , 10 , 0];    % change position of x-axis label
+% hxzp = get( gca, 'Position' );
 % set(sxz,'Position', get(sxz,'Position') + [espace,dshift,0,0]);    % move slightly
 
-sxy = subplot(4,3,7); % xy-projection
+sxy = subplot(6,2,[5,7]); % xy-projection
 hold on;
 plot( ref(kmin:end,1) , ref(kmin:end,3) , 'LineWidth' , 3 , 'Color' , refclr);
 for i = 1 : length( mpcData )
@@ -133,17 +137,17 @@ xlim(xbounds);
 ylim(ybounds);
 hxyp = get( gca, 'Position' );
 % set( gca, 'Position', [hxyp(1:2) , hxzp(3) , hxzp(3)] );
-% set(gca,'DataAspectRatio',[1 1 1])
+set(gca,'DataAspectRatio',[1 1 1])
 xticks( [-150 , -100 , -50 , 0 , 50 , 100 , 150] );
 xticklabels( {[]} ); %( sparse_labels );
 yticks( [-150 , -100 , -50 , 0 , 50 , 100 , 150] );
 yticklabels( {[]} ); %( sparse_labels );
-title('xy-projection');
-xlabel('x (mm)');
-ylabel('y (mm)');
+% title('xy-projection');
+xlabel('x' , 'FontSize' , fsize);
+ylabel('y' , 'FontSize' , fsize);
 % set(sxy,'Position', get(sxy,'Position') + [espace,dshift,0,0.1]);    % move slightly
 
-syz = subplot(4,3,9); % yz-projection
+syz = subplot(6,2,8); % yz-projection
 hold on;
 plot( ref(kmin:end,3) , ref(kmin:end,2) - zorigin , 'LineWidth' , 3 , 'Color' , refclr);
 for i = 1 : length( mpcData )
@@ -157,12 +161,13 @@ xticks( [-150 , -100 , -50 , 0 , 50 , 100 , 150] );
 xticklabels( {[]} ); %( sparse_labels );
 yticklabels( {[]} ); %( sparse_labels_z );
 set(gca,'DataAspectRatio',[1 1 1])
-title('yz-projection');
-xlabel('y (mm)');
-ylabel('z (mm)');
+% title('yz-projection');
+xlh3 = xlabel('y' , 'FontSize' , fsize);
+xlh3.Position = xlh3.Position + [0 , 10 , 0];    % change position of x-axis label
+ylabel('z' , 'FontSize' , fsize);
 % set(syz,'Position', get(syz,'Position') + [espace,dshift,0,0]);    % move slightly
 
-serr = subplot(4,3,[10,11,12]);  % error verses time
+serr = subplot(6,2,[9,10,11,12]);  % error verses time
 hold on;
 % plot( ref(3:end,3) , ref(3:end,2) - zorigin , 'LineWidth' , 3 , 'Color' , refclr);
 for i = 1 : length( mpcData )
@@ -174,11 +179,12 @@ end
 hold off;
 grid on; box on;
 set(serr,'Position', get(serr,'Position') + [0,dshift,0,0]);    % move slightly down
-ylabel('Tracking error (mm)')
-xlabel('Time (seconds)')
+set(gca,'FontSize',tfsize);      % change tick label font size
 xlim([0,Tref]);   % for 130 second reference trajectory
 ylim([0,150]);  % see if this works okay
-title('Tracking Error')
+ylabel('Tracking error (mm)' , 'FontSize' , fsize)
+xlabel('Time (seconds)' , 'FontSize' , fsize)
+% title('Tracking Error')
 
 
 

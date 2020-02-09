@@ -1,14 +1,14 @@
-% plot_load_estimation
-%   Creates a plot of the load estimates for the robot converging over time
-%
+% error_control_known_load
+%   Calculates RMSE error for trajectory following for a known load from mpcData
+%   files.
+%   
 %   Must first select mpcData files from file explorer (can select several 
 %   simultaneously and it will display the different ones on a legend),
 %   it generates a plot of that data, and you can save a cell array
 %   containing all of (the paths to) the mpcData files you used.
 
-
 % select data file(s)
-[ datafile_name , datafile_path ] = uigetfile( 'C:\Users\danie\Google Drive\PhD\Research\Labview\RSS2020\Matlab\load_estimation\dataFiles\*.mat' , 'Choose data file(s)...' , 'multiselect' , 'on' );
+[ datafile_name , datafile_path ] = uigetfile( 'C:\Users\danie\Google Drive\PhD\Research\Labview\RSS2020\Matlab\*.mat' , 'Choose data file(s)...' , 'multiselect' , 'on' );
 
 % load in the data files
 if iscell( datafile_name )  % check if it's cell array
@@ -36,49 +36,20 @@ for i = 1 : length( mpcData )
     mpcData{i} = temp{ load_ordered(i,1) };
 end
 
-%% Generate plot
+%% Caclulate RMSE error over each trial
 
-figure;
-% set(gcf, 'Position',  [100, 100, 1400, 600])
-% set(0,'defaulttextinterpreter','latex')
-colormap lines;
-clr = colormap;
-refclr = [1 1 1]*0.6;   % color for reference trajectory
-
-% set time for trial
-Tref = 30; % time trajectories should take. EDIT FOR FASTER TRAJECTORIES!!
+% set the reference trajectory and start/stop indices
+ref = mpcData{1}.R;
+zorigin = ref(3,:);
+Tref = 20; % time trajectories should take. EDIT FOR FASTER TRAJECTORIES!!
 kmin = 3;   % index of first values that arent trash
 kmax = floor( Tref / mpcData{1}.model.params.Ts );  % number of steps to get to the end of the reference trajectory (assuming it never finishes late)
 
-% initialze fields for legend
-trials = gobjects( 1 , length(mpcData) );
-trialnames = cell( 1 , length(mpcData) );
-
-% set axis limits
-xbounds = [0,];
-ybounds = [0,300];
-
-% Load estimate verses time
-hold on;
+RMSE = zeros( 2 , length( mpcData ) );
 for i = 1 : length( mpcData )
-    time = mpcData{i}.T(kmin:kmax) - mpcData{i}.T(kmin);
-    plot( time , mpcData{i}.Wreal(kmin,end) * ones(size(time)) , '--' , 'LineWidth' , 1.5 , 'Color' , clr(i,:) );
-    trials(i) = plot( time , mpcData{i}.W(kmin:kmax) , 'LineWidth' , 2 , 'Color' , clr(i,:));
-    trialnames{i} = ['\textsf{Actual load} $w =$ ', num2str(mpcData{i}.Wreal(kmin,end)) , ' g'];
+    kmax_i = min( kmax , mpcData{i}.K(end) );
+    RMSE(1,i) = mpcData{i}.Wreal(kmin,end);    % put load in first row
+    terror = sqrt( sum( ( mpcData{i}.Y(kmin:kmax_i,7:9) - ref(kmin:kmax_i,:) ).^2 , 2 ) );
+    RMSE(2,i) = sqrt( sum( terror.^2 ) / length(terror) ); % RMSE over whole trial
+    RMSE(3,i) = mean( terror );     % average error over whole trial
 end
-grid on; box on;
-hold off;
-ylabel('\textsf{Load Estimate}, $\hat{w}$ \textsf{(g)}' ,  'Interpreter' , 'Latex');
-xlabel('\textsf{Time (seconds)}' , 'Interpreter' , 'Latex');
-legend( trials(1,:) , trialnames , 'Location' , 'northeast' , 'Interpreter' , 'Latex' );
-
-
-
-
-
-
-
-
-
-
-

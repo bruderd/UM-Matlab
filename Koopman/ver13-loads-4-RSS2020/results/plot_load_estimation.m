@@ -68,9 +68,9 @@ for i = 1 : length( mpcData )
 end
 grid on; box on;
 hold off;
-ylabel('\textsf{Load Estimate}, $\hat{w}$ \textsf{(g)}' ,  'Interpreter' , 'Latex');
-xlabel('\textsf{Time (seconds)}' , 'Interpreter' , 'Latex');
-legend( trials(1,:) , trialnames , 'Location' , 'northeast' , 'Interpreter' , 'Latex' );
+ylabel('Load Estimate, $\hat{w}$ (g)');
+xlabel('Time (seconds)');
+% legend( trials(1,:) , trialnames , 'Location' , 'northeast' , 'Interpreter' , 'Latex' );
 
 
 

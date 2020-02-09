@@ -44,56 +44,57 @@ ybounds = [-150,150];
 zbounds = [-150,150];
 
 figure;
-set(gcf, 'Position',  [100, 100, 1400, 600])
+% set(gcf, 'Position',  [100, 100, 1400, 600])
 colormap lines;
 clr = colormap;
 refclr = [1 1 1]*0.6;   % color for reference trajectory
 
 % Load estimate verses time
-subplot(2,4,[1,2])
+subplot(2,2,[1,2])
 hold on;
 for i = 1 : length( mpcData )
-    time = mpcData{i}.T(1:min_trial_len);
+    time = mpcData{i}.T(3:min_trial_len) - mpcData{i}.T(3);
     plot( time , mpcData{i}.Wreal(3,end) * ones(size(time)) , '--' , 'LineWidth' , 1.5 , 'Color' , clr(i,:) );
-    plot( time , mpcData{i}.W , 'LineWidth' , 2 , 'Color' , clr(i,:));
+    plot( time , mpcData{i}.W(3:min_trial_len) , 'LineWidth' , 2 , 'Color' , clr(i,:));
 %     trialnames{i+1} = ['Actual ($w =$ ', num2str(mpcData{i}.Wreal(3,end)) , ' g)'];    % change to W
 end
 grid on; box on;
 hold off;
-ylabel('Load (g)')
+xlim([0,40]);
+ylabel('Load Estimate, $\hat{w}$ (g)')
 xlabel('Time (seconds)')
 
 % Tracking error verses time
-subplot(2,4,[5,6])
+subplot(2,2,[3,4])
 hold on;
 for i = 1 : length( mpcData )
-    time = mpcData{i}.T(1:min_trial_len);
-    terror = sqrt( sum( ( mpcData{i}.Y(:,7:9) - ref ).^2 , 2 ) );
+    time = mpcData{i}.T(3:min_trial_len) - mpcData{i}.T(3);
+    terror = sqrt( sum( ( mpcData{i}.Y(3:min_trial_len,7:9) - ref(3:min_trial_len,:) ).^2 , 2 ) );
     plot( time , terror , 'LineWidth' , 2 , 'Color' , clr(i,:));
 end
 grid on; box on;
 hold off;
 ylim([0,100]);
-xlim([0,60]);
+xlim([0,40]);
 ylabel('Tracking error (mm)')
 xlabel('Time (seconds)')
 
-% 3d plot plus legend
-subplot(2,4,[3,4,7,8])
-hold on;
-trials(:,1) = plot3( ref(3:end,1) , ref(3:end,3) , ref(3:end,2) - zorigin , 'LineWidth' , 3 , 'Color' , refclr );
-for i = 1 : length( mpcData )
-    trials(:,i+1) = plot3( mpcData{i}.Y(3:end,7) , mpcData{i}.Y(3:end,9) , mpcData{i}.Y(3:end,8) - zorigin , 'LineWidth' , 2 , 'Color' , clr(i,:));
-    trialnames{i+1} = ['Actual ($w =$ ', num2str(mpcData{i}.Wreal(end,3)) , ' g)'];    % change to W
-end
-hold off;
-grid on; box on;
-view(-37.5+180,15);
-xlim(xbounds);
-ylim(ybounds);
-zlim(zbounds);
-set(gca,'DataAspectRatio',[1 1 1])
-legend( trials(1,:) , trialnames , 'Location' , 'northoutside' , 'Interpreter' , 'Latex' );
+% % 3d plot plus legend
+% subplot(2,4,[3,4,7,8])
+% hold on;
+% trials(:,1) = plot3( ref(3:min_trial_len,1) , ref(3:min_trial_len,3) , ref(3:min_trial_len,2) - zorigin , 'LineWidth' , 3 , 'Color' , refclr );
+% for i = 1 : length( mpcData )
+%     trials(:,i+1) = plot3( mpcData{i}.Y(3:min_trial_len,7) , mpcData{i}.Y(3:min_trial_len,9) , mpcData{i}.Y(3:min_trial_len,8) - zorigin , 'LineWidth' , 2 , 'Color' , clr(i,:));
+%     trialnames{i+1} = ['Actual ($w =$ ', num2str(mpcData{i}.Wreal(3,3)) , ' g)'];    % change to W
+% end
+% hold off;
+% grid on; box on;
+% view(-37.5+180,15);
+% xlim(xbounds);
+% ylim(ybounds);
+% zlim(zbounds);
+% set(gca,'DataAspectRatio',[1 1 1])
+% legend( trials(1,:) , trialnames , 'Location' , 'northoutside' , 'Interpreter' , 'Latex' );
 
 
 
