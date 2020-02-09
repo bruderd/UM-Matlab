@@ -7,13 +7,16 @@ fig = figure;
 
 range = 1 : 12*150;  % data index range 
 
+% scale the data to be in centimeters (TO BE COMPLETED...)
+% valdata_cm = data.val1.x * ( params.
+
 % f(x) = x_1
 subplot(2,1,1)
 hold on
 plot( data.val1.t(range) , data.val1.x(range,1) , 'Color', [0.5 , 0.5 , 0.5] , 'LineWidth' , 2);  % real data
 plot( koopsim.val1.t(range) , koopsim.val1.x(range,1) , 'b:' , 'LineWidth' , 2);  % koopman simulation
 hold off
-ylabel( '$ y $' , 'interpreter' , 'latex' );
+ylabel( '$ y $ (cm)' , 'interpreter' , 'latex' );
 xlabel( 'Time (s)' , 'interpreter' , 'latex' );
 yticks([]);
 
@@ -26,7 +29,7 @@ hold on
 plot( data.val1.t(range) , data.val1.x(range,2) , 'Color', [0.5 , 0.5 , 0.5] , 'LineWidth' , 2);  % real data
 plot( koopsim.val1.t(range) , koopsim.val1.x(range,2) , 'b:' , 'LineWidth' , 2);  % koopman simulation
 hold off
-ylabel( '$ z $' , 'interpreter' , 'latex' );
+ylabel( '$ z $ (cm)' , 'interpreter' , 'latex' );
 xlabel( 'Time (s)' , 'interpreter' , 'latex' );
 yticks([]);
 
