@@ -1,17 +1,23 @@
 %% simulate pendulum data to build model
 h = 0.01;
+slen = 100;
 y0 = [ 0 ; 0 ];
 t0 = 0;
-tfinal = 30;
+tfinal = 300;
 input_t = t0:h:tfinal;
-input_u =  0.5.* rand( length( input_t ), 1 );
+utrain = 1 .* rand( ( length( input_t ) - 1 ) / slen , 1 );
+input_u = zeros( slen * ( length(utrain)+1 ) , 1 );
+for i = 2 : length(utrain)
+    input_u( slen*(i-1)+1 : slen*i , : ) = utrain( i );
+end
+% input_u = [ 0 ; interleave2( utrain , utrain , utrain , utrain , utrain , utrain , utrain , utrain , 'row' ) ];
 
-% yout = ode1( @pendulum,t0,h,tfinal,y0,input_t,input_u,[] );
-yout = ode1_discrete( @linear_system_discrete,t0,h,tfinal,y0,input_t,input_u,[] );
+yout = ode1( @pendulum,t0,h,tfinal,y0,input_t,input_u,[] );
+% yout = ode1_discrete( @linear_system_discrete,t0,h,tfinal,y0,input_t,input_u,[] );
 
 % make output weirder
-% yout( 1, : ) = 1 - cos( yout( 1, : ) );
-% yout( 2, : ) = sin( yout( 1, : ) ) ;
+yout( 1, : ) = 1 - cos( yout( 1, : ) );
+yout( 2, : ) = sin( yout( 1, : ) ) ;
 
 %% transfer function identification
 Nout = size( yout, 2 );
@@ -24,18 +30,24 @@ end
 z = pinv( A ) * yout( 1, : )';  % only finds tf for first output y1
 
 %% validation
-y02 = [ 0.2 ; 0 ];
+y02 = [ 0 ; 0 ];
 tfinal2 = 10;
 input_t2 = t0:h:tfinal2;
-input_u2 = 0.5.* rand( length( input_t2 ), 1 );
+uval = 0.5 .* rand( ( length( input_t2 ) - 1 ) / slen , 1 );
+input_u2 = zeros( slen * ( length(uval)+1 ) , 1 );
+for i = 2 : length(uval)
+    input_u2( slen*(i-1)+1 : slen*i , : ) = uval( i );
+end
+% input_u2 = [ 0 ; interleave2( uval , uval , uval , uval , uval , uval , uval , uval , 'row' ) ];
+% input_u2 = 0.5 .* ones( length( input_t2 ) , 1 );
 Nout2 = length( input_t2 );
 
-% yout2 = ode1( @pendulum,t0,h,tfinal2,y02,input_t2,input_u2,[] );
-yout2 = ode1_discrete( @linear_system_discrete,t0,h,tfinal2,y02,input_t2,input_u2,[] );
+yout2 = ode1( @pendulum,t0,h,tfinal2,y02,input_t2,input_u2,[] );
+% yout2 = ode1_discrete( @linear_system_discrete,t0,h,tfinal2,y02,input_t2,input_u2,[] );
 
 % make output weirder
-% yout2( 1, : ) = 1 - cos( yout2( 1, : ) );
-% yout2( 2, : ) = sin( yout2( 1, : ) ) ;
+yout2( 1, : ) = 1 - cos( yout2( 1, : ) );
+yout2( 2, : ) = sin( yout2( 1, : ) ) ;
 
 %% input matrix
 B = zeros( Nout2 );
@@ -107,13 +119,13 @@ end
 [num,den] = ss2tf(A,B,C,0);
 [Ap,Bp,Cp,Dp] = tf2ss(num,den);
 Ao = Ap'; Bo = Cp' ; Co = Bp' ; Do = Dp;
-L = 0.5e0 * Ao(:,1); % "dead-beat" controller
+L = 0.5e-1 * Ao(:,1); % "dead-beat" controller
 
 % L = 6e-2 * ones( size(x0) );    % Goddamnit this works the best
 
 % set initial conditions for observer
-% xhat0 = x0;
-xhat0 = 1e-1 * rand(size(x0)); % initialize observer state away from origin
+xhat0 = x0;
+% xhat0 = 1e-1 * rand(size(x0)); % initialize observer state away from origin
 xhat(1,:) = xhat0';
 yhat0 = Co * xhat0;
 yhat(1) = yhat0';
