@@ -2,8 +2,8 @@
 
 %% simulate system
 
-kfinal = 100;
-numtrials = 100;
+kfinal = 10;
+numtrials = 1;
 
 utrain = zeros( numtrials , kfinal );
 for j = 1 : numtrials
@@ -36,26 +36,27 @@ ktrain = 1 : kfinal;
 
 %% identify volterra series
 
-hor = 100; % length of model horizon
-p = 2; % order of discrete volterra series
+hor = kfinal; % length of model horizon (can't be more than kfinal)
+p = 4; % order of discrete volterra series
 
-% partition data
-% K = hor : hor : kfinal;
-% N = length(K); % number of training points (wrt the output)
-% U = zeros( numtrials , hor );
-% for i = 1 : numtrials
-%     U(i,:) = utrain( i, : );
-% end
-N = numtrials;
-U = utrain;
-Y = ytrain(:,hor);  % may be hor + 1
+% make input vectors that include 1 to hor points
+Utrain = zeros( size(utrain,1) * hor , hor );
+for i = 1 : size( utrain , 1 )
+    for j = 1 : hor
+        rowindex = hor * (i-1) + j;
+        Utrain( rowindex , 1:j ) = utrain(i,1:j);
+    end
+end
 
 % build data matrix for regression
-data_output = Y;
-data_input = zeros(N,N);
-for i = 1 : N
-    for j = 1 : N
-        data_input(i,j) = ( 1 + U(j,:) * U(i,:)' )^p;
+data_output = reshape( ytrain(:,1:hor)' , [ hor*numtrials , 1 ] );    % stack trials
+data_input = zeros(hor*numtrials,hor);
+for k = 1 : numtrials
+    for i = 1 : hor
+        for j = 1 : hor
+                rowindex = hor*(k-1)+j;
+                data_input(rowindex,i) = ( 1 + Utrain( hor*(k-1)+i ,:) * Utrain(rowindex,:)' )^p;
+        end
     end
 end
 
@@ -63,6 +64,8 @@ end
 Alpha = lsqminnorm( data_input , data_output );
 
 %% validate the identified model
+
+numtrials = 1;  % reset to just one validation trial
 
 % generate new set of validation inputs as a random walk in [-1,1]
 uval = zeros( numtrials , kfinal );
@@ -82,6 +85,7 @@ for j = 1 : numtrials
     end
     uval(j,:) = u;
 end
+% uval = utrain(1,:);     % FOR DEBUGGING to see how well it works for data in the training set.
 
 % simulate system using these inputs and real model
 y0 = 0;
@@ -94,39 +98,42 @@ for i = 1 : numtrials
 end
 kval = 1 : kfinal;
 
-% see if regression solution works on new input data
-% build data matrix for regression
-Yval_real = yval(:,hor);
-data_input_val = zeros(N,N);
-for i = 1 : N
-    for j = 1 : N
-        data_input_val(i,j) = ( 1 + uval(j,:) * uval(i,:)' )^p;
+
+% make input vectors that include 1 to hor points
+Uval = zeros( size(utrain,1) * hor , hor );
+for i = 1 : size( uval , 1 )
+    for j = 1 : hor
+        rowindex = hor * (i-1) + j;
+        Uval( rowindex , 1:j ) = uval(i,1:j);
     end
 end
-Yval_fake = data_input_val * Alpha;
 
 
-% % simulate using the identified model (OLD VERSION)
-% yout_fake = zeros( kfinal , 1 );
-% uout_fake = [ zeros(hor,1) ; uout_real ];
-% % u = [ zeros(hor,1) ; u ];
-% for i = 2 : kfinal
-%     yout_fake(i) = Alpha' * ( 1 + U * uout_fake(i:i+hor-1) ).^p;
-% %     yout_fake(i) = Alpha' * ( 1 + U * u(i:i+hor-1) ).^p;
-% %     yout_fake(i) = Alpha' * ( 1 + U * U(i,:)' ).^p;
-% end
+% build data matrix for regression
+val_output_real = reshape( yval(:,1:hor)' , [ hor*numtrials , 1 ] );    % stack trials
+val_input = zeros( hor*numtrials , hor );
+for k = 1 : numtrials
+    for i = 1 : hor
+        for j = 1 : hor
+                rowindex = hor*(k-1)+j;
+                val_input(rowindex,i) = ( 1 + Utrain( hor*(k-1)+i ,:) * Uval(rowindex,:)' )^p;
+        end
+    end
+end
 
-% % plot the real model verse the fake one (OLD VERSION)
-% figure;
-% hold on;
-% plot(yout_real);
-% plot(yout_fake);
-% hold off;
-% legend('Real','Volterra');
+% compute response based on the model
+val_output_fake = val_input * Alpha;
+
+% plot the real model verse the fake one
+figure;
+hold on;
+plot(val_output_real);
+plot(val_output_fake);
+hold off;
+legend('Real','Volterra');
 
 
-
-%% Just do regular regression
+%% Just do regular regression (only works for one trial right now)
 
 % matrix of exponents. Each row gives exponents for 1 monomial
 exponents = zeros(1,hor);
@@ -136,11 +143,11 @@ end
 M = size( exponents , 1 );  % number of coefficients needed to be solved
 
 % build data matrix for regression
-reg_output = Y;
-reg_input = zeros(N,M);
-for i = 1 : N
+reg_output = data_output;
+reg_input = zeros( size( Utrain , 1 ) , M );
+for i = 1 : size( Utrain , 1 )
     for j = 1 : M
-        monomial = prod( U(i,:).^exponents(j,:) );
+        monomial = prod( Utrain(i,:).^exponents(j,:) );
         reg_input(i,j) = monomial;
     end
 end
@@ -153,29 +160,19 @@ Gamma = lsqminnorm( reg_input , reg_output );
 
 % simulate using the identified model
 yout_reg = zeros( kfinal , 1 );
-uout_reg = [ zeros(hor,1) ; uout_real ];
-for i = 2 : kfinal
-    monomial_vec = prod( kron( ones(M,1) , uout_reg(i:i+hor-1)' ) .^ exponents, 2 );
+uout_reg = uval;
+for i = 1 : kfinal
+    monomial_vec = prod( kron( ones(M,1) , Uval(i,:) ) .^ exponents, 2 );
     yout_reg(i) = Gamma' * monomial_vec;
 end
 
 % plot the real model verse the fake one
 figure;
 hold on;
-plot(yout_real);
+plot(yval);
 plot(yout_reg);
 hold off;
 legend('Real','Volterra');
-
-
-
-
-
-
-
-
-
-
 
 
 
