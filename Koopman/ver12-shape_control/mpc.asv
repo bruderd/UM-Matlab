@@ -465,15 +465,15 @@ classdef mpc
 %             b = [b ; btack];
             
             % solve the MPC problem
-            Uvec = quadprog_gurobi( 2*H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)
-            % U = quadprog( 2*H , f , A , b );     % solve using matlab
+            Uvec = quadprog_gurobi( H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)
+            % U = quadprog( H , f , A , b );     % solve using matlab
             
             % reshape the output so each input will have one row (first row equals current input)
             U = reshape( Uvec , [ obj.params.m , Np ] )';
         end
         
         % get_mpcInput_unl: Solve the mpc problem to get the input over entire horizon
-        function [ E , Z ]= get_mpcInput_unl( obj , traj , ref , shape_bounds )
+        function [ E , zx ]= get_mpcInput_unl( obj , traj , ref , shape_bounds )
             %get_mpcInput_unl: Soves the mpc problem to get the input over
             % entire horizon for a system with a nonlinear input
             %   traj - struct with fields y , u. Contains the measured
@@ -544,15 +544,14 @@ classdef mpc
             b = [b ; btack];
             
             % solve the MPC problem
-            Evec = quadprog_gurobi( 2*H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)
-            % U = quadprog( 2*H , f , A , b );     % solve using matlab
+            Evec = quadprog_gurobi( H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)
+            % U = quadprog( H , f , A , b );     % solve using matlab
             
             % reshape the output so each input will have one row (first row equals current input)
             E = reshape( Evec , [ obj.params.nzx , Np ] )';
             
             % calculate the projected lifted state over the horizon with the given inputs
-            Zvec = obj.cost.A * zx + obj.cost.B * Evec;
-            Z = reshape( Zvec( obj.params.nzx + 1 : end ) , [ obj.params.nzx , Np ] )';
+            Zvec = obj.cost.A * Evec + obj.
         end
         
         % get_costMatrices_unl: Contructs the matrices for the mpc optim. problem

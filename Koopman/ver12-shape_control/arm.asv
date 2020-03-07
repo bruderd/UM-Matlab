@@ -387,10 +387,10 @@ classdef arm
                 end
             elseif strcmp( obj.output_type , 'shape' )
                 y = zeros( size(x,1) , 2*3 ); % assumes planar arm, 3rd order polynomial
-                for i = 1 : size(x,1)
+                for i = size(x,1)
                     alpha = x( i , 1 : obj.params.Nlinks );
-                    shapecoeffs = obj.get_shape_coeffs( alpha , 3 );
-                    y(i,:) = shapecoeffs;
+                    temp = obj.get_shape_coeffs( alpha , 3 );
+                    y(i,:) = 
                 end
             end
         end

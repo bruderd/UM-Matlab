@@ -384,7 +384,7 @@ classdef sysid
             
             % construct the observables
             fullBasis = zeta;  % first nzeta observables should always be the measured state and delays COMMENTED OUT TO DO BILINEAR SHAPE SYSID
-%             fullBasis = [];   % COMMENTED IN TO DO BILINEAR SHAPE SYSID
+%             fullBasis = [];   
             for i = 1 : length(degree)
                 if strcmp( type{i} , 'armshape' )
                     obj = obj.def_armshapeLift( degree(i) );
