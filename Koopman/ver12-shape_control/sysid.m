@@ -1240,7 +1240,9 @@ classdef sysid
             for j = 1 : length(treal)-1      
                 zxsim(j+1,:) = ( model.A * zxsim(j,:)' + model.B * zusim(j,:)' );
                 ysim(j+1,:) = ( model.C * zxsim(j+1,:)' )';
-                zusim(j+1,:) = obj.lift.zu( ysim(j+1,:)' , usim(j+1,:)' )'; % lifting at each step, is this cheating?
+%                 zusim(j+1,:) = obj.lift.zu( ysim(j+1,:)' , usim(j+1,:)' )'; % lifting at each step, is this cheating? yes
+                zx_stack = kron( eye(length(obj.params.u)) , zxsim(j+1,:)' );
+                zusim(j+1,:) = ( zx_stack * usim(j+1,:)' )';
             end
             
             % save simulations in output struct

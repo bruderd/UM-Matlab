@@ -798,11 +798,11 @@ classdef mpc
             end
             
 %             % B
-%             zxblock = kron( eye( obj.params.m ) , obj.basis.zx );   % symbolic block matrix of zx  
+            zxblock = kron( eye( obj.params.m ) , zeros(size(obj.basis.zx)) );   % zero matrix size of block matrix of zx  
             Bheight = N*(obj.horizon+1);
 %             Bcolwidth = obj.params.m;
 %             Bcol = sym( zeros(Bheight , Bcolwidth) );   % first column of B matrix
-% %             obj.cost.randB = rand( size( model.B * zxblock ) );   % DEBUG: Random B matrix
+            obj.cost.randB = rand( size( model.B * zxblock ) );   % DEBUG: Random B matrix
 %             for i = 1 : obj.horizon
 %                 Bcol( (N*i + 1) : N*(i+1) , : ) = model.A^(i-1) * model.B * zxblock ;   % this is a symbolic expression
 % %                 Bcol( (N*i + 1) : N*(i+1) , : ) = model.A^(i-1) * obj.cost.randB ;   % DEBUG: Random B matrix
@@ -857,7 +857,7 @@ classdef mpc
 %             obj.cost.randB = rand( size( model.B * zxblock ) );   % DEBUG: Random B matrix
             for i = 1 : obj.horizon
                 Bcol( (N*i + 1) : N*(i+1) , : ) = obj.model.A^(i-1) * obj.model.B * zxblock ;   % this is a symbolic expression
-%                 Bcol( (N*i + 1) : N*(i+1) , : ) = model.A^(i-1) * obj.cost.randB ;   % DEBUG: Random B matrix
+%                 Bcol( (N*i + 1) : N*(i+1) , : ) = obj.model.A^(i-1) * obj.cost.randB ;   % DEBUG: Random B matrix
             end
             
             Lshift = spdiags( ones( N*obj.horizon , 1 ) , -N , N*(obj.horizon+1) , N*(obj.horizon+1) );    % lower shift operator
