@@ -384,7 +384,7 @@ classdef sysid
             
             % construct the observables
             fullBasis = zeta;  % first nzeta observables should always be the measured state and delays COMMENTED OUT TO DO BILINEAR SHAPE SYSID
-%             fullBasis = [];   
+%             fullBasis = [];   % COMMENTED IN TO DO BILINEAR SHAPE SYSID
             for i = 1 : length(degree)
                 if strcmp( type{i} , 'armshape' )
                     obj = obj.def_armshapeLift( degree(i) );
@@ -1240,7 +1240,7 @@ classdef sysid
             for j = 1 : length(treal)-1      
                 zxsim(j+1,:) = ( model.A * zxsim(j,:)' + model.B * zusim(j,:)' );
                 ysim(j+1,:) = ( model.C * zxsim(j+1,:)' )';
-                zusim(j+1,:) = obj.lift.zu( ysim(j+1,:)' , usim(j+1,:)' )';
+                zusim(j+1,:) = obj.lift.zu( ysim(j+1,:)' , usim(j+1,:)' )'; % lifting at each step, is this cheating?
             end
             
             % save simulations in output struct
