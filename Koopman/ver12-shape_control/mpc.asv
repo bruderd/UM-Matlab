@@ -1097,8 +1097,8 @@ classdef mpc
             nd = obj.params.nd;     % number of delays
             
             % isolate most recent output
-            statenow = traj.y( end , : );   % row
-            inputnow = traj.u( end , : );   % row
+            statenow = traj.y( end , : );
+            inputnow = traj.u( end , : );
             
             % lift zeta
             zx = obj.lift.zx( statenow' );
@@ -1106,7 +1106,7 @@ classdef mpc
             % simulate to find next zx given input u0
             Bz0 = obj.get_modelB_bilinear( statenow' );
             zx1 = obj.model.A * zx + Bz0 * inputnow';
-            statenext = ( obj.model.C * zx1 )';  % row
+            statenext = ( obj.model.C * zx1;
             
             % check that reference trajectory has correct dimensions
             if size( ref , 2 ) ~= obj.params.n    % size( obj.projmtx , 1 )
@@ -1134,11 +1134,11 @@ classdef mpc
             c = obj.set_constRHS( shape_bounds );
             
             % setup matrices for gurobi solver
-            H = obj.cost.get_H( statenext' );      % removed factor of 2 on 12/10/2018
-            G = obj.cost.get_G( statenext' );
-            D = obj.cost.get_D( statenext' );
+            H = obj.cost.get_H( statenow' );      % removed factor of 2 on 12/10/2018
+            G = obj.cost.get_G( statenow' );
+            D = obj.cost.get_D( statenow' );
             f = ( zx' * G + Yr' * D )';
-            A = obj.constraints.get_L( statenext' );
+            A = obj.constraints.get_L( statenow' );
             b = - obj.constraints.M * zx + c;
             
             % tack on "memory" constraint to fix initial input u_0
@@ -1160,7 +1160,7 @@ classdef mpc
             % reshape the output so each input will have one row (first row equals current input)
             E = reshape( Evec , [ obj.params.m , Np ] )';
             
-            % calculate the projected lifted state over the horizon with the given inputs (assuming constant Bz0)
+            % calculate the projected lifted state over the horizon with the given inputs
             Bz0 = obj.cost.get_B( statenow' );
             Zvec = obj.cost.A * zx + Bz0 * Evec;
             Z = reshape( Zvec( obj.params.nzx + 1 : end ) , [ obj.params.nzx , Np ] )';
