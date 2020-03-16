@@ -539,6 +539,89 @@ classdef arm
             
             close(vidObj);
         end
+        
+        % animate_arm
+        function animate_arm_refvmpc( obj, t , xref , xmpc , varargin)
+            %animate_arm: Animate a simualtion of the arm
+            %   t - time vector from simulation
+            %   xref - state reference vector (alpha and alphadot)
+            %   xmpc - state vector from simulation (alpha and alphadot)
+            %   varargin{1} = degree - degree of the shape polynomial (default: 3)
+            %   varargin{2} = name - name of the video file (default: sysName)
+            
+            % deal with optional inputs
+            if length(varargin) == 2
+                degree = varargin{1};
+                name = varargin{2};
+            elseif length(varargin) == 1
+                degree = varargin{1};
+                name = obj.params.sysName;
+            else
+                degree = 3;
+                name = obj.params.sysName;
+            end
+            
+            alpha_ref = xref(: , 1:obj.params.Nlinks );   % joint angles over time
+            alpha_mpc = xmpc(: , 1:obj.params.Nlinks );   % joint angles over time
+            
+            fig = figure;   % create figure for the animation
+            axis([-obj.params.L, obj.params.L, -0.5*obj.params.L, 1.5*obj.params.L])
+            set(gca,'Ydir','reverse')
+            xlabel('x(m)')
+            ylabel('y(m)')
+            
+            % Prepare the new file.
+            vidObj = VideoWriter( ['animations' , filesep , name , '.mp4'] , 'MPEG-4' );
+            vidObj.FrameRate = 30;
+            open(vidObj);
+            
+            set(gca,'nextplot','replacechildren', 'FontUnits' , 'normalized');
+            
+            totTime = t(end);    % total time for animation (s)
+            nsteps = length(t); % total steps in the simulation
+            totFrames = 30 * totTime;   % total frames in 30 fps video
+            
+            % run animation frame by frame
+            for i = 1:totFrames
+                
+                index = floor( (i-1) * (nsteps / totFrames) ) + 1;   % skips points between frames
+                
+                % plot the reference arm
+                [ Xref , ~ ] = obj.alpha2x( alpha_ref(index,:)' );
+                x_ref = Xref(:,1);
+                y_ref = Xref(:,2);
+                marker_ref = obj.get_markers( alpha_ref(index,:) );   % get mocap sensor location
+                [shape_ref , ~ ] = obj.get_shape( alpha_ref(index,:) , degree); % get polynomial approx of shape
+                
+                hold on;
+                p1 = plot(x_ref, y_ref, '-o' , 'Color' , [0 0 1 0.5] );
+                p2 = plot( marker_ref(:,1) , marker_ref(:,2) , '*' , 'Color' , [1 0 0 0.5]);
+                p3 = plot( shape_ref(:,1) , shape_ref(:,2) , 'Color' , [1 0 0 0.5]);
+                hold off;
+                
+                % plot the actual arm
+                [ Xmpc , ~ ] = obj.alpha2x( alpha_mpc(index,:)' );
+                x_mpc = Xmpc(:,1);
+                y_mpc = Xmpc(:,2);
+                marker_mpc = obj.get_markers( alpha_mpc(index,:) );   % get mocap sensor location
+                [shape_mpc , ~ ] = obj.get_shape( alpha_mpc(index,:) , degree); % get polynomial approx of shape
+                
+                hold on;
+                p4 = plot(x_mpc, y_mpc, '-o' , 'Color' , [0 0 1 1] );
+                p5 = plot( marker_mpc(:,1) , marker_mpc(:,2) , '*' , 'Color' , [1 0 0 1]);
+                p6 = plot( shape_mpc(:,1) , shape_mpc(:,2) , 'Color' , [1 0 0 1]);
+                hold off;
+                
+                % write each frame to the file
+                currFrame = getframe(fig);
+                writeVideo(vidObj,currFrame);
+                
+                delete(p1); delete(p2); delete(p3);
+                delete(p4); delete(p5); delete(p6);
+            end
+            
+            close(vidObj);
+        end
             
         %% simulation
         

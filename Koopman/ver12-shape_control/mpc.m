@@ -797,8 +797,12 @@ classdef mpc
                 A( (N*i + 1) : N*(i+1) , : ) = model.A^i ;
             end
             
-%             % B
-            zxblock = kron( eye( obj.params.m ) , zeros(size(obj.basis.zx)) );   % zero matrix size of block matrix of zx  
+            % B (model) symbolic and function
+            zxblock = kron( eye( obj.params.m ) , obj.basis.zx );   % symbolic block matrix of zx
+            Bmodel_sym = obj.model.B * zxblock;
+            obj.model.get_B = matlabFunction( Bmodel_sym , 'Vars' , {obj.params.x} ); % function for evaluating value of B matrix at a given state
+            
+            % B (mpc) zeros, just for size
             Bheight = N*(obj.horizon+1);
 %             Bcolwidth = obj.params.m;
 %             Bcol = sym( zeros(Bheight , Bcolwidth) );   % first column of B matrix
@@ -854,16 +858,23 @@ classdef mpc
         
         % get_costB_bilinear: Constructs the mpc state dependent B matrix
         function B = get_costB_bilinear( obj , x )
+            % x is row vector with 1 row or same number of rows as horizon
             N = size(obj.model.A,1);
             % B
-            zx = obj.lift.zx( x );
-            zxblock = kron( eye( obj.params.m ) , zx );   % block matrix of zx  
+%             zx = obj.lift.zx( x );
+%             zxblock = kron( eye( obj.params.m ) , zx );   % block matrix of zx  
             Bheight = N*(obj.horizon+1);
             Bcolwidth = obj.params.m;
             Bcol = zeros(Bheight , Bcolwidth);   % first column of B matrix
 %             obj.cost.randB = rand( size( model.B * zxblock ) );   % DEBUG: Random B matrix
             for i = 1 : obj.horizon
-                Bcol( (N*i + 1) : N*(i+1) , : ) = obj.model.A^(i-1) * obj.model.B * zxblock ;   % this is a symbolic expression
+                if size(x,1) > 1
+                    Bmodel = obj.model.get_B( x(i,:)' );
+                else
+                    Bmodel = obj.model.get_B( x(1,:)' );
+                end
+                Bcol( (N*i + 1) : N*(i+1) , : ) = obj.model.A^(i-1) * Bmodel ;   % this is a symbolic expression
+%                 Bcol( (N*i + 1) : N*(i+1) , : ) = obj.model.A^(i-1) * obj.model.B * zxblock ;   % this is a symbolic expression
 %                 Bcol( (N*i + 1) : N*(i+1) , : ) = obj.model.A^(i-1) * obj.cost.randB ;   % DEBUG: Random B matrix
             end
             
@@ -1104,7 +1115,7 @@ classdef mpc
             zx = obj.lift.zx( statenow' );
             
             % simulate to find next zx given input u0
-            Bz0 = obj.get_modelB_bilinear( statenow' );
+            Bz0 = obj.model.get_B( statenow' );
             zx1 = obj.model.A * zx + Bz0 * inputnow';
             statenext = ( obj.model.C * zx1 )';  % row
             
@@ -1134,11 +1145,12 @@ classdef mpc
             c = obj.set_constRHS( shape_bounds );
             
             % setup matrices for gurobi solver
-            H = obj.cost.get_H( statenext' );      % removed factor of 2 on 12/10/2018
-            G = obj.cost.get_G( statenext' );
-            D = obj.cost.get_D( statenext' );
+            state_over_horizon = [ statenow ; statenext ; ref(3:end,:) ]; % state over the entire horizon, in the rows  
+            H = obj.cost.get_H( state_over_horizon );      % removed factor of 2 on 12/10/2018
+            G = obj.cost.get_G( state_over_horizon );
+            D = obj.cost.get_D( state_over_horizon );
             f = ( zx' * G + Yr' * D )';
-            A = obj.constraints.get_L( statenext' );
+            A = obj.constraints.get_L( state_over_horizon );
             b = - obj.constraints.M * zx + c;
             
             % tack on "memory" constraint to fix initial input u_0
@@ -1161,8 +1173,8 @@ classdef mpc
             E = reshape( Evec , [ obj.params.m , Np ] )';
             
             % calculate the projected lifted state over the horizon with the given inputs (assuming constant Bz0)
-            Bz0 = obj.cost.get_B( statenow' );
-            Zvec = obj.cost.A * zx + Bz0 * Evec;
+            Bz = obj.cost.get_B( state_over_horizon );
+            Zvec = obj.cost.A * zx + Bz * Evec;
             Z = reshape( Zvec( obj.params.nzx + 1 : end ) , [ obj.params.nzx , Np ] )';
         end
         
