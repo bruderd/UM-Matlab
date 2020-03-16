@@ -471,20 +471,20 @@ classdef mpcsim
                 % get optimal pseudoinput over horizon
                 [ E , Zx ] = obj.mpc.get_mpcInput_bilinear( current , refhor , shapehor );
                 e_kp1 = E(2,:)';     % isolate the pseudoinput for the next step
-%                 u_k_sc = e_kp1;     % USE PSEUDOINPUT AS THE INPUT
+                u_k_sc = e_kp1;     % USE PSEUDOINPUT AS THE INPUT
                 
 %                 % DEBUG: what does the model think the state should given the pseudoinput?
 %                 z_kp1_model = Zx(3,:)'; % what the model says the next lifted state should be
 %                 y_kp1_model_sc = obj.mpc.model.C * z_kp1_model;
 
-                % convert pseudoinput to actual input
-                zx_stack = kron( eye(length(obj.mpc.params.u)) , Zx(2,:)' );
-                zx0_stack = kron( eye(length(obj.mpc.params.u)) , Zx(1,:)' );
-                Bzx = obj.mpc.model.B * zx_stack;
-                Bzx0 = obj.mpc.model.B * zx0_stack;
-%                 Bzx0 = obj.mpc.cost.randB;  % DEBUG: use random B0 matrix
-                u_k_sc = lsqminnorm( Bzx , Bzx0 * e_kp1 );
-                rankB = rank( pinv(Bzx) * Bzx0 );   % DEBUG check rank of transformation
+%                 % convert pseudoinput to actual input
+%                 zx_stack = kron( eye(length(obj.mpc.params.u)) , Zx(2,:)' );
+%                 zx0_stack = kron( eye(length(obj.mpc.params.u)) , Zx(1,:)' );
+%                 Bzx = obj.mpc.model.B * zx_stack;
+%                 Bzx0 = obj.mpc.model.B * zx0_stack;
+% %                 Bzx0 = obj.mpc.cost.randB;  % DEBUG: use random B0 matrix
+%                 u_k_sc = lsqminnorm( Bzx , Bzx0 * e_kp1 );
+%                 rankB = rank( pinv(Bzx) * Bzx0 );   % DEBUG check rank of transformation
                 
                 % scaleup the input for the system simulation
                 u_k = obj.scaleup.u( u_k_sc' )';
@@ -517,7 +517,7 @@ classdef mpcsim
                 results.Z = [ results.Z ; z_kp1'  ]; % current lifted state
                 results.E = [ results.E ; E(2,:) ];    % full size pseudoinput
 %                 results.Ymodel = [ results.Ymodel ; y_kp1_model_sc' ];
-                results.rankB = [ results.rankB ; rankB ];  % DEBUG
+%                 results.rankB = [ results.rankB ; rankB ];  % DEBUG
                 
                 k = k + 1;  % increment step counter
             end
