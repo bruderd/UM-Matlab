@@ -1,9 +1,9 @@
-% try_kernel_regression
+% try_multilinear_kernel_regression
 
 %% simulate system
 
-kfinal = 30;
-numtrials = 30;
+kfinal = 4;
+numtrials = 100;
 
 step_magnitude = 5e-1;
 utrain = zeros( numtrials , kfinal );
@@ -41,7 +41,7 @@ ktrain = 1 : kfinal-1;  % since we removed a pont we have to make this smaller D
 %% identify volterra series
 
 hor = kfinal-1; % length of model horizon (can't be more than kfinal)
-p = 3; % order of discrete volterra series
+p = hor; % order of discrete volterra series
 
 % make input vectors that include 1 to hor points
 Utrain = zeros( size(utrain,1) * hor , hor );
@@ -52,6 +52,10 @@ for i = 1 : size( utrain , 1 )
     end
 end
 
+% get exponents so that we don't have to call multilinear lift everytime
+[~,exponents] = multilinear_lift( Utrain(1,:) );   % default is to set the order equal to the horizon
+% [~,exponents] = multilinear_lift( Utrain(1,:) , p );
+
 % build data matrix for regression
 data_output = reshape( ytrain(:,1:hor)' , [ hor*numtrials , 1 ] );    % stack trials
 data_input = zeros(hor*numtrials,hor);
@@ -59,22 +63,13 @@ for k = 1 : numtrials
     for i = 1 : hor * numtrials
         for j = 1 : hor
                 rowindex = hor*(k-1)+j;
-                % old row index for Utrain first argument hor*(k-1)+i
-                data_input(rowindex,i) = ( 1 + Utrain( i ,:) * Utrain(rowindex,:)' )^p;
                 
-%                 % JUST TRYING THIS, make it bilinearly realizable
-%                 if rowindex == i
-%                     data_input(rowindex,i) = 0;
-%                 end
+%                 data_input(rowindex,i) = multilinear_lift( Utrain(i,:) )' * multilinear_lift( Utrain(rowindex,:) ); 
+                data_input(rowindex,i) = prod( Utrain(i,:).^exponents , 2 )' * prod( Utrain(rowindex,:).^exponents , 2 ); % faster version
         end
     end
 end
 
-% % JUST TRYING THIS (DOESN'T WORK), make it bilinearly realizable by deleting the diagonal
-% poop = size(data_input,1)+1;
-% data_input(1:poop:end) = [];
-% data_input = reshape( data_input , rowindex-1 , i ); % or whatever
-% data_output = data_output(1:end-1,:);
 
 % solve for the coefficients
 Alpha = lsqminnorm( data_input , data_output );
@@ -84,8 +79,8 @@ Alpha = lsqminnorm( data_input , data_output );
 numvals = 1;  % reset to just one validation trial
 
 % generate new set of validation inputs as a random walk in [-1,1]
-uval = zeros( numtrials , kfinal );
-for j = 1 : numtrials
+uval = zeros( numvals , kfinal );
+for j = 1 : numvals
     % generate input as a random walk in [-1,1]
     steps = randi([-1 1],1,kfinal);
     scales = rand(1,kfinal);
@@ -117,11 +112,11 @@ kval = 1 : kfinal;
 % remove certain points to make things line up right
 yval = yval(:,2:end);   % remove initial point, it's zero by construction DEBUG
 uval = uval(:,1:end-1); % remove last point, it is never actually used DEBUG
-kval = 1 : kfinal-1;  % since we removed a pont we have to make this smaller DEBUG
+kval = 1 : kfinal-1;  % since we removed a point we have to make this smaller DEBUG
 
 
 % make input vectors that include 1 to hor points
-Uval = zeros( size(utrain,1) * hor , hor );
+Uval = zeros( size(uval,1) * hor , hor );
 for i = 1 : size( uval , 1 )
     for j = 1 : hor
         rowindex = hor * (i-1) + j;
@@ -137,7 +132,8 @@ for k = 1 : numvals
     for i = 1 : hor * numtrials
         for j = 1 : hor
                 rowindex = hor*(k-1)+j;
-                val_input(rowindex,i) = ( 1 + Utrain( i ,:) * Uval(rowindex,:)' )^p;
+%                 val_input(rowindex,i) = multilinear_lift( Utrain(i,:) )' * multilinear_lift( Uval(rowindex,:) );
+                val_input(rowindex,i) = prod( Utrain(i,:).^exponents , 2 )' * prod( Uval(rowindex,:).^exponents , 2 ); % faster version
         end
     end
 end
@@ -152,6 +148,30 @@ plot(val_output_real);
 plot(val_output_fake);
 hold off;
 legend('Real','Volterra');
+
+
+%% validate model when converted into beta vector form (see notebook)
+
+% compute the vector of coefficients
+beta = zeros( size( prod( Utrain(1,:).^exponents , 2 ) ) );    % length of lifted input
+for i = 1 : length(Alpha)
+    beta = beta + Alpha(i) * prod( Utrain(i,:).^exponents , 2);
+end
+
+% compute response based on this model
+val_output_fake2 = zeros( size(val_output_fake) );
+for i = 1 : size( Uval , 1 )
+    val_output_fake2(i) = beta' * prod( Uval(i,:).^exponents , 2);
+end
+
+% plot the real model verse the fake one (again) 
+figure;
+hold on;
+plot(val_output_real , 'Linewidth' , 2);
+plot(val_output_fake2);
+hold off;
+legend('Real','Volterra');
+title('Beta format');
 
 
 %% Just do regular regression (only works for one trial right now)
@@ -195,15 +215,3 @@ legend('Real','Volterra');
 % hold off;
 % legend('Real','Volterra');
 % 
-
-
-
-
-
-
-
-
-
-
-
-

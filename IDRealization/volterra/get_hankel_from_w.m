@@ -1,0 +1,51 @@
+function [ H , M , N ] = get_hankel_from_w( w )
+%get_hankel_from_w: Converts Volterra series coefficients into the 
+%                   Hankel matrix
+%   
+% Inputs:
+%   w - Matrix containing sequence of Volterra coefficients
+%       Each row stores w_j in columns 1 : 2^(j-1)
+
+M = floor( ( size(w,1) + 1 ) / 2 ); % height of Hankel matrix in "blocks"
+N = size(w,1) + 1 - M;  % width of Hankel matrix in "blocks"
+
+H = zeros( 2^M - 1 , 2^N - 1 ); % preallocation
+
+% construct hankel matrix one "block row" at a time
+for i = 1 : M
+    rowblock = zeros( 2^(i-1) , 2^N - 1 );  % preallocate
+    for j = 1 : N
+        odd_counter = 1;
+        even_counter = 1;
+        block_height = 2^(i-1);
+        block_width = 2^(j-1);
+        block = zeros( block_height , block_width );    % preallocate
+        for k = 1 : block_height    % build block 1 row at a time
+            if i == 1   % blocks in first row shouldn't be split
+                w_left = w( i+j-1 , 1 : 2^(i+j-1-1) );
+                w_right = 0;    %  shouln't be used
+            else
+                w_left = w( i+j-1 , 1 : 2^(i+j-1-2) ); 
+                w_right = w( i+j-1 , 2^(i+j-1-2)+1 : 2^(i+j-1-1) );
+            end
+            if mod(k,2) == 1    % k is odd
+                block(k,:) = w_left( odd_counter : odd_counter + block_width - 1 );
+                odd_counter = odd_counter + block_width;
+            end
+            if mod(k,2) == 0    % k is even
+                block(k,:) = w_right( even_counter : even_counter + block_width - 1 );
+                even_counter = even_counter + block_width;
+            end
+%             bcol_index = 2^(k-1) : 2^(k-1) + block_width - 1;
+%             block(k,:) = w( i+j-1 , bcol_index );
+        end
+        col_index = 2^(j-1) : 2^j - 1;
+        rowblock( : , col_index ) = block;
+    end
+    
+    row_index = 2^(i-1) : 2^i - 1;
+    H( row_index , : ) = rowblock;
+end
+
+
+end

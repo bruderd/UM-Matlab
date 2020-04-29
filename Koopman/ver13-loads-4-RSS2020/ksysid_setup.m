@@ -15,11 +15,11 @@ data4sysid = load( [datafile_path , datafile_name] );
 ksysid = ksysid( data4sysid, ...
         'model_type' , 'linear' ,...    % model type (linear or nonlinear)
         'obs_type' , { 'poly' } ,...    % type of basis functions
-        'obs_degree' , [ 1 ] ,...       % "degree" of basis functions
+        'obs_degree' , [ 2 ] ,...       % "degree" of basis functions
         'snapshots' , Inf ,...          % Number of snapshot pairs
         'lasso' , [ Inf ] ,...           % L1 regularization term
         'delays' , 0 ,...               % Numer of state/input delays
-        'loaded' , true);             % Does system include loads?
+        'loaded' , false);             % Does system include loads?
 
 if ksysid.loaded
     disp(['Number of basis functions: ' , num2str( (ksysid.params.nw + 1) * ksysid.params.N ) ]);
