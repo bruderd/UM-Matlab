@@ -204,8 +204,6 @@ err.kooplin.std = std( kooplin_allerr );
 err.lin.std = std( lin_allerr );
 
 
-%% plot the trajectory comparison for each validation trial
-
 
 %% plot the error comparison over all validation trials
 
@@ -240,3 +238,40 @@ ylim([0 12]);
 eb = errorbar(1:6, [err.kooplin.ave , err.lin.ave , err.koop.ave , err.nnet.ave , err.nlarx.ave , err.nlhw.ave] * 2.54, [err.kooplin.std , err.lin.std , err.koop.std , err.nnet.std , err.nlarx.std , err.nlhw.std] * 2.54, '.', 'CapSize', 14, 'LineWidth', 1.5, 'Color', 'k');
 box on
 hold off
+
+
+%% plot the error comparison over all validation trials (excluding NLARX and Hamm-Weiner)
+
+% Define custom colors:
+cb(1,:) = [69,117,180]/255;
+cb(2,:) = [145,191,219]/255;
+cb(3,:) = [254,224,144]/255;
+cb(4,:) = [252,141,89]/255;
+cb(5,:) = [215,48,39]/255;
+
+% Define more colors
+cb_red = [228,26,28] ./ 255;   % red (for linear state space)
+cb_blue = [55,126,184] ./ 255;  % blue (for linear koopman)
+cb_orange = [255,127,0] ./ 255;   % orange (for nonlinear koopman)
+cb_grey = [150,150,150] ./ 255;
+
+% bar chart showing TOTAL NRMSE across all states and all trials
+figure
+hold on
+bar(1 , err.kooplin.ave * 2.54 , 'FaceColor' , cb_blue );
+bar(2 , err.lin.ave * 2.54 , 'FaceColor' , cb_red );
+bar(4 , err.koop.ave * 2.54 , 'FaceColor' , cb_orange );
+bar(5 , err.nnet.ave * 2.54 , 'FaceColor' , cb_grey );
+xticks([0.85 1.15 2 3.85 4.15 5]);
+xtickangle(45);
+xticklabels( {'Koopman' , '(Linear)     ' , 'State Space' , 'Koopman' , '(Nonlinear)   ' , 'Neural Network'} );
+ylabel('Average Error (cm)');
+ylim([0 4]);
+% eb = errorbar(1:numSystems-1, [mean_NRMSE_alltrials(1:3)' * 100, mean_NRMSE_alltrials(5:end)' * 100], [std_NRMSE_alltrials(1:3)' * 100, std_NRMSE_alltrials(5:end)' * 100], '.', 'CapSize', 14, 'LineWidth', 1.5, 'Color', 'k');
+eb = errorbar([1 2 4 5], [err.kooplin.ave , err.lin.ave , err.koop.ave , err.nnet.ave] * 2.54, [err.kooplin.std , err.lin.std , err.koop.std , err.nnet.std] * 2.54, '.', 'CapSize', 14, 'LineWidth', 1.5, 'Color', 'k');
+box on;
+set(gca, 'YGrid', 'on', 'XGrid', 'off');
+hold off
+
+
+

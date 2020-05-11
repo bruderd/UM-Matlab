@@ -24,28 +24,28 @@ end
 %% val data
 val_data = struct;
 val_data.t = rawdata.t(1:index,:);
-val_data.x = rawdata.x(1:index,:);
+val_data.y = rawdata.y(1:index,:);
 val_data.u = rawdata.u(1:index,:);
 
 % save validation data file
 t = val_data.t;
-x = val_data.x;
+y = val_data.y;
 u = val_data.u;
-val_fname = ['trimdataFiles', filesep, 'validation', filesep, data_name, '_val_', num2str(val_len), 's.mat'];
-save(val_fname, 't', 'x', 'u');
+val_fname = ['trimdataFiles_v2_xps', filesep, 'validation', filesep, data_name, '_val_', num2str(val_len), 's.mat'];
+save(val_fname, 't', 'y', 'u');
 
 %% sysid data
 sysid_data = struct;
 sysid_data.t = rawdata.t(index+1 : end) - rawdata.t(index+1);
-sysid_data.x = rawdata.x(index+1 : end, :);
+sysid_data.y = rawdata.y(index+1 : end, :);
 sysid_data.u = rawdata.u(index+1 : end, :);
 
 % save sysid data file
 t = sysid_data.t;
-x = sysid_data.x;
+y = sysid_data.y;
 u = sysid_data.u;
-sysid_fname = ['trimdataFiles', filesep, 'sysid', filesep, data_name, '_sysid_', num2str(val_len), 's.mat'];
-save(sysid_fname, 't', 'x', 'u');
+sysid_fname = ['trimdataFiles_v2_xps', filesep, 'sysid', filesep, data_name, '_sysid_', num2str(val_len), 's.mat'];
+save(sysid_fname, 't', 'y', 'u');
 
 
 end

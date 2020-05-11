@@ -1,4 +1,4 @@
-function [t,x,u] = trim_laserData(tstart, tend)
+function [t,y,u] = trim_laserData(tstart, tend)
 %trim_data: trim away the beginning and end of raw data file from the
 %cartesion laser tracking experiments
 %   INPUTS
@@ -9,8 +9,9 @@ function [t,x,u] = trim_laserData(tstart, tend)
 
 % Prompt user to identify data file
 disp(['Please select .mat file corresponding to raw data.']);
+[data_file,data_path] = uigetfile('C:\Users\danie\Google Drive (daniel.k.bruder@gmail.com)\PhD\Research\TRI\Labview\KoopmanMPC\Matlab\sysid\dataFiles\v2');
 % [data_file,data_path] = uigetfile('C:\Users\danie\Google Drive\PhD\Research\TRI\Labview\KoopmanMPC\Matlab\sysid\dataFiles\v5_12hz');
-[data_file,data_path] = uigetfile('rawdataFiles_v5');
+% [data_file,data_path] = uigetfile('rawdataFiles_v5');
 [data_filepath,data_name,data_ext] = fileparts([data_path, data_file]);
 foo = load([data_path, data_file]);
 rawdata = foo.sysidData;
@@ -42,12 +43,12 @@ end
 
 % define trimmed data series
 t = rawdata.T(i_tstart : i_tend) - rawdata.T(i_tstart);
-x = rawdata.Y(i_tstart : i_tend , :);
+y = rawdata.Y(i_tstart : i_tend , :);
 u = rawdata.U(i_tstart : i_tend , :);
 
 % save trimmed data files
-val_fname = ['trimdataFiles_v5', filesep, data_name, '_trim.mat'];
+val_fname = ['trimdataFiles_v2_xps', filesep, data_name, '_trim.mat'];
 [unique_fname, change_detect] = auto_rename(val_fname, '0');
-save(unique_fname, 't', 'x', 'u');
+save(unique_fname, 't', 'y', 'u');
 
 end
