@@ -952,10 +952,10 @@ classdef ksysid
             M = Mtranspose';
             
             % define outputs
-            out.A = M*A;  % edited to include projection M, 12/11/2018
-            out.B = M*B;  % edited to include projection M, 12/11/2018
-%             out.A = A; 
-%             out.B = B; 
+%             out.A = M*A;  % edited to include projection M, 12/11/2018
+%             out.B = M*B;  % edited to include projection M, 12/11/2018
+            out.A = A; 
+            out.B = B; 
             out.C = Cy;
             out.M = M;
             out.sys = ss( out.A , out.B , Cy , 0 , obj.params.Ts );  % discrete state space system object
