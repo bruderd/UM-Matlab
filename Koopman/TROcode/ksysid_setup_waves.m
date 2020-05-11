@@ -15,7 +15,7 @@ data4sysid = load( [ 'datafiles' , filesep , 'RSS2019-robot_train-16_val-3_2020-
 ksysid = ksysid( data4sysid, ...
         'model_type' , 'linear' ,...    % model type (linear or nonlinear)
         'obs_type' , { 'poly' } ,...    % type of basis functions
-        'obs_degree' , [ 4 ] ,...       % "degree" of basis functions
+        'obs_degree' , [ 2 ] ,...       % "degree" of basis functions
         'snapshots' , Inf ,...          % Number of snapshot pairs
         'lasso' , [ 10 ] ,...           % L1 regularization term
         'delays' , 1 );                 % Number of state/input delays
@@ -44,4 +44,4 @@ ksysid = ksysid.train_models;
 
 % You do this based on the validation results.
 % Call this function:
-  ksysid.save_class( 1 , [ 'systems' , filesep , 'waves' ] );
+  ksysid.save_class( [] , [ 'systems' , filesep , 'waves' ] );

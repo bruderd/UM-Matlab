@@ -342,7 +342,11 @@ classdef ksysid
             elseif ~exist('model_id', 'var')
                 obj.model = obj.candidates{1};
             else
-                obj.model = obj.candidates{model_id};
+                if isempty( model_id )
+                    obj.model = obj.candidates;
+                else
+                    obj.model = obj.candidates{model_id};
+                end
             end
                         
             % set the class name based on its parameters
