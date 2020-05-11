@@ -317,7 +317,7 @@ classdef ksysid
         %% save the class object
         
         % save_class
-        function obj = save_class( obj , model_id )
+        function obj = save_class( obj , model_id , location )
             %save_class: Saves the class as a .mat file
             %   If class is from a simulated system, it is saved in the
             %   subfolder corresponding to that system.
@@ -325,14 +325,21 @@ classdef ksysid
             %   folder /systems/fromData/.
             %   varargin = isupdate - indicates whether this is an update of a
             %   previously saved class (1) or a new class (0).
+            %   location is an optional argument for specifying a different
+            %   save location.
             
             % shorthand
             isupdate = obj.isupdate;
             
+            % check if a location is provided
+            if ~exist('location', 'var')
+                location = 0;   % dummy value
+            end
+            
             % if no model id is provided, save the first candidate model
-            if nargin < 2 && ~iscell(obj.candidates)
+            if ~exist('model_id', 'var') && ~iscell(obj.candidates)
                 obj.model = obj.candidates;
-            elseif nargin < 2
+            elseif ~exist('model_id', 'var')
                 obj.model = obj.candidates{1};
             else
                 obj.model = obj.candidates{model_id};
@@ -349,7 +356,11 @@ classdef ksysid
     
             % save the class file
             sysid_class = obj;
-            if obj.params.isfake    % check if class was created from simulated system
+            if location
+                dirname = location;
+                fname = [ dirname , filesep , classname, '.mat' ];
+                save( fname , 'sysid_class' );
+            elseif obj.params.isfake    % check if class was created from simulated system
                 dirname = [ 'systems' , filesep , obj.params.sysParams.sysName , filesep , 'models'];
                 if ~isupdate
                     mkdir( dirname );
