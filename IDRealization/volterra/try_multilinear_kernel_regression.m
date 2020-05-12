@@ -2,8 +2,8 @@
 
 %% simulate system
 
-kfinal = 4;
-numtrials = 100;
+kfinal = 10;
+numtrials = 10;
 
 step_magnitude = 5e-1;
 utrain = zeros( numtrials , kfinal );
@@ -41,7 +41,7 @@ ktrain = 1 : kfinal-1;  % since we removed a pont we have to make this smaller D
 %% identify volterra series
 
 hor = kfinal-1; % length of model horizon (can't be more than kfinal)
-p = hor; % order of discrete volterra series
+p = 1; % order of discrete volterra series
 
 % make input vectors that include 1 to hor points
 Utrain = zeros( size(utrain,1) * hor , hor );

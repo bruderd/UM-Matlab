@@ -17,7 +17,7 @@ ksysid = ksysid( data4sysid, ...
         'obs_type' , { 'poly' } ,...    % type of basis functions
         'obs_degree' , [ 2 ] ,...       % "degree" of basis functions
         'snapshots' , Inf ,...          % Number of snapshot pairs
-        'lasso' , [ 10 ] ,...           % L1 regularization term
+        'lasso' , [ 1.5 ] ,...           % L1 regularization term
         'delays' , 1 );                 % Number of state/input delays
 
     

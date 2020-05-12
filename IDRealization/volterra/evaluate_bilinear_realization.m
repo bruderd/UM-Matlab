@@ -29,6 +29,8 @@ end
 % simulate system using these inputs
 y0 = 0;
 x0 = [0 0]';
+% x0 = rand( 2 , 1 ); % nonzero IC
+% y0 = x0(1);    % nonzero IC
 ytrain = zeros( numtrials , kfinal );
 for i = 1 : numtrials
     [ yout , xout ] = sim_discrete( @vf_siso , kfinal , x0 , y0 , utrain(i,:) );

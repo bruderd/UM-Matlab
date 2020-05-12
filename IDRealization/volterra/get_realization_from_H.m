@@ -14,7 +14,7 @@ Hs = H( 1 : 2^(m-1)-1 , 1 : 2^(n-1)-1 );
 
 % Take SVD of Hankel matrix
 [U,S,V] = svd( Hs , 'econ' );
-largesvs = find( diag(S) > 1e-4 );
+largesvs = find( diag(S) > 1e-4 );  % threshold the singular values
 Q = U(:,largesvs) * S(largesvs,largesvs);    % notation to match paper
 P = V(:,largesvs)';     % notation to match paper
 % Q = U*S;    % notation to match paper
