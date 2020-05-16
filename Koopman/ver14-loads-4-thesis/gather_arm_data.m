@@ -34,8 +34,8 @@ w_ub = [ 1 , pi/2 ];
 % w_ub = [0 0];   % unloaded
 
 % input bounds
-u_lb = -0.8*pi * ones( 1 , Arm.params.Nmods );
-u_ub = 0.8*pi * ones( 1 , Arm.params.Nmods );
+u_lb = -0.9*pi * ones( 1 , Arm.params.Nmods );
+u_ub = 0.9*pi * ones( 1 , Arm.params.Nmods );
 
 %% conduct training trials
 

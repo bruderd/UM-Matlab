@@ -821,14 +821,15 @@ classdef ksysid
                 end
             end
             
-            % Call function that solves QP problem
-            Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
-            if obj.liftinput == 1
-                Umtx = reshape(Uvec, [N,N]); % Koopman operator matrix
-            else
-                Umtx = reshape(Uvec, [Nm,Nm]); % Koopman operator matrix
-            end
-            K = Umtx;   % switching to K convention to not confuse with input
+%             % Call function that solves QP problem
+%             Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
+%             if obj.liftinput == 1
+%                 Umtx = reshape(Uvec, [N,N]); % Koopman operator matrix
+%             else
+%                 Umtx = reshape(Uvec, [Nm,Nm]); % Koopman operator matrix
+%             end
+%             K = Umtx;   % switching to K convention to not confuse with input
+            K = Px \ Py;    % least-squares solution (very efficient, but no L1 penalty)
             
             % other usefule outputs
             koopData.K = K; % Koopman operator matrix (note the switch to K)
