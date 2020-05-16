@@ -510,11 +510,12 @@ classdef Arm
             alpha = y(: , 1:obj.params.Nlinks );   % joint angles over time
             
             fig = figure;   % create figure for the animation
-            axis([-obj.params.L, obj.params.L, -0.5*obj.params.L, 1.5*obj.params.L])
+            axis([-1.25*obj.params.L, 1.25*obj.params.L, -1.25*obj.params.L, 1.25*obj.params.L])
             set(gca,'Ydir','reverse')
             xlabel('x(m)')
             ylabel('y(m)')
-            
+            daspect([1 1 1]);   % make axis ratio 1:1
+           
             % Prepare the new file.
             vidObj = VideoWriter( ['animations' , filesep , name , '.mp4'] , 'MPEG-4' );
             vidObj.FrameRate = 30;
@@ -528,7 +529,7 @@ classdef Arm
             
             % Grid points for gravity direction arrows
             arrow_len = 0.1;
-            [ x_grid , y_grid ] = meshgrid( -obj.params.L:arrow_len:obj.params.L , -0.5*obj.params.L:arrow_len:1.5*obj.params.L);
+            [ x_grid , y_grid ] = meshgrid( -1.25*obj.params.L:arrow_len:1.25*obj.params.L , -1.25*obj.params.L:arrow_len:1.25*obj.params.L);
             
             % run animation fram by frame
             for i = 1:totFrames
@@ -591,7 +592,7 @@ classdef Arm
             alpha_mpc = xmpc(: , 1:obj.params.Nlinks );   % joint angles over time
             
             fig = figure;   % create figure for the animation
-            axis([-obj.params.L, obj.params.L, -0.5*obj.params.L, 1.5*obj.params.L])
+            axis([-1.25*obj.params.L, 1.25*obj.params.L, -1.25*obj.params.L, 1.25*obj.params.L])
             set(gca,'Ydir','reverse')
             xlabel('x(m)')
             ylabel('y(m)')
@@ -652,20 +653,21 @@ classdef Arm
         %% simulation
         
         % simulate system under random "ramp and hold" inputs
-        function sim = simulate_rampNhold( obj , tf , Tramp , varargin)
+        function sim = simulate_rampNhold( obj , tf , Tramp , w , varargin)
             %simulate_rampNhold: simulate system under random "ramp and hold" inputs
             %   tf - length of simulation(s)
             %   Tramp - ramp period length
+            %   w - load condition [ endeff mass , angle of gravity (normal is 0) ]
+            %       (assumed constant for entire trial)
             %   Alpha - joint angles and velocities at each timestep
             %   markers - marker position at each time step [x0,y0,...,xn,yn ; ...]
             %   varargin - save on? (true/false)
             
-            % save simulation results? Default is no
-            if length(varargin) == 1
-                saveon = varargin{1};
-            else
-                saveon = false;
-            end
+            % replace default values with user input values
+            p = inputParser;
+            addParameter( p , 'saveon' , false );
+            parse( p , varargin{:} );
+            saveon = p.Results.saveon;
             
             % time steps
             tsteps = ( 0 : obj.params.Ts : tf )';    % all timesteps
@@ -675,15 +677,15 @@ classdef Arm
             numPeriods = ceil( length(tswitch) / 2 );
             inputs_nohold = obj.params.umax .* ( 2*rand( numPeriods , obj.params.Nmods ) - 1 );  % table of random inputs
             inputs_hold = reshape([inputs_nohold(:) inputs_nohold(:)]',2*size(inputs_nohold,1), []); % repeats rows of inputs so that we get a hold between ramps
-            u = interp1( tswitch , inputs_hold( 1:length(tswitch) , : ) , tsteps );
+            u = interp1( tswitch , inputs_hold( 1:length(tswitch) , : ) , tsteps , 'linear' , 0 );
             
             % initial condition (resting)
             a0 = zeros( obj.params.Nlinks , 1 );
             adot0 = zeros( obj.params.Nlinks , 1 );
             
             % simulate system
-            options = odeset( 'Mass' , @(t,x) obj.vf_massMatrix( t , x , u ) );
-            [ t , Alpha ] = ode45( @(t,x) obj.vf_RHS( t , x , u( floor(t/obj.params.Ts) + 1 , : )' ) , tsteps , [ a0 ; adot0 ] , options );    % with mass matrix, variable time step
+            options = odeset( 'Mass' , @(t,x) obj.vf_massMatrix( t , x , u , w' ) );
+            [ t , Alpha ] = ode45( @(t,x) obj.vf_RHS( t , x , u( floor(t/obj.params.Ts) + 1 , : )' , w' ) , tsteps , [ a0 ; adot0 ] , options );    % with mass matrix, variable time step
             
             % get locations of the markers at each time step
             markers = zeros( length(t) , 2 * ( obj.params.Nmods+1 ) );
@@ -703,6 +705,7 @@ classdef Arm
             sim.alphadot = Alpha( : , obj.params.Nlinks+1 : end );  % joint velocities
             sim.y = obj.get_y( Alpha );    % output based on available observations (remove 0th marker position because it is always at the origin)
             sim.u = u;  % input
+            sim.w = kron( ones(size(t)) , w );  % load condition
             sim.params = obj.params;    % parameters associated with the system
             
             % save results
@@ -714,10 +717,11 @@ classdef Arm
         end
            
         % simulate_Ts (simulate system over a single time step)
-        function [ x_kp1 ] = simulate_Ts( obj , x_k , u_k , tstep )
+        function [ x_kp1 ] = simulate_Ts( obj , x_k , u_k , w_k , tstep )
             %simulate_Ts: Simulate system over a single time step
             %   x_k - current value of state (full state Alpha = [alpha ; alphadot])
             %   u_k - input over next time step
+            %   w_k - load condition over next time step
             
             % if no timestep is provided use the default stored in params
             if nargin < 3
@@ -725,8 +729,8 @@ classdef Arm
             end
             
             % simulate system
-            options = odeset( 'Mass' , @(t,x) obj.vf_massMatrix( t , x , u_k ) );
-            [ t , Alpha ] = ode45( @(t,x) obj.vf_RHS( t , x , u_k ) , tstep , x_k , options );    % with mass matrix, variable time step
+            options = odeset( 'Mass' , @(t,x) obj.vf_massMatrix( t , x , u_k , w_k ) );
+            [ t , Alpha ] = ode45( @(t,x) obj.vf_RHS( t , x , u_k , w_k ) , tstep , x_k , options );    % with mass matrix, variable time step
             
             % set output, the state after one time step
             x_kp1 = Alpha(end,:)';
@@ -806,6 +810,7 @@ classdef Arm
             sim.alphadot = Alpha( : , obj.params.Nlinks+1 : end );  % joint velocities
             sim.y = obj.get_y( Alpha );    % output based on available observations (remove 0th marker position because it is always at the origin)
             sim.u = u_in( 1 : length(t_out) , : );  % input
+            sim.w = w_in;
             sim.params = obj.params;    % parameters associated with the system
             
             % save results
@@ -824,6 +829,25 @@ classdef Arm
                 index = find( t_vec < t );
             end
             k = index(end);
+        end
+        
+        % get_rampNhold (give rampNhold signal between an upper and lower bound)
+        function [ signal , tsteps ] = get_rampNhold( obj , tf , Tramp , lb , ub)
+            %get_rampNhold: simulate system under random "ramp and hold" inputs
+            %   tf - length of simulation(s)
+            %   Tramp - ramp period length
+            %   lb - [1 x dim of signal], lower bound for the signal
+            %   ub - [1 x dim of signal], upper bound for the signal
+            
+            % time steps
+            tsteps = ( 0 : obj.params.Ts : tf )';    % all timesteps
+            tswitch = ( 0 : Tramp : tf )';  % input switching points
+            
+            % table of inputs
+            numPeriods = ceil( length(tswitch) / 2 );
+            signal_nohold = ( ub - lb ) .* rand( numPeriods , length(lb) ) + lb ;  % table of random inputs
+            signal_hold = reshape([signal_nohold(:) signal_nohold(:)]',2*size(signal_nohold,1), []); % repeats rows of inputs so that we get a hold between ramps
+            signal = interp1( tswitch , signal_hold( 1:length(tswitch) , : ) , tsteps , 'linear' , 0 );
         end
         
         

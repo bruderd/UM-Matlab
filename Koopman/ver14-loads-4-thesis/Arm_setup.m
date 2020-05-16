@@ -10,9 +10,9 @@
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm-endeff_1-mods_1-links_1-Ts';
+params.sysName = 'arm-endeff_2-mods_1-links_0p5-Ts';
 
-params.Nmods = 3;   % number of modules (actuated sections)
+params.Nmods = 2;   % number of modules (actuated sections)
 params.nlinks = 1;      % number of links in each module
 params.Nlinks = params.Nmods * params.nlinks;   % total number of links in robot
 
@@ -36,7 +36,7 @@ params.markerPos = ( ( 0 : params.Nmods ) * params.l * params.nlinks ) / params.
 
 % input parameters
 % params.ku = 1e-3; % effective input stiffness
-params.ku = 01e1; % effective input stiffness
+params.ku = 1e1; % effective input stiffness
 
 % simulation parameters
 params.Ts = 0.05;   % sampling time (for 20 hz)
