@@ -13,7 +13,7 @@ data4sysid = load( [datafile_path , datafile_name] );
 
 %% construct sysid class
 Ksysid = Ksysid( data4sysid ,...
-        'model_type' , 'bilinear' ,...    % model type (linear or nonlinear)
+        'model_type' , 'nonlinear' ,...    % model type (linear or nonlinear)
         'obs_type' , { 'poly' } ,...    % type of basis functions
         'obs_degree' , [ 1 ] ,...       % "degree" of basis functions
         'snapshots' , Inf ,...          % Number of snapshot pairs

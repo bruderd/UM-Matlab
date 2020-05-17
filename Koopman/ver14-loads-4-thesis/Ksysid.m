@@ -1502,39 +1502,60 @@ classdef Ksysid
                 end
             end
             
-            % set initial condition
-            zeta0 = zetareal(1,:)';    % initial state with delays
-            if obj.loaded
-                z0 = obj.lift.econ_full_loaded( zeta0 , wreal(1,:)' );    % initial lifted state
-            else
-                z0 = obj.lift.econ_full( zeta0 );    % initial lifted state
-            end
-            
-            % simulate lifted linear model
+            % simulate lifted bilinear linear model
             tsim = treal;
             usim = ureal;
             ysim = zeros( size( yreal ) ); % preallocate
             zsim = zeros( size( zreal ) ); % preallocate
+            zetasim = zeros( size( zetareal ) );    % preallocate
             ysim(1,:) = yreal(1,:); % initialize
-            zsim(1,:) = z0';        % initialize
-            for j = 1 : length(treal)-1
-                zsim(j+1,:) = ( model.A * zsim(j,:)' + model.B * usim(j,:)' )';
-                ysim(j+1,:) = ( model.C * zsim(j+1,:)' )';
+            zetasim(1,:) = zetareal(1,:)';    % initialize
+            zeta0 = zetareal(1,:)';    % initial state with delays
+            if obj.loaded
+                wsim = wreal;   % load condition
+                
+                % set initial condition
+                z0 = obj.lift.econ_full_loaded( zeta0 , wsim(1,:)' );    % initial lifted state
+                zsim(1,:) = z0';        % initialize
+                
+                % simulate system response
+                for j = 1 : length(treal)-1
+                    % compute current lifted state using actual load condition
+                    znow = kron( eye(obj.params.nw+1) , zsim(j,1:obj.params.N)' ) * [ 1 ; wsim(j,:)' ];
+                    zsim(j+1,:) = ( model.A * znow + model.B * usim(j,:)' )';
+                    zetasim(j+1,:) = zsim( j+1 , 1 : obj.params.nzeta );
+                    ysim(j+1,:) = ( model.C * zsim(j+1,:)' )';
+                end
+            else
+                % set initial condition
+                z0 = obj.lift.econ_full( zeta0 );    % initial lifted state
+                zsim(1,:) = z0';        % initialize
+                
+                % simulate system response
+                for j = 1 : length(treal)-1
+                    zsim(j+1,:) = ( model.A * zsim(j,:)' + model.B * usim(j,:)' )';
+                    zetasim(j+1,:) = zsim( j+1 , 1 : obj.params.nzeta );
+                    ysim(j+1,:) = ( model.C * zsim(j+1,:)' )';
+                end
             end
             
             % save simulations in output struct
             results = struct;
             results.t = treal; 
+            
             results.sim.t = tsim;
             results.sim.u = usim;
             results.sim.y = ysim;
             results.sim.z = zsim;
+            results.sim.zeta = zetasim;
+            
             results.real.t = treal;
             results.real.u = ureal;
             results.real.y = yreal;
             results.real.z = zreal;
+            results.real.zeta = zetareal;
             if obj.loaded
-                results.sim.w = zsim(:,end-obj.params.nw+1:end);
+                results.sim.w = wsim;
                 results.real.w = wreal;
             end
             
@@ -1599,12 +1620,12 @@ classdef Ksysid
                 
                 % simulate system response
                 for j = 1 : length(treal)-1
-                    % debug
-                    zsim_winputs = obj.lift.econ_full_input( zetasim(j,:)' , usim(j,:)' );
-                    zsim_winputs_plus = obj.model.K' * zsim_winputs;
-                    zsim(j+1,:) = zsim_winputs_plus( 1 : obj.params.N )';
+%                     % debug
+%                     zsim_winputs = obj.lift.econ_full_input( zetasim(j,:)' , usim(j,:)' );
+%                     zsim_winputs_plus = obj.model.K' * zsim_winputs;
+%                     zsim(j+1,:) = zsim_winputs_plus( 1 : obj.params.N )';
                     
-%                     zsim(j+1,:) = ( model.A * zsim(j,:)' + model.Beta( zsim(j,:)' ) * usim(j,:)' )';
+                    zsim(j+1,:) = ( model.A * zsim(j,:)' + model.Beta( zsim(j,:)' ) * usim(j,:)' )';
                     zetasim(j+1,:) = zsim( j+1 , 1 : obj.params.nzeta );
                     ysim(j+1,:) = ( model.C * zsim(j+1,:)' )';
                 end
@@ -1626,7 +1647,7 @@ classdef Ksysid
             results.real.z = zreal;
             results.real.zeta = zetareal;
             if obj.loaded
-                results.sim.w = wreal;
+                results.sim.w = wsim;
                 results.real.w = wreal;
             end
             
@@ -1652,6 +1673,7 @@ classdef Ksysid
             end
             
             % include load if it exists
+            results = struct;
             if obj.loaded
                 wreal = valdata.w(index0 : end , :);
                 wsim = wreal;
@@ -1677,11 +1699,12 @@ classdef Ksysid
             ysim = zetasim( : , 1 : obj.params.n );
             
             % save simulations in output struct
-            results = struct;
-            results.t = treal; 
+            results.t = treal;
+            
             results.sim.t = tsim;
             results.sim.u = usim;
             results.sim.y = ysim;
+            
             results.real.t = treal;
             results.real.u = ureal;
             results.real.y = yreal;
