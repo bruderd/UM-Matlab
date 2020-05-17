@@ -94,8 +94,10 @@ classdef Ksysid
                 obj.liftinput = 0;  % default is not to lift input
             elseif strcmp( obj.model_type , 'nonlinear' )
                 obj.liftinput = 1;  % lift the input
+            elseif strcmp( obj.model_type , 'bilinear' )
+                obj.liftinput = 2;  % lift the input (try to avoid using this parameter)
             else
-                error('Invalid model_type chosen. Must be linear or nonlinear.');
+                error('Invalid model_type chosen. Must be linear, bilinear, or nonlinear.');
             end    
             
             % make sure if user specifies a "loaded" model the data has a load field (w)
@@ -483,6 +485,21 @@ classdef Ksysid
             % add a constant term to the end of the set
             fullBasis = [ fullBasis ; sym(1) ];
             
+            % BILINEAR LIFT: multiply input by monomials of state, but no powers of input
+            if strcmp( obj.model_type , 'bilinear' )
+%                 % remember basis without inputs
+%                 obj.basis.noinput = fullBasis;  % save basis w/o input
+%                 obj.lift.noinput = matlabFunction( fullBasis , 'Vars' , { zeta } );  % lifting function w/o input
+                
+                % modify basis to include inputs
+                basis_diag = kron( eye(obj.params.m) , fullBasis );
+                fullBasis_input = [ fullBasis ; basis_diag * u ];
+                
+                % save basis and function to class
+                obj.basis.full_input = fullBasis_input; % symbolic expression
+                obj.lift.full_input = matlabFunction( fullBasis_input , 'Vars' , { zeta , u } );  % lifting function
+            end
+            
             % remove current input from zeta
             if strcmp( obj.model_type , 'nonlinear' )
                 zeta = zeta(1 : obj.params.nzeta);
@@ -491,9 +508,9 @@ classdef Ksysid
             % define outputs
             obj.params.zeta = zeta;
             obj.basis.full = fullBasis;
-            obj.basis.jacobian = jacobian( fullBasis , zeta );  % needed for cts nonlinear model id 
+%             obj.basis.jacobian = jacobian( fullBasis , zeta );  % needed for cts nonlinear model id 
             obj.lift.full = matlabFunction( fullBasis , 'Vars' , { [ zeta ; u ] } );
-            obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { zeta , u } );   % needed for cts nonlinear model id
+%             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { zeta , u } );   % needed for cts nonlinear model id
             obj.params.N = length( fullBasis ); % the dimension of the lifted state
 
         end
@@ -557,11 +574,24 @@ classdef Ksysid
             
             % incorporate the loads into the basis set
             zw = [ 1 ; w ];    % load vector, with 1 appended to beginning
-%             Omega = kron( eye( length(zw) ) , fullBasis );
-%             fullBasis_loaded = Omega * zw;  % basis with load included
             fullBasis_loaded = fullBasis;% different version, doesn't requare large symbolic matrices
             for i = 1 : obj.params.nw
                 fullBasis_loaded = [ fullBasis_loaded ; w(i) * fullBasis ];
+            end
+            
+            % BILINEAR LIFT: multiply input by monomials of state, but no powers of input
+            if strcmp( obj.model_type , 'bilinear' )
+%                 % remember basis without inputs (DELET THIS BLOCK LATER IF NOT NEEDED)
+%                 obj.basis.noinput = fullBasis_loaded;  % save basis w/o input
+%                 obj.lift.noinput = matlabFunction( fullBasis_loaded , 'Vars' , { zeta } );  % lifting function w/o input
+                
+                % modify basis to include inputs
+                basis_diag = kron( eye(obj.params.m) , fullBasis_loaded );
+                fullBasis_loaded_input = [ fullBasis_loaded ; basis_diag * u ]; % save to class
+                
+                % save basis and function to class
+                obj.basis.full_loaded_input = fullBasis_loaded_input; % symbolic expression
+                obj.lift.full_loaded_input = matlabFunction( fullBasis_loaded_input , 'Vars' , { zeta , w , u} );  % lifting function
             end
             
             % remove current input from zeta
@@ -575,11 +605,11 @@ classdef Ksysid
             obj.basis.full = fullBasis;
             obj.basis.full_loaded = fullBasis_loaded;
 %             obj.basis.Omega = Omega;
-            obj.basis.jacobian = jacobian( fullBasis , zeta );  % needed for cts nonlinear model id
+%             obj.basis.jacobian = jacobian( fullBasis , zeta );  % needed for cts nonlinear model id
             obj.lift.full = matlabFunction( fullBasis , 'Vars' , { [ zeta ; u ] } );
             obj.lift.full_loaded = matlabFunction( fullBasis_loaded , 'Vars' , { [ zeta ; u ] , w } );
 %             obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ zeta ; u ] } );
-            obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { zeta , u } );   % needed for cts nonlinear model id
+%             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { zeta , u } );   % needed for cts nonlinear model id
             obj.params.N = length( fullBasis ); % the dimension of the lifted state
 
         end
@@ -958,6 +988,9 @@ classdef Ksysid
             if strcmp( obj.model_type , 'nonlinear' )    % don't append input
                 Px = zeros(length(x), N * (nw+1) );
                 Py = zeros(length(x), N * (nw+1) );
+            elseif strcmp( obj.model_type , 'bilinear' )    % don't append input
+                Px = zeros(length(x), N * (nw+1) );
+                Py = zeros(length(x), N * (nw+1) );
             else    % append input to end of lifted state
                 Px = zeros( length(x), N * (nw+1) + m );
                 Py = zeros( length(x), N * (nw+1) + m );
@@ -974,6 +1007,16 @@ classdef Ksysid
                     else
                         psix = obj.lift.econ_full( [ x(i,:) , u(i,:) ]' )';   
                         psiy = obj.lift.econ_full( [ y(i,:) , u(i,:) ]' )';    
+                    end
+                    Px(i,:) = psix;
+                    Py(i,:) = psiy;
+                elseif strcmp( obj.model_type , 'bilinear' )    % don't append input if it already is lifted
+                    if obj.loaded
+                        psix = obj.lift.econ_full_loaded_input( x(i,:)' , w(i,:)' , u(i,:)' )';   
+                        psiy = obj.lift.econ_full_loaded_input( y(i,:)' , w(i,:)' , u(i,:)' )'; 
+                    else
+                        psix = obj.lift.econ_full_input( x(i,:)' , u(i,:)' )';   
+                        psiy = obj.lift.econ_full_input( y(i,:)' , u(i,:)' )';    
                     end
                     Px(i,:) = psix;
                     Py(i,:) = psiy;
@@ -1144,6 +1187,54 @@ classdef Ksysid
             obj.model = out;
         end
         
+        % get_BLmodel (Extracts bilinear model from the Koopman matrix)
+        function [ out , obj ] = get_BLmodel( obj , koopData )
+            %get_BLmodel: Defines the A, B, Beta, and C matrices that describe the linear
+            %lifted system z+ = Az + Beta(z)u, y = Cz.
+            %   out - struct with fields A, B, C, sys, params, ...
+            %   obj.model - property of struct which stores the model
+            
+            UT = koopData.K';    % transpose of koopman operator
+            
+            if isfield( koopData , 'w' )
+                nw = obj.params.nw;
+            else
+                nw = 0; % null nw for when there is no load
+            end
+            
+            % Extract the A and B system matrices
+            A = UT( 1 : obj.params.N * (nw+1) , 1 : obj.params.N * (nw+1) );
+            B = UT( 1 : obj.params.N * (nw+1) , obj.params.N * (nw+1) + 1 : end );
+            
+            % Cy selects the first n entries of the lifted state
+            Cy = [eye(obj.params.n), zeros(obj.params.n , obj.params.N*(nw+1) - obj.params.n)];
+            
+            % define outputs
+            out.A = A;
+            out.B = B;
+            out.Beta = @(zeta_in,w_in)obj.get_Beta_bilinear(zeta,w_in);   % bilinear term matrix
+            out.C = Cy;
+            out.sys = ss( out.A , out.B , Cy , 0 , obj.params.Ts );  % discrete state space system object
+            out.params = obj.params;    % save system parameters as part of system struct    
+            out.K = koopData.K; % save the Koopman operator matrix just in case
+            
+            % add model substruct to the class
+            obj.model = out;
+        end
+        
+        % get_Beta_bilinear: Constructs the model state dependent B matrix
+        function Beta = get_Beta_bilinear( obj , zeta , w)
+            if nargin < 2
+                zx = obj.lift.econ_full( zeta );
+                zxblock = kron( eye( obj.params.m ) , zx );   % block matrix of zx
+                Beta = obj.model.B * zxblock;
+            else
+                zx = obj.lift.econ_full_loaded( zeta , w );
+                zxblock = kron( eye( obj.params.m ) , zx );   % block matrix of zx
+                Beta = obj.model.B * zxblock;
+            end
+        end
+        
         % get_NLmodel (Builds discrete time nonlinear Koopman model)
         function [ out , obj ] = get_NLmodel( obj , koopData )
             %get_NLmodel: Defines the vector field F(x,u) that describe the nonlinear
@@ -1160,12 +1251,12 @@ classdef Ksysid
                 for i = 1 : obj.params.nw
                     basis_loaded = [ basis_loaded ; obj.params.w(i) * basis_noload ]; % lifted state including loads
                 end
-                F = koopData.K( 1 : obj.params.nzeta , : ) * basis_loaded;
+                F = koopData.K( : , 1 : obj.params.nzeta )' * basis_loaded;
                 out.F_sym = F;
                 out.F_func = matlabFunction( F , 'Vars', { obj.params.zeta , obj.params.u , obj.params.w } );
             else
                 basis_noload = [ obj.params.zeta ; obj.params.u ; obj.basis.econ ];  % lifted state
-                F = koopData.K( 1 : obj.params.nzeta , : ) * basis_noload;
+                F = koopData.K( : , 1 : obj.params.nzeta )' * basis_noload;
                 out.F_sym = F;
                 out.F_func = matlabFunction( F , 'Vars', {obj.params.zeta, obj.params.u} );
             end
@@ -1250,6 +1341,9 @@ classdef Ksysid
                 if strcmp( obj.model_type , 'nonlinear' )
                     [ temp , obj ] = obj.get_NLmodel( obj.koopData );
                     obj.candidates = temp;
+                elseif strcmp( obj.model_type , 'bilinear' )
+                    [ temp , obj ] = obj.get_BLmodel( obj.koopData );
+                    obj.candidates = temp; 
                 else
                     obj.candidates = obj.get_model( obj.koopData );
                 end
@@ -1262,6 +1356,9 @@ classdef Ksysid
                     obj.koopData{i} = obj.get_Koopman( obj.snapshotPairs , lasso(i) );
                     if strcmp( obj.model_type , 'nonlinear' )
                         [ temp , obj ] = obj.get_NLmodel( obj.koopData{i} );
+                        obj.candidates{i} = temp;
+                    elseif strcmp( obj.model_type , 'bilinear' )
+                        [ temp , obj ] = obj.get_BLmodel( obj.koopData{i} );
                         obj.candidates{i} = temp;
                     else
                         obj.candidates{i} = obj.get_model( obj.koopData{i} );
@@ -1294,14 +1391,21 @@ classdef Ksysid
             N = obj.params.N;       % dimension of z (i.e. lifted state)
             
             % preallocation
-            Px = zeros(length(x), N );
+            if strcmp( obj.model_type , 'bilinear' )
+                Px = zeros(length(x), N );
+            else
+                Px = zeros(length(x), N );
+            end
             disp('Evaluating all basis functions on snapshots...');
             for i = 1:length(x)
                 if ~mod( i , floor(length(x)/10) )  % only update progress once in a while
                     obj.loop_progress( i , length(x) );  % display progress
                 end
-                if strcmp( obj.model_type , 'nonlinear' )    % don't append input if it already is lifted nonlinearly  
+                if strcmp( obj.model_type , 'nonlinear' )    % nonlinear lift includes the input 
                     psix = obj.lift.full( [ x(i,:) , u(i,:) ]' )';  
+                    Px(i,:) = psix;
+                elseif strcmp( obj.model_type , 'bilinear' )    % don't include input in this lift 
+                    psix = obj.lift.full( x(i,:)' )';  
                     Px(i,:) = psix;
                 else
                     psix = obj.lift.full( x(i,:)' )';   
@@ -1325,84 +1429,161 @@ classdef Ksysid
             % extract first num_pcs columns 
             pcs = coeffs( : , 1 : num_pcs );
             
-            % new symbolic observables
-%             phi_sym = pcs' * [ obj.basis.poly ; sym(1) ];
-%             fullBasis = [ obj.params.zeta ; phi_sym ];   % preprend unlifted state
-%             fullBasis = vpa( fullBasis , 2 );  % round to save memory
-            
-            % incorporate the loads into the basis set
-%             Omega = kron( eye( length(obj.params.zw) ) , fullBasis );
-%             fullBasis_loaded = Omega * obj.params.zw;  % basis with load included
-%             fullBasis_loaded = vpa( fullBasis_loaded , 2 ); % round to save memory
-            
-%             % overwrite a bunch of stuff (VERSION 1)
-%             obj.basis.pcs = pcs;    % principal components
-% %             obj.basis.noload = fullBasis;
-% %             obj.basis.full = fullBasis_loaded;
-% %             obj.basis.full = fullBasis_loaded;
-% %             obj.basis.Omega = Omega;
-% %             obj.basis.jacobian = jacobian( fullBasis , obj.params.zeta );
-% %             obj.lift.noload = matlabFunction( fullBasis , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
-%             obj.lift.noload = @(zeta_in)obj.econ_noload(zeta_in);
-% %             obj.lift.full = matlabFunction( fullBasis_loaded , 'Vars' , { [ obj.params.zeta ; obj.params.u ] , obj.params.w } );
-%             obj.lift.full = @(zeta_in,w_in)obj.econ_lift(zeta_in,w_in);     % could also call it econ
-% %             obj.lift.Omega = matlabFunction( Omega , 'Vars' , { [ obj.params.zeta ; obj.params.u ] } );
-%             obj.lift.Omega = @(zeta_in)obj.econ_Omega(zeta_in);
-% %             obj.lift.jacobian = matlabFunction( obj.basis.jacobian , 'Vars' , { obj.params.zeta , obj.params.u } );
-%             obj.params.N = num_pcs + obj.params.nzeta; % the dimension of the lifted state 
-            
-            % Overwrite old lifting function with the lower dimensional one (VERSION 2)
+            % Chenge the dimension parameters for the lifted state
             obj.basis.pcs = pcs;    % principal components
             if strcmp( obj.model_type , 'nonlinear' )
                 obj.params.N = num_pcs + obj.params.nzeta + obj.params.m; % the dimension of the lifted state
+            elseif strcmp( obj.model_type , 'bilinear' )
+                obj.params.N = ( num_pcs + obj.params.nzeta ) * obj.params.m; % the dimension of the lifted state
             else
                 obj.params.N = num_pcs + obj.params.nzeta; % the dimension of the lifted state 
             end
-            if obj.loaded
-                obj.lift.econ_full = @(zeta_in)obj.econ_noload(zeta_in);
-                obj.lift.econ_full_loaded = @(zeta_in,w_in)obj.econ_lift(zeta_in,w_in);
-%                 obj.lift.Omega = @(zeta_in)obj.econ_Omega(zeta_in);
+            
+%             % Save new reduced dimension lifting functions to the class
+%             if strcmp( obj.model_type , 'bilinear' )    % differnent because inputs must be kept out of dimensional reduction
+%                 if obj.loaded
+%                     obj.lift.econ_full = @(zeta_in)obj.econ_noload_bilinear(zeta_in);
+%                     obj.lift.econ_full_loaded = @(zeta_in,w_in)obj.econ_lift_bilinear(zeta_in,w_in);
+%                     obj.lift.econ_full_loaded_input = @(zeta_in,w_in,u_in)obj.econ_full_loaded_input(zeta_in,w_in,u_in);
+%                 else
+%                     obj.lift.econ_full = @(zeta_in)obj.econ_noload_bilinear(zeta_in);
+%                     obj.lift.econ_full_input =  @(zeta_in,u_in)obj.econ_full_input(zeta_in,u_in);
+%                 end
+%             else
+%                 if obj.loaded
+%                     obj.lift.econ_full = @(zeta_in)obj.econ_noload(zeta_in);
+%                     obj.lift.econ_full_loaded = @(zeta_in,w_in)obj.econ_lift(zeta_in,w_in);
+%                 else
+%                     obj.lift.econ_full = @(zeta_in)obj.econ_noload(zeta_in);
+%                 end
+%             end
+
+            % Save new reduced dimension lifting functions to the class (NEW VERSION, DELETE OLD IF THIS WORKS)
+            if strcmp( obj.model_type , 'bilinear' )    % differnent because inputs must be kept out of dimensional reduction
+                if obj.loaded
+                    obj.lift.econ_full = @(zeta_in)obj.econ_full(zeta_in);
+                    obj.lift.econ_full_loaded = @(zeta_in,w_in)obj.econ_full_loaded(zeta_in,w_in);
+                    obj.lift.econ_full_loaded_input = @(zeta_in,w_in,u_in)obj.econ_full_loaded_input(zeta_in,w_in,u_in);
+                else
+                    obj.lift.econ_full = @(zeta_in)obj.econ_full(zeta_in);
+                    obj.lift.econ_full_input =  @(zeta_in,u_in)obj.econ_full_input(zeta_in,u_in);
+                end
             else
-                obj.lift.econ_full = @(zeta_in)obj.econ_noload(zeta_in);
+                if obj.loaded
+                    obj.lift.econ_full = @(zeta_in)obj.econ_full(zeta_in);
+                    obj.lift.econ_full_loaded = @(zeta_in,w_in)obj.econ_full_loaded(zeta_in,w_in);
+                else
+                    obj.lift.econ_full = @(zeta_in)obj.econ_full(zeta_in);
+                end
             end
             
             % Save a symbolic version of the reduced order basis
             obj.basis.econ = obj.basis.pcs' * obj.basis.full;
-%             obj.lift.econ = matlabFunction( obj.basis.econ , 'Vars' , { obj.params.zeta , obj.params.u } );
+%             if strcmp( obj.model_type , 'bilinear' )
+%                 obj.basis.econ = obj.basis.pcs' * obj.basis.full;
+%             else
+%                 obj.basis.econ = obj.basis.pcs' * obj.basis.full;
+%             end
         end
         
-        % econ_lift (define new lifting function for lower dim basis)
-        function zwecon = econ_lift( obj , unlifted , w)
-            %econ_lift: define new lifting function for lower dim basis
+        %%%%%%%%%% See if you can get rid of these four functions
+        
+%         % econ_lift (define new lifting function for lower dim basis)
+%         function zwecon = econ_lift( obj , unlifted , w)
+%             %econ_lift: define new lifting function for lower dim basis
+%             %   zeta - unlifted state with input appended
+%             %   w - load
+%             
+%             phi = obj.basis.pcs' * obj.lift.full( unlifted ); % lift to full size
+%             fullBasis = [ unlifted ; phi ]; % prepend unlifted states
+%             zwecon = fullBasis;
+%             for i = 1 : obj.params.nw
+%                 zwecon = [ zwecon ; w(i) * fullBasis ]; % reduce to just principle components
+%             end
+%         end
+%         
+%         % econ_noload
+%         function zecon = econ_noload( obj , unlifted )
+%             %econ_noload: lift without the input
+%             %   zeta - unlifted state with input appended
+%             
+%             phi = obj.basis.pcs' * obj.lift.full( unlifted ); % lift to full size
+%             zecon = [ unlifted ; phi ]; % prepend unlifted states
+%         end
+%         
+%         % econ_lift_bilinear (define new lifting function for lower dim basis)
+%         function zwecon = econ_lift_bilinear( obj , unlifted , w )
+%             %econ_lift_bilinear: define new lifting function for lower dim basis
+%             %   zeta - unlifted state with input appended
+%             %   w - load
+%             
+%             zeta = unlifted( 1 : obj.params.nzeta );
+%             u = unlifted( obj.params.nzeta + 1 : obj.params.nzeta + obj.params.m );
+%             
+%             phi = obj.basis.pcs' * obj.lift.full_loaded( zeta , w ); % lift to full size
+%             phi_diag = kron( eye(obj.params.m) , [ zeta ; phi ] );
+%             fullBasis = phi_diag * u; % prepend unlifted states
+%             zwecon = fullBasis;
+%             for i = 1 : obj.params.nw
+%                 zwecon = [ zwecon ; w(i) * fullBasis ]; % reduce to just principle components
+%             end
+%         end
+%         
+%         % econ_noload_bilinear
+%         function zecon = econ_noload_bilinear( obj , unlifted )
+%             %econ_noload_bilinear: lift without the input
+%             %   zeta - unlifted state with input appended
+%             
+%             zeta = unlifted( 1 : obj.params.nzeta );
+%             u = unlifted( obj.params.nzeta + 1 : obj.params.nzeta + obj.params.m );
+%             
+%             phi = obj.basis.pcs' * obj.lift.full( zeta ); % lift to full size
+%             phi_diag = kron( eye(obj.params.m) , [ zeta ; phi ] );
+%             zecon = phi_diag * u; % prepend unlifted states
+%         end
+        
+        
+        %%%%%%%%%%%% See if you can use just functions below this line
+        
+        % econ_full_loaded_input (for bilinear systems only)
+        function zwecon = econ_full_loaded_input( obj , zeta , w , u )
+            %econ_lift_bilinear: define new lifting function for lower dim basis
             %   zeta - unlifted state with input appended
             %   w - load
             
-            phi = obj.basis.pcs' * obj.lift.full( unlifted ); % lift to full size
-            fullBasis = [ unlifted ; phi ]; % prepend unlifted states
-            zwecon = fullBasis;
-            for i = 1 : obj.params.nw
-                zwecon = [ zwecon ; w(i) * fullBasis ]; % reduce to just principle components
-            end
+            gecon = obj.basis.pcs' * obj.lift.full( zeta ); % lift to full size
+            gecon_diag = kron( eye(obj.params.nw+1) , [ zeta ; gecon ] );
+            full_loaded = gecon_diag * [ 1 ; w ];
+            phi_diag = kron( eye(obj.params.m+1) , full_loaded );
+            full_loaded_input = phi_diag * [ 1 ; u ];
+            zwecon = full_loaded_input;
         end
         
-        % econ_noload
-        function zecon = econ_noload( obj , unlifted )
-            %econ_noload: lift without the input
+        % econ_full_input (for bilinear systems only)
+        function zecon = econ_full_input( obj , zeta , u )
+            %econ_noload_bilinear: lift without the input
             %   zeta - unlifted state with input appended
             
-            phi = obj.basis.pcs' * obj.lift.full( unlifted ); % lift to full size
-            zecon = [ unlifted ; phi ]; % prepend unlifted states
+            gecon = obj.basis.pcs' * obj.lift.full( zeta ); % lift to full size
+%             g_diag = kron( eye(obj.params.nw+1) , [ zeta ; g ] );
+%             full_loaded = g_diag * [ 1 ; w ];
+            phi_diag = kron( eye(obj.params.m+1) , [ zeta ; gecon ] );
+            full_input = phi_diag * [ 1 ; u ];
+            zecon = full_input;
         end
         
-        % econ_Omega (function that evaluates Omega without as much
-        % symbolic shit) BETA
-        function Omegaecon = econ_Omega( obj , zeta )
-            %econ_Omega: evaluate Omega without making an enormous symbolic
-            % matrix
-            
-            phi = obj.basis.pcs' * [ obj.lift.poly( zeta ) ; 1]; % lift to full size
-            fullBasis = [ zeta ; phi ]; % prepend unlifted states
-            Omegaecon = kron( eye( length(obj.params.zw) ) , fullBasis );
+        % econ_full_loaded
+        function zwecon = econ_full_loaded( obj , zeta , w )           
+            gecon = obj.basis.pcs' * obj.lift.full( zeta );
+            gecon_diag = kron( eye(obj.params.nw+1) , [ zeta ; gecon ] );
+            full_loaded = gecon_diag * [ 1 ; w ];
+            zwecon = full_loaded;
+        end
+        
+        % econ_full
+        function zecon = econ_full( obj , zeta )         
+            gecon = obj.basis.pcs' * obj.lift.full( zeta );
+            zecon = [ zeta ; gecon ];
         end
         
         %% validate performance of a fitted model

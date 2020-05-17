@@ -4,9 +4,9 @@
 load('C:\Users\danie\OneDrive\Documents\MATLAB\UM-Matlab\Koopman\TROcode\datafiles\softrobot_train-13_val-4.mat')
 
 for i = 1 : length( train )
-%     % add uniformly distributed noise
+    % add uniformly distributed noise
 %     offset = rand;
-%     train{i}.y = train{i}.y + 2 * ( 2*randn( size(train{i}.y ) ) - ( 0.5 + offset ) );
+%     train{i}.y = train{i}.y + ( 2*randn( size(train{i}.y ) ) - ( 0.5 + offset ) );
 
     % add normally distributed noise
 %     offset = randn( size( train{i}.y ) ); % different offset for each dimension
@@ -18,9 +18,9 @@ for i = 1 : length( train )
     % add outliers
     decider = rand( size( train{i}.t ) );
     outlier_ind = ( decider < 0.1 );    % selects a subset of points to add outliers to
-    outlier_mag = 20 * ( rand( size( train{i}.y ) ) - 0.5 );
+    outlier_mag = 5 * ( rand( size( train{i}.y ) ) - 0.5 );
     train{i}.y = train{i}.y + outlier_ind .* outlier_mag;
 end
 
 % save the noisier data
-save( [ 'datafiles' , filesep , 'sofrobot_outliers.mat' ] , 'train' , 'val' );
+save( [ 'datafiles' , filesep , 'sofrobot_noisy_outliears.mat' ] , 'train' , 'val' );

@@ -15,9 +15,9 @@ data4sysid = load( [datafile_path , datafile_name] );
 ksysid = ksysid( data4sysid, ...
         'model_type' , 'linear' ,...    % model type (linear or nonlinear)
         'obs_type' , { 'poly' } ,...    % type of basis functions
-        'obs_degree' , [ 2 ] ,...       % "degree" of basis functions
+        'obs_degree' , [ 4 ] ,...       % "degree" of basis functions
         'snapshots' , Inf ,...          % Number of snapshot pairs
-        'lasso' , [ 1.5 ] ,...           % L1 regularization term
+        'lasso' , [ Inf ] ,...           % L1 regularization term
         'delays' , 1 );                 % Number of state/input delays
 
     
