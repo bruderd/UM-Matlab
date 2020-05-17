@@ -19,7 +19,7 @@ Ksysid = Ksysid( data4sysid ,...
         'snapshots' , Inf ,...          % Number of snapshot pairs
         'lasso' , [ Inf ] ,...           % L1 regularization term
         'delays' , 0 ,...               % Numer of state/input delays
-        'loaded' , false);             % Does system include loads?
+        'loaded' , true);             % Does system include loads?
 
 if Ksysid.loaded
     disp(['Number of basis functions: ' , num2str( (Ksysid.params.nw + 1) * Ksysid.params.N ) ]);
