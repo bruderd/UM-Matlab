@@ -943,6 +943,8 @@ classdef Ksysid
             total = num_max;
             s = RandStream('mlfg6331_64'); 
             index = datasample(s , 1:total, num , 'Replace' , false);
+%             %DEBUG: (REMOVE THIS LATER)
+%             index = 1 : num_max;
             
             snapshotPairs.alpha = before.zeta( index , : ); 
             snapshotPairs.beta = after.zeta( index , : );
@@ -1210,16 +1212,17 @@ classdef Ksysid
             Cy = [eye(obj.params.n), zeros(obj.params.n , obj.params.N*(nw+1) - obj.params.n)];
             
             % bilinear term matrix (depends on zeta)
-            if obj.loaded
-                Beta = @(zeta_in,w_in)obj.get_Beta_bilinear(B,zeta_in,w_in);
-            else
-                Beta = @(zeta_in)obj.get_Beta_bilinear(B,zeta_in);
-            end
+            Beta = @(z_in)obj.get_Beta_bilinear( B , z_in );
+%             if obj.loaded
+%                 Beta = @(zeta_in,w_in)obj.get_Beta_bilinear(B,zeta_in,w_in);
+%             else
+%                 Beta = @(zeta_in)obj.get_Beta_bilinear(B,zeta_in);
+%             end
                 
             % define outputs
             out.A = A;
             out.B = B;
-            out.Beta = Beta;   % bilinear term matrix
+            out.Beta = Beta;   % bilinear term matrix function
             out.C = Cy;
             out.params = obj.params;    % save system parameters as part of system struct    
             out.K = koopData.K; % save the Koopman operator matrix just in case
@@ -1229,14 +1232,14 @@ classdef Ksysid
         end
         
         % get_Beta_bilinear: Constructs the model state dependent B matrix
-        function Beta = get_Beta_bilinear( obj , B , zeta , w)
+        function Beta = get_Beta_bilinear( obj , B , z )
             if nargin < 4
-                zx = obj.lift.econ_full( zeta );
-                zxblock = kron( eye( obj.params.m ) , zx );   % block matrix of zx
+%                 zx = obj.lift.econ_full( zeta );
+                zxblock = kron( eye( obj.params.m ) , z );   % block matrix of z
                 Beta = B * zxblock;
             else
-                zx = obj.lift.econ_full_loaded( zeta , w );
-                zxblock = kron( eye( obj.params.m ) , zx );   % block matrix of zx
+%                 zx = obj.lift.econ_full_loaded( zeta , w );
+                zxblock = kron( eye( obj.params.m ) , z );   % block matrix of z
                 Beta = B * zxblock;
             end
         end
@@ -1378,33 +1381,56 @@ classdef Ksysid
             
             % extract first num_pcs columns 
             pcs = coeffs( : , 1 : num_pcs );
+            % DEBUG (don't do dimensional reduction)
+            pcs = eye( obj.params.N );
+            num_pcs = obj.params.N;
             
             % Chenge the dimension parameters for the lifted state
             obj.basis.pcs = pcs;    % principal components
             if strcmp( obj.model_type , 'nonlinear' )
                 obj.params.N = num_pcs + obj.params.nzeta + obj.params.m; % the dimension of the lifted state
             elseif strcmp( obj.model_type , 'bilinear' )
-                obj.params.N = num_pcs + obj.params.nzeta; % the dimension of the lifted state, including loads
+                obj.params.N = num_pcs + obj.params.nzeta + 1; % the dimension of the lifted state, including loads
             else
-                obj.params.N = num_pcs + obj.params.nzeta; % the dimension of the lifted state 
+                obj.params.N = num_pcs + obj.params.nzeta + 1; % the dimension of the lifted state 
             end
 
             % Save new reduced dimension lifting functions to the class (NEW VERSION, DELETE OLD IF THIS WORKS)
             if strcmp( obj.model_type , 'bilinear' )    % differnent because inputs must be kept out of dimensional reduction
                 if obj.loaded
+                    % functions
                     obj.lift.econ_full = @(zeta_in)obj.econ_full(zeta_in);
                     obj.lift.econ_full_loaded = @(zeta_in,w_in)obj.econ_full_loaded(zeta_in,w_in);
                     obj.lift.econ_full_loaded_input = @(zeta_in,w_in,u_in)obj.econ_full_loaded_input(zeta_in,w_in,u_in);
+                    
+                    % symbolic expressions
+                    obj.basis.econ_full = obj.econ_full( obj.params.zeta );
+                    obj.basis.econ_full_loaded = obj.econ_full_loaded( obj.params.zeta , obj.params.w );
+                    obj.basis.econ_full_loaded_input = obj.econ_full_loaded_input( obj.params.zeta , obj.params.w , obj.params.u );
                 else
+                    % functions
                     obj.lift.econ_full = @(zeta_in)obj.econ_full(zeta_in);
                     obj.lift.econ_full_input =  @(zeta_in,u_in)obj.econ_full_input(zeta_in,u_in);
+                    
+                    % symbolic expressions
+                    obj.basis.econ_full = obj.econ_full( obj.params.zeta );
+                    obj.basis.econ_full_input = obj.econ_full_input( obj.params.zeta , obj.params.u );
                 end
             else
                 if obj.loaded
+                    % functions
                     obj.lift.econ_full = @(zeta_in)obj.econ_full(zeta_in);
                     obj.lift.econ_full_loaded = @(zeta_in,w_in)obj.econ_full_loaded(zeta_in,w_in);
+                    
+                    % symbolic expressions
+                    obj.basis.econ_full = obj.econ_full( obj.params.zeta );
+                    obj.basis.econ_full_loaded = obj.econ_full_loaded( obj.params.zeta , obj.params.w );
                 else
+                    % functions
                     obj.lift.econ_full = @(zeta_in)obj.econ_full(zeta_in);
+                    
+                    % symbolic expressions
+                    obj.basis.econ_full = obj.econ_full( obj.params.zeta );
                 end
             end
             
@@ -1478,7 +1504,7 @@ classdef Ksysid
             %   w - load
             
             gecon = obj.basis.pcs' * obj.lift.full( zeta ); % lift to full size
-            gecon_diag = kron( eye(obj.params.nw+1) , [ zeta ; gecon ] );
+            gecon_diag = kron( eye(obj.params.nw+1) , [ zeta ; gecon ; 1 ] );   % constant appended at end
             full_loaded = gecon_diag * [ 1 ; w ];
             phi_diag = kron( eye(obj.params.m+1) , full_loaded );
             full_loaded_input = phi_diag * [ 1 ; u ];
@@ -1493,7 +1519,7 @@ classdef Ksysid
             gecon = obj.basis.pcs' * obj.lift.full( zeta ); % lift to full size
 %             g_diag = kron( eye(obj.params.nw+1) , [ zeta ; g ] );
 %             full_loaded = g_diag * [ 1 ; w ];
-            phi_diag = kron( eye(obj.params.m+1) , [ zeta ; gecon ] );
+            phi_diag = kron( eye(obj.params.m+1) , [ zeta ; gecon ; 1 ] );  % constant appended at end
             full_input = phi_diag * [ 1 ; u ];
             zecon = full_input;
         end
@@ -1501,7 +1527,7 @@ classdef Ksysid
         % econ_full_loaded
         function zwecon = econ_full_loaded( obj , zeta , w )           
             gecon = obj.basis.pcs' * obj.lift.full( zeta );
-            gecon_diag = kron( eye(obj.params.nw+1) , [ zeta ; gecon ] );
+            gecon_diag = kron( eye(obj.params.nw+1) , [ zeta ; gecon ; 1 ] );   % constant term appended
             full_loaded = gecon_diag * [ 1 ; w ];
             zwecon = full_loaded;
         end
@@ -1509,7 +1535,7 @@ classdef Ksysid
         % econ_full
         function zecon = econ_full( obj , zeta )         
             gecon = obj.basis.pcs' * obj.lift.full( zeta );
-            zecon = [ zeta ; gecon ];
+            zecon = [ zeta ; gecon ; 1 ];   % constant term appended
         end
         
         %% validate performance of a fitted model
@@ -1606,22 +1632,30 @@ classdef Ksysid
                 end
             end
             
-            % simulate lifted linear model
+            % simulate lifted bilinear linear model
             tsim = treal;
             usim = ureal;
             ysim = zeros( size( yreal ) ); % preallocate
             zsim = zeros( size( zreal ) ); % preallocate
-            zetasim = zeros( size( zeta ) );    % preallocate
+            zetasim = zeros( size( zetareal ) );    % preallocate
             ysim(1,:) = yreal(1,:); % initialize
             zetasim(1,:) = zetareal(1,:)';    % initialize
             zeta0 = zetareal(1,:)';    % initial state with delays
             if obj.loaded
+                wsim = wreal;   % load condition
+                
                 % set initial condition
-                z0 = obj.lift.econ_full_loaded( zeta0 , wreal(1,:)' );    % initial lifted state
+                z0 = obj.lift.econ_full_loaded( zeta0 , wsim(1,:)' );    % initial lifted state
                 zsim(1,:) = z0';        % initialize
                 
                 % simulate system response
-                
+                for j = 1 : length(treal)-1
+                    % compute current lifted state using actual load condition
+                    znow = kron( eye(obj.params.nw+1) , zsim(j,1:obj.params.N)' ) * [ 1 ; wsim(j,:)' ];
+                    zsim(j+1,:) = ( model.A * znow + model.Beta( znow ) * usim(j,:)' )';
+                    zetasim(j+1,:) = zsim( j+1 , 1 : obj.params.nzeta );
+                    ysim(j+1,:) = ( model.C * zsim(j+1,:)' )';
+                end
             else
                 % set initial condition
                 z0 = obj.lift.econ_full( zeta0 );    % initial lifted state
@@ -1629,14 +1663,16 @@ classdef Ksysid
                 
                 % simulate system response
                 for j = 1 : length(treal)-1
-                    zsim(j+1,:) = ( model.A * zsim(j,:)' + model.Beta( zetasim(j,:)' ) * usim(j,:)' )';
+                    % debug
+                    zsim_winputs = obj.lift.econ_full_input( zetasim(j,:)' , usim(j,:)' );
+                    zsim_winputs_plus = obj.model.K' * zsim_winputs;
+                    zsim(j+1,:) = zsim_winputs_plus( 1 : obj.params.N )';
+                    
+%                     zsim(j+1,:) = ( model.A * zsim(j,:)' + model.Beta( zsim(j,:)' ) * usim(j,:)' )';
                     zetasim(j+1,:) = zsim( j+1 , 1 : obj.params.nzeta );
                     ysim(j+1,:) = ( model.C * zsim(j+1,:)' )';
                 end
             end
-            
-            
-            
             
             % save simulations in output struct
             results = struct;
@@ -1646,13 +1682,15 @@ classdef Ksysid
             results.sim.u = usim;
             results.sim.y = ysim;
             results.sim.z = zsim;
+            results.sim.zeta = zetasim;
             
             results.real.t = treal;
             results.real.u = ureal;
             results.real.y = yreal;
             results.real.z = zreal;
+            results.real.zeta = zetareal;
             if obj.loaded
-                results.sim.w = zsim(:,end-obj.params.nw+1:end);
+                results.sim.w = wreal;
                 results.real.w = wreal;
             end
             
