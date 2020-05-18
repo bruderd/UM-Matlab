@@ -152,12 +152,15 @@ classdef Ksysid
              prog = now / total;
              numdots = floor( prog * 10 );
              
-             if now == 1
+             if prog <= 0.1     % empty progress bar
                 fprintf(['Loop progress: [' , repmat('.',1,10) , ']\n']);
+             elseif prog >= 0.9     % last progress bar
+                fprintf(repmat('\b',1,28));
+                fprintf(['Loop progress: [' , repmat('#',1,10) , repmat('.',1,10-10) , ']\n']);
+             else
+                 fprintf(repmat('\b',1,28));
+                 fprintf(['Loop progress: [' , repmat('#',1,numdots) , repmat('.',1,10-numdots) , ']\n']);
              end
-             
-             fprintf(repmat('\b',1,28));
-             fprintf(['Loop progress: [' , repmat('#',1,numdots) , repmat('.',1,10-numdots) , ']\n']);
         end
         
         %% operations on simulation/experimental data (some are redundant and found in the data class)
@@ -1331,7 +1334,7 @@ classdef Ksysid
             else
                 Px = zeros(length(x), N );
             end
-            disp('Evaluating all basis functions on snapshots...');
+            fprintf('Evaluating all basis functions on snapshots...\n');
             for i = 1:length(x)
                 if ~mod( i , floor(length(x)/10) )  % only update progress once in a while
                     obj.loop_progress( i , length(x) );  % display progress
