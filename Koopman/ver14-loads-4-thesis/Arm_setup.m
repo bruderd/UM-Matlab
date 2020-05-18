@@ -7,12 +7,14 @@
 %   -Every module is identical (same number of joints/links)
 %
 
+saveon = false;  % decides whether to save the class or not
+
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm-markers_2-mods_1-links_0p5-Ts';
+params.sysName = 'arm-markers_1-mods_1-links_0p5-Ts';
 
-params.Nmods = 2;   % number of modules (actuated sections)
+params.Nmods = 1;   % number of modules (actuated sections)
 params.nlinks = 1;      % number of links in each module
 params.Nlinks = params.Nmods * params.nlinks;   % total number of links in robot
 
@@ -52,9 +54,9 @@ dirname = [ 'systems' , filesep , params.sysName ];
 unique_dirname = auto_rename( dirname , '(0)' );
 Arm.params.sysName = erase( unique_dirname , ['systems', filesep] ) ;    % modify the system name parameter    
 
-% % create directory for the system, and save the class
-% mkdir( unique_dirname );
-% mkdir( [ unique_dirname , filesep , 'simulations' ] );  % make simulation subfolder
-% fname = [ unique_dirname , filesep , params.sysName, '.mat' ];
-% save( fname , 'Arm' );
+% create directory for the system, and save the class
+mkdir( unique_dirname );
+mkdir( [ unique_dirname , filesep , 'simulations' ] );  % make simulation subfolder
+fname = [ unique_dirname , filesep , params.sysName, '.mat' ];
+save( fname , 'Arm' );
 

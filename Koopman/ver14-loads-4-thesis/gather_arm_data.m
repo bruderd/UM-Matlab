@@ -28,10 +28,10 @@ ramps_lb = 0.25;
 ramps_ub = 3;
 
 % load condition bounds
-w_lb = [ 0 , -pi/2 ];
-w_ub = [ 1 , pi/2 ];
-% w_lb = [0 0];   % unloaded
-% w_ub = [0 0];   % unloaded
+% w_lb = [ 0 , -pi/2 ];
+% w_ub = [ 1 , pi/2 ];
+w_lb = [0 0];   % unloaded
+w_ub = [0 0];   % unloaded
 
 % input bounds
 u_lb = -0.9*pi * ones( 1 , Arm.params.Nmods );
@@ -71,7 +71,7 @@ end
 
 %% put data together into a single struct
 
-file_name = 'exp1';
+file_name = 'exp3';
 data4sysid = Data.get_data4sysid( train , val , true , file_name );
 
 
