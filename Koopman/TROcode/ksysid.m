@@ -821,15 +821,15 @@ classdef ksysid
                 end
             end
             
-            % Call function that solves QP problem
-            Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
-            if obj.liftinput == 1
-                Umtx = reshape(Uvec, [N,N]); % Koopman operator matrix
-            else
-                Umtx = reshape(Uvec, [Nm,Nm]); % Koopman operator matrix
-            end
-            K = Umtx;   % switching to K convention to not confuse with input
-%             K = Px \ Py;    % least-squares solution (very efficient, but no L1 penalty)
+%             % Call function that solves QP problem
+%             Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
+%             if obj.liftinput == 1
+%                 Umtx = reshape(Uvec, [N,N]); % Koopman operator matrix
+%             else
+%                 Umtx = reshape(Uvec, [Nm,Nm]); % Koopman operator matrix
+%             end
+%             K = Umtx;   % switching to K convention to not confuse with input
+            K = Px \ Py;    % least-squares solution (very efficient, but no L1 penalty)
             
             % other usefule outputs
             koopData.K = K; % Koopman operator matrix (note the switch to K)
@@ -953,10 +953,10 @@ classdef ksysid
             M = Mtranspose';
             
             % define outputs
-%             out.A = M*A;  % edited to include projection M, 12/11/2018
-%             out.B = M*B;  % edited to include projection M, 12/11/2018
-            out.A = A; 
-            out.B = B; 
+            out.A = M*A;  % edited to include projection M, 12/11/2018
+            out.B = M*B;  % edited to include projection M, 12/11/2018
+%             out.A = A; 
+%             out.B = B; 
             out.C = Cy;
             out.M = M;
             out.sys = ss( out.A , out.B , Cy , 0 , obj.params.Ts );  % discrete state space system object
@@ -1167,6 +1167,7 @@ classdef ksysid
             err.abs = abs( simdata.y - realdata.y );  % absolute error over time
             err.mean = mean( err.abs , 1 );   % average absolute error over time
             err.rmse = sqrt( sum( (simdata.y - realdata.y).^2 , 1 ) ./ length(realdata.t) ); % RMSE (over each state)
+            err.rmse2 = sqrt( sum( sum( (simdata.y - realdata.y).^2 , 2) , 1 ) ./ length(realdata.t) ); % RMSE (over all states)
             err.nrmse = err.rmse ./ abs( max( realdata.y ) - min( realdata.y ) );   % RMSE normalized by total range of real data values
         end
         
@@ -1198,9 +1199,13 @@ classdef ksysid
         end
         
         % valNplot_model (run val_model and plot_comparison for a given model)
-        function [ results , err ] = valNplot_model( obj , model_id )
+        function [ results , err ] = valNplot_model( obj , model_id , saveask )
             %valNplot_model: run val_model and plot_comparison for a given model
             
+            if nargin < 3
+                saveask = true;    % ask if user wants to save the model
+            end
+                
             % if no model id is provided, use first one in the model cell array
             if nargin < 2 && ~iscell(obj.candidates)
                 mod = obj.candidates;
@@ -1223,9 +1228,11 @@ classdef ksysid
             end
             
             % save (or don't save) sysid class, model, and training data
-            saveModel = questdlg( 'Would you like to save this model?' , '' , 'Yes' , 'Not right now' , 'Not right now' );
-            if strcmp( saveModel , 'Yes' )
-                obj.save_class;
+            if saveask
+                saveModel = questdlg( 'Would you like to save this model?' , '' , 'Yes' , 'Not right now' , 'Not right now' );
+                if strcmp( saveModel , 'Yes' )
+                    obj.save_class;
+                end
             end
         end
         
