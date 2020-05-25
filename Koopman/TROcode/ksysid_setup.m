@@ -15,9 +15,9 @@ data4sysid = load( [datafile_path , datafile_name] );
 ksysid = ksysid( data4sysid, ...
         'model_type' , 'linear' ,...    % model type (linear or nonlinear)
         'obs_type' , { 'poly' } ,...    % type of basis functions
-        'obs_degree' , [ 4 ] ,...       % "degree" of basis functions
+        'obs_degree' , [ 2 ] ,...       % "degree" of basis functions
         'snapshots' , Inf ,...          % Number of snapshot pairs
-        'lasso' , [ 0.05:0.5:10.05 ] ,...           % L1 regularization term
+        'lasso' , [ 0.2 : 0.02 : 3 ] ,...           % L1 regularization term
         'delays' , 1 );                 % Number of state/input delays
 
     
@@ -33,7 +33,11 @@ err = cell( size(ksysid.candidates) );    % store error in a cell array
 
 if iscell(ksysid.candidates)
     for i = 1 : length(ksysid.candidates)
-        [ results{i} , err{i} ] = ksysid.valNplot_model( i );
+        if i == length(ksysid.candidates)   % only ask to save the last model
+            [ results{i} , err{i} ] = ksysid.valNplot_model( i );
+        else
+            [ results{i} , err{i} ] = ksysid.valNplot_model( i , false );
+        end
     end
 else
     [ results{1} , err{1} ] = ksysid.valNplot_model;

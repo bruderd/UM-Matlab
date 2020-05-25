@@ -68,6 +68,7 @@ for i = 1 : length( err_noproj )
         err_noproj_v_lasso(i) = err_noproj_v_lasso(i) + err_noproj{i}{j}.rmse2;
     end
     err_noproj_v_lasso(i) = err_noproj_v_lasso(i) / j;  % take average over val trials
+
 end
 
 %% smooth out the erro data a little bit
@@ -81,13 +82,18 @@ err_proj_v_lasso_smooth = movmean( err_proj_v_lasso_noout , 8 );
 err_noproj_v_lasso_smooth = movmean( err_noproj_v_lasso_noout , 8 );
 
 
-%% Determine the A matrices of the models
+%% Determine the density and rank of the A matrices of the models
 
 dens_proj = zeros( size(lasso_params) );
 dens_noproj = zeros( size(lasso_params) );
+rank_proj = zeros( size(lasso_params) );
+rank_noproj = zeros( size(lasso_params) );
 for i = 1 : length( lasso_params )
     dens_proj(i) = nnz( ksysid_proj.candidates{i}.A( find( abs( ksysid_proj.candidates{i}.A ) > 5e-6 ) ) ) / numel( ksysid_proj.candidates{i}.A );
     dens_noproj(i) = nnz( ksysid_noproj.candidates{i}.A( find( abs( ksysid_noproj.candidates{i}.A ) > 5e-6 ) ) ) / numel( ksysid_noproj.candidates{i}.A );
+    
+    rank_proj(i) = rank( ksysid_proj.candidates{i}.A ); % rank of A matrix
+    rank_noproj(i) = rank( ksysid_noproj.candidates{i}.A ); % rank of A matrix
 end
 
 %% plot it
