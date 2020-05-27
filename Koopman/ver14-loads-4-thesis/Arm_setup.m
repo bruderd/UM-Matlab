@@ -12,9 +12,9 @@ saveon = false;  % decides whether to save the class or not
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm-markers_1-mods_1-links_0p5-Ts';
+params.sysName = 'arm-markers_3-mods_1-links_0p5-Ts';
 
-params.Nmods = 1;   % number of modules (actuated sections)
+params.Nmods = 3;   % number of modules (actuated sections)
 params.nlinks = 1;      % number of links in each module
 params.Nlinks = params.Nmods * params.nlinks;   % total number of links in robot
 

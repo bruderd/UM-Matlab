@@ -15,7 +15,7 @@ y(1,:) = y0;
 % [ y(2,:) , ~ ] = nnet_model_nio( u(1,:)' , u0del' );
 for i = 2 : size(u,1) - 1
     [ y(i+1,:) , ~ , ~ ] = nnet_model( u(i,:)' , y(i,:)' , u(i-1,:)' , y(i-1,:)' );
-%     [ y(i+1,:) , ~ ] = nnet_model_nio( u(i,:)' , u(i-1,:)' );
+    [ y(i+1,:) , ~ ] = nnet_model_nio( u(i,:)' , u(i-1,:)' );
 end
 
 end

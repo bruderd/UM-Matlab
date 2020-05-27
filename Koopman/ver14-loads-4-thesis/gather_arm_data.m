@@ -71,7 +71,7 @@ end
 
 %% put data together into a single struct
 
-file_name = 'exp3';
+file_name = 'triple-pend';
 data4sysid = Data.get_data4sysid( train , val , true , file_name );
 
 

@@ -1,6 +1,7 @@
-function [ err , res ] = evaluate_all_models( data )
-%evaluate_all_models: Evaluates the performance of koopman models for soft
-%robot system verses Matlab sysid toolbox models and neural network
+function err = evaluate_all_models_1step( data )
+%evaluate_all_models_1step: Evaluates the performance of koopman models for soft
+%robot system verses Matlab sysid toolbox models and neural network just
+%for 1 step predictions
 
 % If data argument not supplied, prompt uset to load data from file
 if ~exist('data', 'var')
@@ -43,7 +44,8 @@ for i = 1 : length(data)
     
     % simulate the (scaled) system
     for j = 1 : length( kooplin{i}.t ) - 1
-        kooplin{i}.z(j+1,:) = ( ksysid_lin.model.A * kooplin{i}.z(j,:)' + ksysid_lin.model.B * datasc.u(j,:)' )';
+        z = ksysid_lin.lift.full( kooplin{i}.zeta(j,:)' ); % actual value
+        kooplin{i}.z(j+1,:) = ( ksysid_lin.model.A * z + ksysid_lin.model.B * datasc.u(j,:)' )';
         kooplin{i}.y(j+1,:) = ( ksysid_lin.model.C * kooplin{i}.z(j+1,:)' )';
     end
     
@@ -64,25 +66,28 @@ for i = 1 : length(data)
     lin{i}.t = data{i}.t;
     lin{i}.u = data{i}.u;
     
-%     % scale down the data
-%     datasc.t = data{i}.t;
-%     datasc.u = ksysid_lin.scaledown.u( data{i}.u );
-%     datasc.y = ksysid_lin.scaledown.y( data{i}.y );
+    % scale down the data
+    datasc.t = data{i}.t;
+    datasc.u = data{i}.u * diag( model.params.uScaleFactor ); % ksysid_lin.scaledown.u( data{i}.u );
+    datasc.y = data{i}.y * diag( model.params.xScaleFactor ); % ksysid_lin.scaledown.y( data{i}.y );
     
-    lin{i}.x = zeros( length( data{i}.t ) , 4 );    % preallocate
-    lin{i}.x(1,:) = [ data{i}.y(1,1) , data{i}.y(1,1) , data{i}.y(1,2) , data{i}.y(1,2) ];  % initial state
-    lin{i}.y = zeros( length( data{i}.t ) , 2 );    % preallocate
-    lin{i}.y(1,:) = data{i}.y(1,:); % initial output
+    lin{i}.x = zeros( length( datasc.t ) , 4 );    % preallocate
+    lin{i}.x(1,:) = [ datasc.y(1,1) , datasc.y(1,1) , datasc.y(1,2) , datasc.y(1,2) ];  % initial state
+    lin{i}.y = zeros( length( datasc.t ) , 2 );    % preallocate
+    lin{i}.y(1,:) = datasc.y(1,:); % initial output
     
     % simulate the system
-    for j = 1 : length( kooplin{i}.t ) - 1
-        lin{i}.x(j+1,:) = ( model.A * lin{i}.x(j,:)' + model.B * data{i}.u(j,:)' )';
-        lin{i}.y(j+1,:) = ( model.C * lin{i}.x(j+1,:)' )';
+    lin{i}.x(2,:) = [ datasc.y(1,1) , datasc.y(2,1) , datasc.y(1,2) , datasc.y(2,2) ];  % next initial state
+    lin{i}.y(2,:) = datasc.y(2,:); % initial output
+    for j = 2 : length( kooplin{i}.t ) - 1
+        x = [ datasc.y(j-1,1) , datasc.y(j,1) , datasc.y(j-1,2) , datasc.y(j,2) ]';  % actual state
+        lin{i}.x(j+1,:) = ( model.A * x + model.B * datasc.u(j,:)' )';
+        lin{i}.y(j+1,:) = lin{i}.x(j+1,[]); %( model.C * lin{i}.x(j+1,:)' )';
     end
     
 %     % scale data back up
-%     kooplin{i}.u = data{i}.u;
-%     kooplin{i}.y = ksysid_lin.scaleup.y( kooplin{i}.y );
+%     lin{i}.y = ksysid_lin.scaleup.y( lin{i}.y );
+    lin{i}.y = lin{i}.y * diag( model.params.xScaleFactor .^(-1) );
     
     % distance error at each timestep
     lin{i}.err = sqrt( sum( ( data{i}.y - lin{i}.y ).^2 , 2 ) );
@@ -99,7 +104,13 @@ for i = 1 : length(data)
     koop{i}.t = data{i}.t;
     koop{i}.u = ksysid.scaledown.u( data{i}.u );
     ykoop0 = ksysid.scaledown.y( data{i}.y(1,:) );
-    [ ~ , koop{i}.y ] = ode45( @(t,y) ksysid.model.F_func( y , koop{i}.u( min( floor(t/Ts)+1 , size(koop{i}.u,1) ) ,:)' ) , koop{i}.t , ykoop0' );
+%     [ ~ , koop{i}.y ] = ode45( @(t,y) ksysid.model.F_func( y , koop{i}.u( floor(t/Ts)+1 ,:)' ) , koop{i}.t , ykoop0' );
+    
+    for j = 1 : length( kooplin{i}.t ) - 1
+        ykoop = ksysid.scaledown.y( data{i}.y(j,:) );   % actual value
+        [ ~ , ykoop_next ] = ode45( @(t,y) ksysid.model.F_func( y , koop{i}.u(j,:)' ) , [0,Ts] , ykoop' );
+        koop{i}.y(j+1,:) = ykoop_next(end,:); % last row of output
+    end
     
     % scale data back up
     koop{i}.u = data{i}.u;
@@ -116,18 +127,23 @@ nnet = cell( size(data) );
 for i = 1 : length(data)
     nnet{i}.t = data{i}.t;
     nnet{i}.u = data{i}.u;
-
-    nnet{i}.y = sim_nnet_model( data{i}.u , data{i}.y(1,:) , data{i}.u(1,:) , data{i}.y(1,:) );
-
+    nnet{i}.y(1,:) = data{i}.y(1,:); % initial condition
+%     nnet{i}.y(2,:) = nnet_model_nio( nnet{i}.u(1,:)' , [0 0 0]' );
+    [ nnet{i}.y(2,:) , ~ , ~ ] = nnet_model( nnet{i}.u(1,:)' , data{i}.y(1,:)' , data{i}.u(1,:)' , data{i}.y(1,:)' );  % narx network
+    for j = 2 : length( kooplin{i}.t ) - 1 
+%        [ nnet{i}.y(j+1,:) , ~ ] = nnet_model_nio( nnet{i}.u(j,:)' , nnet{i}.u(j-1,:)' );    % io network
+       [ nnet{i}.y(j+1,:) , ~ , ~ ] = nnet_model( nnet{i}.u(j,:)' , data{i}.y(j,:)' , data{i}.u(j-1,:)' , data{i}.y(j-1,:)' );  % narx network
+    end
+          
 %     [ ynnet , ~ ] = nnet_model_nio( nnet{i}.u' , [0 0 0]' );
-%     nnet{i}.y = ynnet'; 
+%     nnet{i}.y = ynnet';
     
     % distance error at each timestep
     nnet{i}.err = sqrt( sum( ( data{i}.y - nnet{i}.y ).^2 , 2 ) );
 end
 
 
-%% simulate NLARX model
+%% simulate NLARX model (DID NOT MAKE ONE STEP)
 
 % load in the NLARX model from file
 load('nlarx1.mat');
@@ -153,7 +169,7 @@ for i = 1 : length( data )
     nlarx{i}.err = sqrt( sum( ( data{i}.y - nlarx{i}.y ).^2 , 2 ) );
 end
 
-%% simulate Hamm-Weiner model
+%% simulate Hamm-Weiner model (DID NOT MAKE ONE STEP)
 
 % load in the NLARX model from file
 load('nlhw1.mat');
@@ -168,16 +184,6 @@ for i = 1 : length( data )
     % distance error at each timestep
     nlhw{i}.err = sqrt( sum( ( data{i}.y - nlhw{i}.y ).^2 , 2 ) );
 end
-
-%% create the results output
-
-res = struct;
-res.koop = koop;    % nonlinear koopman
-res.nnet = nnet;    % neural network
-res.nlarx = nlarx; 
-res.nlhw = nlhw;
-res.kooplin = kooplin;  % linear koopman model
-res.lin = lin;          % linear state space model (not lifted)
 
 %% evaluate the total average error for each model
 
@@ -218,42 +224,6 @@ err.lin.std = std( lin_allerr );
 
 
 
-%% plot the error comparison over all validation trials
-
-% Define custom colors:
-cb(1,:) = [69,117,180]/255;
-cb(2,:) = [145,191,219]/255;
-cb(3,:) = [254,224,144]/255;
-cb(4,:) = [252,141,89]/255;
-cb(5,:) = [215,48,39]/255;
-
-% Define more colors
-cb_red = [228,26,28] ./ 255;   % red (for linear state space)
-cb_blue = [55,126,184] ./ 255;  % blue (for linear koopman)
-cb_orange = [255,127,0] ./ 255;   % orange (for nonlinear koopman)
-cb_grey = [124,124,124] ./ 255;
-cb_brown = [166,86,40] ./ 255;
-
-% bar chart showing TOTAL NRMSE across all states and all trials
-figure
-hold on
-bar(1 , err.kooplin.ave * 2.54 , 'FaceColor' , cb_blue );
-bar(2 , err.lin.ave * 2.54 , 'FaceColor' , cb_red );
-bar(3 , err.koop.ave * 2.54 , 'FaceColor' , cb_orange );
-bar(4 , err.nnet.ave * 2.54 , 'FaceColor' , cb_brown );
-bar(5 , err.nlarx.ave * 2.54 , 'FaceColor' , cb_grey );
-bar(6 , err.nlhw.ave * 2.54 , 'FaceColor' , cb_grey );
-xticks(1:6);
-xtickangle(45);
-xticklabels( {'Koopman (Linear)', 'State Space (Linear)' , 'Koopman (Nonlinear)' , 'Neural Network', 'NLARX', 'Ham.-Wiener'} );
-ylabel('Average Error (cm)');
-ylim([0 12]);
-% eb = errorbar(1:numSystems-1, [mean_NRMSE_alltrials(1:3)' * 100, mean_NRMSE_alltrials(5:end)' * 100], [std_NRMSE_alltrials(1:3)' * 100, std_NRMSE_alltrials(5:end)' * 100], '.', 'CapSize', 14, 'LineWidth', 1.5, 'Color', 'k');
-eb = errorbar(1:6, [err.kooplin.ave , err.lin.ave , err.koop.ave , err.nnet.ave , err.nlarx.ave , err.nlhw.ave] * 2.54, [err.kooplin.std , err.lin.std , err.koop.std , err.nnet.std , err.nlarx.std , err.nlhw.std] * 2.54, '.', 'CapSize', 14, 'LineWidth', 1.5, 'Color', 'k');
-box on
-hold off
-
-
 %% plot the error comparison over all validation trials (excluding NLARX and Hamm-Weiner)
 
 % Define custom colors:
@@ -267,8 +237,8 @@ cb(5,:) = [215,48,39]/255;
 cb_red = [228,26,28] ./ 255;   % red (for linear state space)
 cb_blue = [55,126,184] ./ 255;  % blue (for linear koopman)
 cb_orange = [255,127,0] ./ 255;   % orange (for nonlinear koopman)
-cb_grey = [150,150,150] ./ 255;
 cb_brown = [166,86,40] ./ 255;
+cb_grey = [124,124,124] ./ 255;
 
 % bar chart showing TOTAL NRMSE across all states and all trials
 figure
@@ -281,12 +251,9 @@ xticks([0.85 1.15 2 3.85 4.15 5]);
 xtickangle(45);
 xticklabels( {'Koopman' , '(Linear)     ' , 'State Space' , 'Koopman' , '(Nonlinear)   ' , 'Neural Network'} );
 ylabel('Average Error (cm)');
-ylim([0 8]);
+ylim([0 1.5]);
 % eb = errorbar(1:numSystems-1, [mean_NRMSE_alltrials(1:3)' * 100, mean_NRMSE_alltrials(5:end)' * 100], [std_NRMSE_alltrials(1:3)' * 100, std_NRMSE_alltrials(5:end)' * 100], '.', 'CapSize', 14, 'LineWidth', 1.5, 'Color', 'k');
 eb = errorbar([1 2 4 5], [err.kooplin.ave , err.lin.ave , err.koop.ave , err.nnet.ave] * 2.54, [err.kooplin.std , err.lin.std , err.koop.std , err.nnet.std] * 2.54, '.', 'CapSize', 14, 'LineWidth', 1.5, 'Color', 'k');
 box on;
 set(gca, 'YGrid', 'on', 'XGrid', 'off');
 hold off
-
-
-

@@ -378,7 +378,8 @@ classdef Arm
             
             % set the output, depending on what the output_type is.
             if strcmp( obj.output_type , 'markers' )
-                y = zeros( size(x,1) , 2 * ( obj.params.Nlinks ) + 2 );
+%                 y = zeros( size(x,1) , 2 * ( obj.params.Nlinks ) + 2 );
+                y = zeros( size(x,1) , 2 * ( obj.params.Nlinks ) );
                 for i = 1 : size(x,1)
                     alpha = x( i , 1 : obj.params.Nlinks );
 %                     theta = obj.alpha2theta( alpha );

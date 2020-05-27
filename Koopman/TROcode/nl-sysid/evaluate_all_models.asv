@@ -172,12 +172,12 @@ end
 %% create the results output
 
 res = struct;
-res.koop = koop;    % nonlinear koopman
-res.nnet = nnet;    % neural network
-res.nlarx = nlarx; 
+res.koop = koop;    % nonlinear koopm
+res.nnet = nnet;
+res.nlarx = nlarx;
 res.nlhw = nlhw;
-res.kooplin = kooplin;  % linear koopman model
-res.lin = lin;          % linear state space model (not lifted)
+res.kooplin = kooplin;
+res.lin = lin;
 
 %% evaluate the total average error for each model
 

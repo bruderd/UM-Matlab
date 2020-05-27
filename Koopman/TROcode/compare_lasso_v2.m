@@ -90,8 +90,8 @@ dens_noproj = zeros( size(lasso_params) );
 rank_proj = zeros( size(lasso_params) );
 rank_noproj = zeros( size(lasso_params) );
 for i = 1 : length( lasso_params )
-    dens_proj(i) = nnz( ksysid_proj.candidates{i}.A( find( abs( ksysid_proj.candidates{i}.A ) > 1e-13 ) ) ) / numel( ksysid_proj.candidates{i}.A );
-    dens_noproj(i) = nnz( ksysid_noproj.candidates{i}.A( find( abs( ksysid_noproj.candidates{i}.A ) > 1e-13 ) ) ) / numel( ksysid_noproj.candidates{i}.A );
+    dens_proj(i) = nnz( ksysid_proj.candidates{i}.A( find( abs( ksysid_proj.candidates{i}.A ) > 1e-12 ) ) ) / numel( ksysid_proj.candidates{i}.A );
+    dens_noproj(i) = nnz( ksysid_noproj.candidates{i}.A( find( abs( ksysid_noproj.candidates{i}.A ) > 1e-12 ) ) ) / numel( ksysid_noproj.candidates{i}.A );
     
     rank_proj(i) = rank( ksysid_proj.candidates{i}.A ); % rank of A matrix
     rank_noproj(i) = rank( ksysid_noproj.candidates{i}.A ); % rank of A matrix
@@ -104,8 +104,8 @@ end
 % dens_noproj_smooth = movmean( dens_noproj , 5 , 'Endpoints' , 'shrink' );
 
 % lowpass filter
-dens_proj_smooth = lowpass( dens_proj , 0.1 );
-dens_noproj_smooth = lowpass( dens_noproj , 0.1 );
+dens_proj_smooth = lowpass( dens_proj , 0.25 );
+dens_noproj_smooth = lowpass( dens_noproj , 0.25 );
 
 % lowpass filter
 rank_proj_smooth = lowpass( rank_proj , 0.1 );
@@ -128,11 +128,12 @@ set(fig,'defaultAxesColorOrder',[left_color; right_color]);
 
 hold on;
 yyaxis left;
-% d_noproj = plot( lasso_params  , dens_noproj_smooth(end:-1:1) );
-% d_proj = plot( lasso_params  , dens_proj_smooth(end:-1:1) );
-d_noproj = stairs( lasso_params(offset:end)  , rank_noproj_whole(end-offset+1:-1:1) );
-d_proj = stairs( lasso_params(offset:end)  , rank_proj_whole(end-offset+1:-1:1) , '-.' );
-ylim([0,40]);
+d_noproj = plot( lasso_params  , dens_noproj_smooth(end:-1:1) );
+d_proj = plot( lasso_params  , dens_proj_smooth(end:-1:1) );
+% d_noproj = stairs( lasso_params(offset:end)  , rank_noproj_whole(end-offset+1:-1:1) );
+% d_proj = stairs( lasso_params(offset:end)  , rank_proj_whole(end-offset+1:-1:1) , '-.' );
+ylim([0,1]);
+% ylim([0,40]);
 ylabel('Koopman Matrix Rank')
 
 yyaxis right;
