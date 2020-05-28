@@ -4,10 +4,14 @@ function [ err , res ] = evaluate_all_models( data )
 
 % If data argument not supplied, prompt uset to load data from file
 if ~exist('data', 'var')
-    % Prompt user to identify data file
-    [data_file,data_path] = uigetfile('..\dataFiles\*.mat');
-    all_data = load([data_path, data_file]); % must be a .mat file
-    data = all_data.val;    % isolate just the validation data trials
+%     % Prompt user to identify data file
+%     [data_file,data_path] = uigetfile('..\dataFiles\*.mat');
+%     all_data = load([data_path, data_file]); % must be a .mat file
+%     data = all_data.val;    % isolate just the validation data trials
+
+    % default data
+    temp = load('mean_noisedata.mat');
+    data = temp.ndata;
 end
 
 
@@ -53,6 +57,9 @@ for i = 1 : length(data)
     
     % distance error at each timestep
     kooplin{i}.err = sqrt( sum( ( data{i}.y - kooplin{i}.y ).^2 , 2 ) );
+    kooplin{i}.err_ave = sum( kooplin{i}.err ) / length(kooplin{i}.err);
+    kooplin{i}.err_cm = in2cm( kooplin{i}.err );
+    kooplin{i}.err_ave_cm = in2cm( kooplin{i}.err_ave );
 end
 
 %% simulate linear state space model
@@ -86,6 +93,9 @@ for i = 1 : length(data)
     
     % distance error at each timestep
     lin{i}.err = sqrt( sum( ( data{i}.y - lin{i}.y ).^2 , 2 ) );
+    lin{i}.err_ave = sum( lin{i}.err ) / length(lin{i}.err);
+    lin{i}.err_cm = in2cm( lin{i}.err );
+    lin{i}.err_ave_cm = in2cm( lin{i}.err_ave );
 end
 
 %% simulate nonlinear Koopman model
@@ -107,6 +117,9 @@ for i = 1 : length(data)
     
     % distance error at each timestep
     koop{i}.err = sqrt( sum( ( data{i}.y - koop{i}.y ).^2 , 2 ) );
+    koop{i}.err_ave = sum( koop{i}.err ) / length(koop{i}.err);
+    koop{i}.err_cm = in2cm( koop{i}.err );
+    koop{i}.err_ave_cm = in2cm( koop{i}.err_ave );
 end
 
 
@@ -124,6 +137,9 @@ for i = 1 : length(data)
     
     % distance error at each timestep
     nnet{i}.err = sqrt( sum( ( data{i}.y - nnet{i}.y ).^2 , 2 ) );
+    nnet{i}.err_ave = sum( nnet{i}.err ) / length(nnet{i}.err);
+    nnet{i}.err_cm = in2cm( nnet{i}.err );
+    nnet{i}.err_ave_cm = in2cm( nnet{i}.err_ave );
 end
 
 
@@ -172,6 +188,7 @@ end
 %% create the results output
 
 res = struct;
+res.real = data;    % actual system
 res.koop = koop;    % nonlinear koopman
 res.nnet = nnet;    % neural network
 res.nlarx = nlarx; 
