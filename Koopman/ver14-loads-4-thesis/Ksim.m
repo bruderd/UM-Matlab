@@ -115,7 +115,7 @@ classdef Ksim
 %                 results.UNL = [ zeros( 1 , obj.mpc.params.m ) ]; 
 %                 results.E = [ zeros( 1 , obj.mpc.params.N ) ];
             else
-                results.Z = [ obj.mpc.lift.full( zeta0' )' ]; % lifted states
+                results.Z = [ obj.mpc.lift.econ_full( zeta0' )' ]; % lifted states
             end
             
             k = 1;
@@ -179,11 +179,11 @@ classdef Ksim
                 
                 % get optimal input over horizon
                 if isfield( obj.mpc.params , 'NLinput' )
-                    [ E , z ] = obj.mpc.get_mpcInput_unl( current , refhor , shapehor );
+                    [ E , z ] = obj.mpc.get_mpcInput_unl( current , refhor );
                     NU = E * obj.mpc.model.Beta';   % convert to nu
                     u_k_sc = obj.mpc.params.NLinput( [ NU(2,:) , current.y ]' )';
                 else
-                    [ U , z ] = obj.mpc.get_mpcInput( current , refhor , shapehor );
+                    [ U , z ] = obj.mpc.get_mpcInput( current , refhor );
                     
                     % if a solution was not found, break out of while loop
                     if any( isnan(U) )
@@ -209,7 +209,7 @@ classdef Ksim
                 
                 % simulate the system over one time-step
                 x_k = results.X( end , : )';
-                x_kp1 = obj.sys.simulate_Ts( x_k , u_k );
+                x_kp1 = obj.sys.simulate_Ts( x_k , u_k , [0 0]' );
                 y_kp1 = obj.sys.get_y( x_kp1' );
 %                 y_kp1 = obj.sys.get_shape_coeffs( x_kp1(1:3)' , 3 );    %NEED TO UNDO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 

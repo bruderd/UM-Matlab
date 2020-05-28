@@ -75,7 +75,7 @@ classdef Kmpc
             if isfield( obj.params , 'NLinput' ) && ~obj.bilinear
                 obj = obj.get_costMatrices_unl;
                 obj = obj.get_constraintMatrices_unl;
-            elseif obj.bilinear
+            elseif strcmp( sysid_class.model_type , 'bilinear' )
                 obj = obj.get_costMatrices_bilinear;
                 obj = obj.get_constraintMatrices_bilinear;
             else
@@ -206,8 +206,8 @@ classdef Kmpc
                 else
                     input_bounds_sc = obj.scaledown.u( obj.input_bounds' )';   % scaled down the input bounds
                 end
-                cbounds_i = sym( [ -input_bounds_sc(:,1) ; input_bounds_sc(:,2) ] ); % [ -umin ; umax ]
-                cbounds = sym( zeros( num * (Np+1) , 1) );    % initialization
+                cbounds_i = [ -input_bounds_sc(:,1); input_bounds_sc(:,2) ]; % [ -umin ; umax ]
+                cbounds = zeros( num * (Np+1) , 1);    % initialization
                 cbounds(1 : num*Np) = kron( ones( Np , 1 ) , cbounds_i );     % fill in nonzeros
                 c = [ c ; cbounds ];    % append vector
             end
@@ -231,7 +231,7 @@ classdef Kmpc
                 else
                     slope_lim = obj.input_slopeConst * mean( params.scale.u_factor );  % scale down the 2nd deriv. limit
                 end
-                cslope_top = sym( slope_lim * ones( params.m * (Np-1) , 1 ) );
+                cslope_top = slope_lim * ones( params.m * (Np-1) , 1 );
                 cslope = [ cslope_top ; cslope_top ];
                 c = [ c ; cslope ];     % append vector
             end
@@ -252,7 +252,7 @@ classdef Kmpc
                 
                 % c: input_smoothConst
                 smooth_lim = params.Ts^2 * obj.input_smoothConst * mean( params.scale.u_factor );  % scale down the 2nd deriv. limit
-                csmooth = sym( smooth_lim * ones( size(Fsmooth,1) ,1) );
+                csmooth = smooth_lim * ones( size(Fsmooth,1) ,1);
                 c = [ c ; csmooth ];
             end
             
@@ -272,7 +272,7 @@ classdef Kmpc
                 
                 % c: state_bounds
                 state_bounds_sc = obj.scaledown.y( obj.state_bounds' )';    % scaled down state bounds
-                csbounds_i = sym( [ -state_bounds_sc(:,1) ; state_bounds_sc(:,2) ] ); % [ -ymin ; ymax ]
+                csbounds_i = [ -state_bounds_sc(:,1) ; state_bounds_sc(:,2) ]; % [ -ymin ; ymax ]
                 csbounds = kron( ones( Np+1 , 1 ) , csbounds_i );     % fill in nonzeros
                 c = [ c ; csbounds ];    % append vector
             end
@@ -307,7 +307,7 @@ classdef Kmpc
             zeta = zeta_temp( end , : )';   % want most recent points
             
             % lift zeta
-            z = obj.lift.full( zeta );
+            z = obj.lift.econ_full( zeta );
             
             % check that reference trajectory has correct dimensions
             if size( ref , 2 ) ~= size( obj.projmtx , 1 )
@@ -324,7 +324,7 @@ classdef Kmpc
             Yr = reshape( ref' , [ ( Np + 1 ) * size(ref,2) , 1 ] );
             
             % get the RHS of the inequality constraints
-            c = obj.set_constRHS( shape_bounds );
+            c = obj.constraints.c;
             
             % setup matrices for gurobi solver
             H = obj.cost.H;      % removed factor of 2 on 12/10/2018
@@ -353,7 +353,7 @@ classdef Kmpc
         end
         
         % get_mpcInput_noIC: Solve the mpc problem to get the input over entire horizon
-        function [ U , z ]= get_mpcInput_noIC( obj , traj , ref , shape_bounds )
+        function [ U , z ]= get_mpcInput_noIC( obj , traj , ref )
             %get_mpcInput: Soves the mpc problem to get the input over
             % entire horizon.
             %   traj - struct with fields y , u. Contains the measured

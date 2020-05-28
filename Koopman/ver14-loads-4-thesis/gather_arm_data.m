@@ -71,7 +71,7 @@ end
 
 %% put data together into a single struct
 
-file_name = 'triple-pend';
+file_name = 'triple-pend-angles';
 data4sysid = Data.get_data4sysid( train , val , true , file_name );
 
 

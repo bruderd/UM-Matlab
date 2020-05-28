@@ -12,7 +12,7 @@ saveon = false;  % decides whether to save the class or not
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm-markers_3-mods_1-links_0p5-Ts';
+params.sysName = 'arm-angles-linear_3-mods_1-links_0p5-Ts';
 
 params.Nmods = 3;   % number of modules (actuated sections)
 params.nlinks = 1;      % number of links in each module
@@ -47,7 +47,7 @@ params.umax = 4*pi/8; % maximum input value (scalar for all modules, vector for 
 
 %% Create class for this system
 
-Arm = Arm( params , 'output_type' , 'markers');   % choice is 'angles' or 'markers' or 'endeff' or 'shape'
+Arm = Arm( params , 'output_type' , 'angles');   % choice is 'angles' or 'markers' or 'endeff' or 'shape'
 
 % save this system for later use
 dirname = [ 'systems' , filesep , params.sysName ];

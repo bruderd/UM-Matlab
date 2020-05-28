@@ -726,13 +726,15 @@ classdef Arm
             %   w_k - load condition over next time step
             
             % if no timestep is provided use the default stored in params
-            if nargin < 3
-                tstep = [ 0 , obj.params.Ts ];
+            if nargin < 5
+                tspan = [ 0 , obj.params.Ts ];
+            else
+                tspan = [ 0 , tstep ];
             end
             
             % simulate system
             options = odeset( 'Mass' , @(t,x) obj.vf_massMatrix( t , x , u_k , w_k ) );
-            [ t , Alpha ] = ode45( @(t,x) obj.vf_RHS( t , x , u_k , w_k ) , tstep , x_k , options );    % with mass matrix, variable time step
+            [ t , Alpha ] = ode45( @(t,x) obj.vf_RHS( t , x , u_k , w_k ) , tspan , x_k , options );    % with mass matrix, variable time step
             
             % set output, the state after one time step
             x_kp1 = Alpha(end,:)';
