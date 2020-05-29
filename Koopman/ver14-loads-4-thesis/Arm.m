@@ -362,8 +362,7 @@ classdef Arm
         
         % get_y (extracts the measured output from the full state)
         function y = get_y( obj , x )
-            %get_y: Gets the output (in this case marker positions
-            % vectorized) from the state (in this case Alpha)
+            %get_y: Gets the output from the state (in this case Alpha)
             %   x - array containing one or more state values. Each row
             %    should be a state.
             %   y - array containing the corresponding output values. Each

@@ -307,9 +307,6 @@ classdef Kmpc
             %    states and inputs for the past ndelay+1 timesteps.
             %   ref - matrix containing the reference trajectory for the
             %    system over the horizon (one row per timestep).
-            %   shape_bounds - [min_shape_parameters , max_shape_parameters] 
-            %    This is only requred if system has shape constraints 
-            %   (note: size is num of shape observables x 2)
             %   z - the lifted state at the current timestep
             
             % shorthand variable names
@@ -840,11 +837,9 @@ classdef Kmpc
             b = [b ; btack];
             
             % solve the MPC problem
-            Sve = fmincon;
-            Y = 
-            U
-%             Uvec = quadprog_gurobi( H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)
-            Uvec = quadprog( 2*H , f , A , b );     % solve using matlab
+            Svec = fmincon();     % solve using fmincon
+            Yvec = Svec( 1 : obj.params.n * Np );   % vectorized outputs over horizon
+            Uvec = Svec( obj.params.n * Np + 1 : end ); % vectorize inputs over horizon
             
             % reshape the output so each input will have one row (first row equals current input)
             U = reshape( Uvec , [ obj.params.m , Np ] )';

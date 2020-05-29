@@ -28,7 +28,7 @@ classdef Kmpc
     
     methods
         % CLASS CONSTRUCTOR
-        function obj = Kmpc( sysid_class , varargin )
+        function obj = Kmpc_old( sysid_class , varargin )
             %mpc: Construct an instance of this class
             %   sysid_class - sysid class object with a model and params
             %    properties

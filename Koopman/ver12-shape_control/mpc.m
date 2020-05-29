@@ -1075,7 +1075,7 @@ classdef mpc
             obj.constraints.M = E * cost.A;
         end
         
-        % get_costD_bilinear: Constructs the mpc state dependent D matrix
+        % get_constraintL_bilinear: Constructs the mpc state dependent D matrix
         function L = get_constraintL_bilinear( obj , x )
             B = obj.get_costB_bilinear( x );
             F = obj.constraints.F;
