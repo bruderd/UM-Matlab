@@ -27,7 +27,7 @@ classdef Arm
             %parse_args: Parses the Name, Value pairs in varargin of the
             % constructor, and assigns property values
             for idx = 1:2:length(varargin)
-                obj.(varargin{idx}) = varargin{idx+1} ;
+                obj.(varargin{idx}) = varargin{idx+1};
             end
         end
         

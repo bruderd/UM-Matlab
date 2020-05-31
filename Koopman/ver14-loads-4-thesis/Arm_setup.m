@@ -7,12 +7,12 @@
 %   -Every module is identical (same number of joints/links)
 %
 
-saveon = false;  % decides whether to save the class or not
+saveon = true;  % decides whether to save the class or not
 
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm-angles_2-mods_1-links_0p5-Ts';
+params.sysName = 'arm-angles_2-mods_1-links_20hz';
 
 params.Nmods = 2;   % number of modules (actuated sections)
 params.nlinks = 1;      % number of links in each module
@@ -50,14 +50,15 @@ params.umax = 4*pi/8; % maximum input value (scalar for all modules, vector for 
 
 Arm = Arm( params , 'output_type' , 'angles');   % choice is 'angles' or 'markers' or 'endeff' or 'shape'
 
-% save this system for later use
-dirname = [ 'systems' , filesep , params.sysName ];
-unique_dirname = auto_rename( dirname , '(0)' );
-Arm.params.sysName = erase( unique_dirname , ['systems', filesep] ) ;    % modify the system name parameter    
-
-% create directory for the system, and save the class
-mkdir( unique_dirname );
-mkdir( [ unique_dirname , filesep , 'simulations' ] );  % make simulation subfolder
-fname = [ unique_dirname , filesep , params.sysName, '.mat' ];
-save( fname , 'Arm' );
-
+if saveon
+    % save this system for later use
+    dirname = [ 'systems' , filesep , params.sysName ];
+    unique_dirname = auto_rename( dirname , '(0)' );
+    Arm.params.sysName = erase( unique_dirname , ['systems', filesep] ) ;    % modify the system name parameter
+    
+    % create directory for the system, and save the class
+    mkdir( unique_dirname );
+    mkdir( [ unique_dirname , filesep , 'simulations' ] );  % make simulation subfolder
+    fname = [ unique_dirname , filesep , params.sysName, '.mat' ];
+    save( fname , 'Arm' );
+end

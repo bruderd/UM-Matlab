@@ -357,8 +357,8 @@ classdef Kmpc
             b = [b ; btack];
             
             % solve the MPC problem
-            Uvec = quadprog_gurobi( H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)
-%             Uvec = quadprog( 2*H , f , A , b );     % solve using matlab
+%             Uvec = quadprog_gurobi( H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)
+            Uvec = quadprog( 2*H , f , A , b );     % solve using matlab
             
             % reshape the output so each input will have one row (first row equals current input)
             U = reshape( Uvec , [ obj.params.m , Np ] )';
@@ -944,29 +944,43 @@ classdef Kmpc
             hor = size( zetapast , 1 ); % length of past horizon with delays
             
             % construct the RHS regression matrix ( LHS = RHS * [1;w] )
-            RHS = zeros( obj.params.nzeta * obj.params.m * (hor-1) , obj.params.nw+1 );
+            RHS = zeros( obj.params.nzeta * (hor-1) , obj.params.nw+1 );
+%             RHS = zeros( obj.params.nzeta * obj.params.m * (hor-1) , obj.params.nw+1 );
             for i = 1 : hor-1
                 gy_i = obj.lift.econ_full( zetapast(i,:)' );    % should be zeta, but okay with no delays
                 Omega_i = kron( eye(obj.params.nw+1) , gy_i );
                  
-                RHS_i = zeros( obj.params.nzeta * obj.params.m , obj.params.nw+1 );
+                RHS_i_CB = zeros( obj.params.nzeta , obj.params.nw+1 );
                 for j = 1 : obj.params.m
                     CA = obj.model.A( 1:obj.params.nzeta , : );
                     B_col_range = (j-1)*obj.params.N*(obj.params.nw+1)+1 : j*obj.params.N*(obj.params.nw+1);
                     CB = obj.model.B( 1:obj.params.nzeta , B_col_range );
-                    RHS_ij = CA * Omega_i + CB * Omega_i * upast(i,j);
-                    ind1 = (j-1)*obj.params.nzeta + 1;
-                    ind2 = j*obj.params.nzeta;
-                    RHS_i( ind1:ind2 , : ) = RHS_ij; 
+                    RHS_i_CB = RHS_i_CB + CB * Omega_i * upast(i,j);
                 end
-                ind1 = (obj.params.nzeta * obj.params.m) * (i-1) + 1;
-                ind2 = (obj.params.nzeta * obj.params.m) * i;
+                RHS_i = CA * Omega_i + RHS_i_CB;
+                ind1 = obj.params.nzeta * (i-1) + 1;
+                ind2 = obj.params.nzeta * i;
                 RHS( ind1:ind2 , :) = RHS_i;
+               
+%                 RHS_i = zeros( obj.params.nzeta * obj.params.m , obj.params.nw+1 );
+%                 for j = 1 : obj.params.m
+%                     CA = obj.model.A( 1:obj.params.nzeta , : );
+%                     B_col_range = (j-1)*obj.params.N*(obj.params.nw+1)+1 : j*obj.params.N*(obj.params.nw+1);
+%                     CB = obj.model.B( 1:obj.params.nzeta , B_col_range );
+%                     RHS_ij = CA * Omega_i + CB * Omega_i * upast(i,j);
+%                     ind1 = (j-1)*obj.params.nzeta + 1;
+%                     ind2 = j*obj.params.nzeta;
+%                     RHS_i( ind1:ind2 , : ) = RHS_ij; 
+%                 end
+%                 ind1 = (obj.params.nzeta * obj.params.m) * (i-1) + 1;
+%                 ind2 = (obj.params.nzeta * obj.params.m) * i;
+%                 RHS( ind1:ind2 , :) = RHS_i;
             end
             
             % construct the LHS regression matrix ( LHS = RHS * [1;w] )
-            zetapast_rep = repelem( zetapast , obj.params.m , 1 );  % duplicate each row of zetapast m times
-            LHS = reshape( zetapast_rep( obj.params.m+1:end , 1:obj.params.nzeta )' , [ obj.params.nzeta * (hor-1) * obj.params.m , 1 ] ); 
+            LHS = reshape( zetapast( 2:end , 1:obj.params.nzeta )' , [ obj.params.nzeta * (hor-1) , 1 ] );
+%             zetapast_rep = repelem( zetapast , obj.params.m , 1 );  % duplicate each row of zetapast m times
+%             LHS = reshape( zetapast_rep( obj.params.m+1:end , 1:obj.params.nzeta )' , [ obj.params.nzeta * (hor-1) * obj.params.m , 1 ] ); 
                  
             % cost function matrices
             Clsqlin = RHS;

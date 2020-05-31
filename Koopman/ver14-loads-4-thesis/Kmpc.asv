@@ -357,8 +357,8 @@ classdef Kmpc
             b = [b ; btack];
             
             % solve the MPC problem
-            Uvec = quadprog_gurobi( H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)
-%             Uvec = quadprog( 2*H , f , A , b );     % solve using matlab
+%             Uvec = quadprog_gurobi( H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)
+            Uvec = quadprog( 2*H , f , A , b );     % solve using matlab
             
             % reshape the output so each input will have one row (first row equals current input)
             U = reshape( Uvec , [ obj.params.m , Np ] )';
@@ -746,7 +746,11 @@ classdef Kmpc
             zeta = zeta_temp( end , : )';   % want most recent points
             
             % lift zeta
-            z = obj.lift.econ_full( zeta );
+            if obj.loaded
+                z = obj.lift.econ_full_loaded( zeta , traj.what(end,:)' );
+            else
+                z = obj.lift.econ_full( zeta );
+            end
             zrow = z';
             
             % check that reference trajectory has correct dimensions
@@ -920,7 +924,7 @@ classdef Kmpc
         
         % estimate_load_bilinear (infer the load based on dynamics)
         function [ what , resnorm ] = estimate_load_bilinear( obj , ypast , upast , whatpast )
-            % estimate_load_linear: Estimate the load given measurements over a 
+            % estimate_load_bilinear: Estimate the load given measurements over a 
             % past horizon.
             %   ypast - [hor x n], output measurements over previous hor steps
             %   upast - [hor x m], inputs over previous hor steps
@@ -939,54 +943,49 @@ classdef Kmpc
             [ ~ , zetapast ] = obj.get_zeta( traj );
             hor = size( zetapast , 1 ); % length of past horizon with delays
             
-            % stack Omega and u vertically
-%             Omega = zeros( obj.params.N * (obj.params.nw+1) * (hor-1) , obj.params.nw+1 );
-            RHS = zeros( obj.params.nzeta * );
+            % construct the RHS regression matrix ( LHS = RHS * [1;w] )
+            RHS = zeros( obj.params.nzeta * (hor-1) , obj.params.nw+1 );
+%             RHS = zeros( obj.params.nzeta * obj.params.m * (hor-1) , obj.params.nw+1 );
             for i = 1 : hor-1
                 gy_i = obj.lift.econ_full( zetapast(i,:)' );    % should be zeta, but okay with no delays
                 Omega_i = kron( eye(obj.params.nw+1) , gy_i );
-%                 ind1 = (obj.params.N*(obj.params.nw+1))*(i-1)+1;
-%                 ind2 = (obj.params.N*(obj.params.nw+1))*i;
-%                 Omega( ind1 : ind2 , : ) = Omega_i; 
-                
-                % 
-                RHS_i = zeros( obj.params.nzeta * obj.params.m , obj.params.nw+1 );
+                 
+                RHS_i_CB = zeros( obj.params.nzeta , obj.params.nw+1 );
                 for j = 1 : obj.params.m
                     CA = obj.model.A( 1:obj.params.nzeta , : );
                     B_col_range = (j-1)*obj.params.N*(obj.params.nw+1)+1 : j*obj.params.N*(obj.params.nw+1);
                     CB = obj.model.B( 1:obj.params.nzeta , B_col_range );
-                    RHS_ij = CA * Omega_i + CB * Omega_i * upast(i,j);
-                    ind1 = (j-1)*obj.params.nzeta + 1;
-                    ind2 = j*obj.params.nzeta;
-                    RHS_i( ind1:ind2 , : ) = RHS_ij; 
+                    RHS_i_CB = RHS_i_CB + CB * Omega_i * upast(i,j);
                 end
-                ind1 = (obj.params.nzeta * obj.params.m) * (i-1) + 1;
-                ind2 = (obj.params.nzeta * obj.params.m) * i;
+                RHS_i = CA * Omega_i + RHS_i_CB;
+                ind1 = obj.params.nzeta * (i-1) + 1;
+                ind2 = obj.params.nzeta * i;
                 RHS( ind1:ind2 , :) = RHS_i;
+               
+%                 RHS_i = zeros( obj.params.nzeta * obj.params.m , obj.params.nw+1 );
+%                 for j = 1 : obj.params.m
+%                     CA = obj.model.A( 1:obj.params.nzeta , : );
+%                     B_col_range = (j-1)*obj.params.N*(obj.params.nw+1)+1 : j*obj.params.N*(obj.params.nw+1);
+%                     CB = obj.model.B( 1:obj.params.nzeta , B_col_range );
+%                     RHS_ij = CA * Omega_i + CB * Omega_i * upast(i,j);
+%                     ind1 = (j-1)*obj.params.nzeta + 1;
+%                     ind2 = j*obj.params.nzeta;
+%                     RHS_i( ind1:ind2 , : ) = RHS_ij; 
+%                 end
+%                 ind1 = (obj.params.nzeta * obj.params.m) * (i-1) + 1;
+%                 ind2 = (obj.params.nzeta * obj.params.m) * i;
+%                 RHS( ind1:ind2 , :) = RHS_i;
             end
-            U = reshape( upast(obj.params.nd+1:end-1,:)' , [ obj.params.m * (hor-1) , 1 ] );    % NOT NEEDED?
             
-            % duplicate each row of zetapast m times
-            zetapast_rep = repelem( zetapast , obj.params.m , 1 );
-            Zeta = reshape( zetapast_rep( obj.params.m+1:end , 1:obj.params.nzeta )' , [ obj.params.nzeta * (hor-1) * obj.params.m , 1 ] );
-            
-            for i = 1 : hor-1
-                for j = 1 : obj.params.m
-                    CA = obj.model.A( 1:obj.params.nzeta , : );
-                    B_col_range = (j-1)*obj.params.N*(obj.params.nw+1)+1 : j*obj.params.N*(obj.params.nw+1);
-                    CB = obj.model.B( 1:obj.params.nzeta , B_col_range );
-                    RHS = CA * Omega_i + CB * Omega_i * upast(i,j);
-                end
-            end
+            % construct the LHS regression matrix ( LHS = RHS * [1;w] )
+            LHS = reshape( zetapast_( obj.params.m+1:end , 1:obj.params.nzeta )' , [ obj.params.nzeta * (hor-1) * obj.params.m , 1 ] );
+            zetapast( 2:end , : );
+%             zetapast_rep = repelem( zetapast , obj.params.m , 1 );  % duplicate each row of zetapast m times
+%             LHS = reshape( zetapast_rep( obj.params.m+1:end , 1:obj.params.nzeta )' , [ obj.params.nzeta * (hor-1) * obj.params.m , 1 ] ); 
                  
             % cost function matrices
-            dlsqlin = Zeta;
-            
-            % cost function matrices
-            CAstack = kron(eye(hor-1) , obj.model.A( 1:obj.params.nzeta , : ) );    % accounts for delays
-            CBstack = kron(eye(hor-1) , obj.model.B( 1:obj.params.nzeta , : ) );    % accounts for delays
-            Clsqlin = CAstack * Omega;
-            dlsqlin = Zeta - CBstack * U;
+            Clsqlin = RHS;
+            dlsqlin = LHS;
             
             % optional: make sure new load estimate is close to last one
             if nargin < 4
