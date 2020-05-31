@@ -44,35 +44,68 @@ classdef Ksim
         %% Simulate the system with mpc controller
         
         % run_trial_mpc: Runs a simulation of system under linear mpc controller
-        function results = run_trial_mpc( obj , ref , x0 , u0)
+        function results = run_trial_mpc( obj , ref , x0 , u0 , load )
             %run_trial: Runs a simulation of system under mpc controller.
             %   Tries to follow the trajectory in ref and impose the
             %   shape constraints in shape_bounds.
             %   Assume ref and shape_bounds have same sampling frequency as
             %   sytem, and that they are already scaled to be consistent 
             %   with the lifted model.
-            %   ref - struct containing reference trajectory with fields:
-            %       t - vector of timesteps
-            %       y - each row is a desired point at the corresponding timestep
+            %   ref - each row is a desired point at the corresponding timestep
             %   x0 - [1,nx] initial condtion
             %   u0 - [1,nu] initial input
+            %   load - [1,nw] or [total steps,nw] load condition for trial
             
             % shorthand
             nd = obj.mpc.params.nd;
             Np = obj.mpc.horizon;
             
-            % set value of initial conditions to zero if none provided
-            if nargin < 3
+            % set initial state value
+            if isempty(x0)
                 x0 = zeros( nd+1 , obj.sys.params.nx );
-                u0 = zeros( nd+1 , obj.sys.params.nu );
-            elseif nargin < 4
-                x0 = kron( ones( nd+1 , 1 ) , x0 );
-                u0 = zeros( nd+1 , obj.sys.params.nu );
             else
                 x0 = kron( ones( nd+1 , 1 ) , x0 );
+            end
+            
+            % set initial state value
+            if isempty(u0)
+                u0 = zeros( nd+1 , obj.sys.params.nu );
+            else
                 u0 = kron( ones( nd+1 , 1 ) , u0 );
             end
-            y0 = obj.sys.get_y( x0 );
+            y0 = obj.sys.get_y( x0 );   % initial output
+            
+            % set value for loading condition
+            if obj.mpc.loaded
+                if nargin < 5
+                    error('Missing argument: The model expects a load condition but none was provided');
+                else
+                    if size( load , 2 ) ~= obj.sys.params.nw
+                        error(['Load argument should have ' , obj.sys.params.nw , ' columns, not ' , size( load , 2) ]);
+                    end
+                    if isempty(load)
+                        w = zeros( size(ref,1) , obj.sys.params.nw );
+                    elseif size( load , 1 ) == 1    % assume constant load
+                        w = kron( ones( size(ref,1) , 1 ) , load );
+                    elseif size( load , 1 ) ~= size( ref , 1 )
+                        error('Load argument must have 1 or the same number of rows as ref argument');
+                    else
+                        w = load;
+                    end
+                end
+            end
+%             % set value of initial conditions to zero if none provided
+%             if nargin < 3
+%                 x0 = zeros( nd+1 , obj.sys.params.nx );
+%                 u0 = zeros( nd+1 , obj.sys.params.nu );
+%             elseif nargin < 4
+%                 x0 = kron( ones( nd+1 , 1 ) , x0 );
+%                 u0 = zeros( nd+1 , obj.sys.params.nu );
+%             else
+%                 x0 = kron( ones( nd+1 , 1 ) , x0 );
+%                 u0 = kron( ones( nd+1 , 1 ) , u0 );
+%             end
+%             y0 = obj.sys.get_y( x0 );
             
             % resample and scale the reference trajectory (TODO: FIX THIS AND THE REFERENCE TRAJECTORY FORMAT)
 %             ref_Ts = obj.resample_ref( ref );
@@ -80,7 +113,8 @@ classdef Ksim
             ref_sc = obj.scaledown.ref( ref );
             
             % set initial condition
-            initial.y = obj.scaledown.y(y0); initial.u = obj.scaledown.u(u0);
+            initial.y = obj.scaledown.y(y0);
+            initial.u = obj.scaledown.u(u0);
             [ initial , zeta0 ] = obj.mpc.get_zeta( initial );    % LINE NOT NEEDED
             
             % initialize results struct
@@ -91,7 +125,11 @@ classdef Ksim
             results.K = [ 0 ];
             results.R = [ ref(1,:) ];
             results.X = [ x0( end , : ) ];
-            results.Z = [ obj.mpc.lift.econ_full( zeta0' )' ]; % lifted states
+            results.Z = []; %[ obj.mpc.lift.econ_full( zeta0' )' ]; % lifted states
+            if obj.mpc.loaded
+                results.W = w;  % actual load condition over entire horizon
+                results.What = [ zeros( 1 , size(w,2) ) ];    % estimated load condition
+            end
             
             k = 1;
             while k < size( ref_sc , 1 )
@@ -102,7 +140,7 @@ classdef Ksim
                 % get current state and input with delays
                 if k == 1
                     current.y = obj.scaledown.y( y0 );   
-                    current.u = obj.scaledown.u( u0 );  
+                    current.u = obj.scaledown.u( u0 ); 
                 elseif k < nd + 1
                     y = [ y0( k : end-1 , : ) ; results.Y ];
                     u = [ u0( k : end-1 , : ) ; results.U ];
@@ -113,6 +151,31 @@ classdef Ksim
                     u = results.U( end - nd : end , : );
                     current.y = obj.scaledown.y( y ); 
                     current.u = obj.scaledown.u( u ); 
+                end
+                
+                % get current estimate of the load condtion (if applicable)
+                if obj.mpc.loaded
+                    if k < nd + 2
+                        ypast = kron( ones(nd+2,1) , obj.scaledown.y( y0 ) );  % minimum size is nd+2
+                        upast = kron( ones(nd+2,1) , obj.scaledown.u( u0 ) );  % minimum size is nd+2
+                    elseif k < obj.mpc.load_obs_horizon + 1
+                        yp = [ y0( k : end-1 , : ) ; results.Y ];
+                        up = [ u0( k : end-1 , : ) ; results.U ];
+                        ypast = obj.scaledown.y( yp );
+                        upast = obj.scaledown.u( up );
+                    else
+                        yp = results.Y( end - obj.mpc.load_obs_horizon : end , : );
+                        up = results.U( end - obj.mpc.load_obs_horizon : end , : );
+                        ypast = obj.scaledown.y( yp );
+                        upast = obj.scaledown.u( up );
+                    end
+                    % choose appropriate estimateion function for model type
+                    if strcmp( obj.mpc.model_type , 'linear' )
+                        current.what = obj.mpc.estimate_load_linear( ypast , upast)';   % NOTE!!!!: Only works no delays for now
+                    elseif strcmp( obj.mpc.model_type , 'bilinear' )
+                        current.what = obj.mpc.estimate_load_bilinear( ypast , upast)';
+                    end
+                    results.What = [ results.What ; obj.scaleup.w( current.what ) ]; % update results struct
                 end
                 
                 % isolate the reference trajectory over the horizon
@@ -151,7 +214,12 @@ classdef Ksim
                 % simulate the system over one time-step (using actual system model)
                 x_k = results.X( end , : )';
                 u_k = results.U(end,:)'; %current.u';
-                x_kp1 = obj.sys.simulate_Ts( x_k , u_k , [0 0]' );
+                if obj.mpc.loaded
+                    w_k = results.W(k,:)'; % actual load at kth timestep
+                    x_kp1 = obj.sys.simulate_Ts( x_k , u_k , w_k );
+                else
+                    x_kp1 = obj.sys.simulate_Ts( x_k , u_k );
+                end
                 y_kp1 = obj.sys.get_y( x_kp1' )';
                 
                 % record updated results
@@ -163,10 +231,11 @@ classdef Ksim
                 results.X = [ results.X ; x_kp1' ];
                 results.Z = [ results.Z ; z'  ]; % current lifted state
                 
+                
                 k = k + 1;  % increment step counter
             end
         end
-        
+ 
 
     end
 end

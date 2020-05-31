@@ -12,7 +12,7 @@ saveon = false;  % decides whether to save the class or not
 %% Define parameters
 params = struct;
 
-params.sysName = 'arm-shape_3-mods_1-links_0p5-Ts';
+params.sysName = 'arm-angles-linear_3-mods_1-links_0p5-Ts';
 
 params.Nmods = 3;   % number of modules (actuated sections)
 params.nlinks = 1;      % number of links in each module
@@ -22,7 +22,7 @@ params.Nlinks = params.Nmods * params.nlinks;   % total number of links in robot
 params.nx = params.Nlinks * 2;   % dimension of the full state (joint angles and joing velocities)
 params.ny = 2 * (params.Nlinks ); % + 2;   % dimension of measured output (mocap coordinates + end effector orientation)
 params.nu = params.Nlinks;  % dimension of the input (reference angle at each joint)
-params.nw = 2;  % dimension of load parametrization [end eff mass , gravity angle]
+params.nw = 2;  % dimension of load parametrization
 
 % manipulator parameters
 params.L = 1; %0.3;    % total length of robot (m)
@@ -48,7 +48,7 @@ params.umax = 4*pi/8; % maximum input value (scalar for all modules, vector for 
 
 %% Create class for this system
 
-Arm = Arm( params , 'output_type' , 'shape');   % choice is 'angles' or 'markers' or 'endeff' or 'shape'
+Arm = Arm( params , 'output_type' , 'angles');   % choice is 'angles' or 'markers' or 'endeff' or 'shape'
 
 % save this system for later use
 dirname = [ 'systems' , filesep , params.sysName ];

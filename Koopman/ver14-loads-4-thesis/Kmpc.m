@@ -8,7 +8,9 @@ classdef Kmpc
         lift;   % lifting functions for system
         basis;  % symbolic basis set of observables
         model_type; % specified by the sysid_class
+        loaded; % does model have loads incorporated into it?
         horizon;
+        load_obs_horizon;   % backwards looking load observer horizon
         input_bounds;
         input_slopeConst;
         input_smoothConst;
@@ -43,6 +45,7 @@ classdef Kmpc
             obj.scaledown = sysid_class.scaledown;
             obj.scaleup = sysid_class.scaleup;
             obj.model_type = sysid_class.model_type;    % 'linear' , 'bilinear' , 'nonlinear'
+            obj.loaded = sysid_class.loaded;    % true or false
             
             % define default values of properties
             obj.horizon = floor( 1 / obj.params.Ts );
@@ -56,6 +59,7 @@ classdef Kmpc
             obj.projmtx = obj.model.C;   % recovers measured state (could also use Cshape)
             obj.cost = [];
             obj.constraints = [];
+            obj.load_obs_horizon = 10;  % backwards looking load horizon
             
             % replace default values with user input values
             obj = obj.parse_args( varargin{:} );
@@ -303,8 +307,8 @@ classdef Kmpc
         function [ U , z ]= get_mpcInput( obj , traj , ref )
             %get_mpcInput: Soves the mpc problem to get the input over
             % entire horizon.
-            %   traj - struct with fields y , u. Contains the measured
-            %    states and inputs for the past ndelay+1 timesteps.
+            %   traj - struct with fields y , u , (what). Contains the measured
+            %    states, inputs, (and loads) for the past ndelay+1 timesteps.
             %   ref - matrix containing the reference trajectory for the
             %    system over the horizon (one row per timestep).
             %   z - the lifted state at the current timestep
@@ -318,7 +322,11 @@ classdef Kmpc
             zeta = zeta_temp( end , : )';   % want most recent points
             
             % lift zeta
-            z = obj.lift.econ_full( zeta );
+            if obj.loaded
+                z = obj.lift.econ_full_loaded( zeta , traj.what(end,:)' );
+            else
+                z = obj.lift.econ_full( zeta );
+            end
             
             % check that reference trajectory has correct dimensions
             if size( ref , 2 ) ~= size( obj.projmtx , 1 )
@@ -779,72 +787,137 @@ classdef Kmpc
             U = reshape( Uvec , [ obj.params.m , Np ] )';
         end
         
-        %% nonlinear MPC functions
+        %% nonlinear MPC functions (Uncomment and finish writing later)
         
-        % get_mpcInput_nonlinear: Solve the mpc problem to get the input over entire horizon
-        function [ U , z ]= get_mpcInput_bilinear( obj , traj , ref )
-            %get_mpcInput: Soves the mpc problem to get the input over
-            % entire horizon.
-            %   traj - struct with fields y , u. Contains the measured
-            %    states and inputs for the past ndelay+1 timesteps.
-            %   ref - matrix containing the reference trajectory for the
-            %    system over the horizon (one row per timestep).
-            %   shape_bounds - [min_shape_parameters , max_shape_parameters] 
-            %    This is only requred if system has shape constraints 
-            %   (note: size is num of shape observables x 2)
-            %   z - the lifted state at the current timestep
+%         % get_mpcInput_nonlinear: Solve the mpc problem to get the input over entire horizon
+%         function [ U , z ]= get_mpcInput_nonlinear( obj , traj , ref )
+%             %get_mpcInput: Soves the mpc problem to get the input over
+%             % entire horizon.
+%             %   traj - struct with fields y , u. Contains the measured
+%             %    states and inputs for the past ndelay+1 timesteps.
+%             %   ref - matrix containing the reference trajectory for the
+%             %    system over the horizon (one row per timestep).
+%             %   shape_bounds - [min_shape_parameters , max_shape_parameters] 
+%             %    This is only requred if system has shape constraints 
+%             %   (note: size is num of shape observables x 2)
+%             %   z - the lifted state at the current timestep
+%             
+%             % shorthand variable names
+%             Np = obj.horizon;       % steps in the horizon
+%             nd = obj.params.nd;     % number of delays
+%             
+%             % construct the current value of zeta
+%             [ ~ , zeta_temp ] = obj.get_zeta( traj );
+%             zeta = zeta_temp( end , : )';   % want most recent points
+%             
+% %             % lift zeta
+% %             z = obj.lift.econ_full( zeta );
+% %             zrow = z';
+%             
+%             % check that reference trajectory has correct dimensions
+%             if size( ref , 2 ) ~= size( obj.projmtx , 1 )
+%                 error('Reference trajectory is not the correct dimension');
+%             elseif size( ref , 1 ) > Np + 1
+%                 ref = ref( 1 : Np + 1 , : );    % remove points over horizon
+%             elseif size( ref , 1 ) < Np + 1
+%                 ref_temp = kron( ones( Np+1 , 1 ) , ref(end,:) );
+%                 ref_temp( 1 : size(ref,1) , : ) = ref;
+%                 ref = ref_temp;     % repeat last point for remainer of horizon
+%             end
+%             
+%             % vectorize the reference trajectory
+%             Yr = reshape( ref' , [ ( Np + 1 ) * size(ref,2) , 1 ] );
+%             
+%             % setup matrices for gurobi solver
+%             H = obj.get_costH_bilinear( zrow );
+%             G = obj.get_costG_bilinear( zrow );
+%             D = obj.get_costD_bilinear( zrow );
+%             f = ( z' * G + Yr' * D )';
+%             A = obj.get_constraintL_bilinear( zrow );
+%             b = - obj.constraints.M * z + obj.constraints.c;
+%             
+%             % tack on "memory" constraint to fix initial input u_0
+%             Atack = [ [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - obj.params.m ) ];
+% %             Atack_bot = [ sparse( 2*obj.params.m , obj.params.m) , [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - 2*obj.params.m ) ];
+% %             Atack = [ Atack_top ; Atack_bot ];
+%             btack = [ traj.u(end,:)' ; -traj.u(end,:)' ];
+%             A = [A ; Atack];    % tack on memory constraint
+%             b = [b ; btack];
+%             
+%             % solve the MPC problem
+%             Svec = fmincon();     % solve using fmincon
+%             Yvec = Svec( 1 : obj.params.n * Np );   % vectorized outputs over horizon
+%             Uvec = Svec( obj.params.n * Np + 1 : end ); % vectorize inputs over horizon
+%             
+%             % reshape the output so each input will have one row (first row equals current input)
+%             U = reshape( Uvec , [ obj.params.m , Np ] )';
+%         end
+        
+
+        %% load estimation
+    
+        % estimate_load_linear (infer the load based on dynamics)
+        function [ what , resnorm ] = estimate_load_linear( obj , ypast , upast , whatpast )
+            % estimate_load_linear: Estimate the load given measurements over a 
+            % past horizon.
+            %   ypast - [hor x n], output measurements over previous hor steps
+            %   upast - [hor x m], inputs over previous hor steps
+            %   whatpast - [1 x nw], load estimate at previous step (optional)
+            %   resnorm - squared 2-norm of residual of cost function
+            % Note: This doesn't work for delays yet...
+            %       This doesn't work for bilinear systems yet
             
-            % shorthand variable names
-            Np = obj.horizon;       % steps in the horizon
-            nd = obj.params.nd;     % number of delays
-            
-            % construct the current value of zeta
-            [ ~ , zeta_temp ] = obj.get_zeta( traj );
-            zeta = zeta_temp( end , : )';   % want most recent points
-            
-%             % lift zeta
-%             z = obj.lift.econ_full( zeta );
-%             zrow = z';
-            
-            % check that reference trajectory has correct dimensions
-            if size( ref , 2 ) ~= size( obj.projmtx , 1 )
-                error('Reference trajectory is not the correct dimension');
-            elseif size( ref , 1 ) > Np + 1
-                ref = ref( 1 : Np + 1 , : );    % remove points over horizon
-            elseif size( ref , 1 ) < Np + 1
-                ref_temp = kron( ones( Np+1 , 1 ) , ref(end,:) );
-                ref_temp( 1 : size(ref,1) , : ) = ref;
-                ref = ref_temp;     % repeat last point for remainer of horizon
+            hor_y = size( ypast , 1 ); % length of past horizon
+            if size(upast,1) ~= hor_y
+                error('Input arguments must have the same number of rows');
             end
             
-            % vectorize the reference trajectory
-            Yr = reshape( ref' , [ ( Np + 1 ) * size(ref,2) , 1 ] );
+            % construct zeta from input arguments
+            traj.y = ypast; traj.u = upast;
+            [ ~ , zetapast ] = obj.get_zeta( traj );
+            hor = size( zetapast , 1 ); % length of past horizon with delays
             
-            % setup matrices for gurobi solver
-            H = obj.get_costH_bilinear( zrow );
-            G = obj.get_costG_bilinear( zrow );
-            D = obj.get_costD_bilinear( zrow );
-            f = ( z' * G + Yr' * D )';
-            A = obj.get_constraintL_bilinear( zrow );
-            b = - obj.constraints.M * z + obj.constraints.c;
+            % stack Omega and u vertically
+            Omega = zeros( obj.params.N * (obj.params.nw+1) * (hor-1) , obj.params.nw+1 );
+            for i = 1 : hor-1
+                gy_i = obj.lift.econ_full( zetapast(i,:)' );    % should be zeta, but okay with no delays
+                Omega_i = kron( eye(obj.params.nw+1) , gy_i );
+                ind1 = (obj.params.N*(obj.params.nw+1))*(i-1)+1;
+                ind2 = (obj.params.N*(obj.params.nw+1))*i;
+                Omega( ind1 : ind2 , : ) = Omega_i; 
+            end
+            U = reshape( upast(obj.params.nd+1:end-1,:)' , [ obj.params.m * (hor-1) , 1 ] );
+            Zeta = reshape( zetapast( 2:end , 1:obj.params.nzeta )' , [ obj.params.nzeta * (hor-1) , 1 ] );
             
-            % tack on "memory" constraint to fix initial input u_0
-            Atack = [ [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - obj.params.m ) ];
-%             Atack_bot = [ sparse( 2*obj.params.m , obj.params.m) , [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - 2*obj.params.m ) ];
-%             Atack = [ Atack_top ; Atack_bot ];
-            btack = [ traj.u(end,:)' ; -traj.u(end,:)' ];
-            A = [A ; Atack];    % tack on memory constraint
-            b = [b ; btack];
+            % cost function matrices
+            CAstack = kron(eye(hor-1) , obj.model.A( 1:obj.params.nzeta , : ) );    % accounts for delays
+            CBstack = kron(eye(hor-1) , obj.model.B( 1:obj.params.nzeta , : ) );    % accounts for delays
+            Clsqlin = CAstack * Omega;
+            dlsqlin = Zeta - CBstack * U;
             
-            % solve the MPC problem
-            Svec = fmincon();     % solve using fmincon
-            Yvec = Svec( 1 : obj.params.n * Np );   % vectorized outputs over horizon
-            Uvec = Svec( obj.params.n * Np + 1 : end ); % vectorize inputs over horizon
+            % optional: make sure new load estimate is close to last one
+            if nargin < 4
+                A = zeros( obj.params.nw + 1 , obj.params.nw + 1 );
+                b = zeros( obj.params.nw + 1 , 1 );
+            else
+                % inequality contsraints (acts as slope constraint)
+                A = [ -whatpast(end,:)' , eye( obj.params.nw );...
+                    whatpast(end,:)' , -eye( obj.params.nw )];
+                b = 0.01 * ones( obj.params.nw + 1 , 1 );
+            end
             
-            % reshape the output so each input will have one row (first row equals current input)
-            U = reshape( Uvec , [ obj.params.m , Np ] )';
+            % equality constraint matrices
+%             Aeq = blkdiag( 1 , zeros(obj.params.nw , obj.params.nw) );
+            Aeq = blkdiag( 1 , 0 , 1 ); % DEBUG: ensure last element is zero and first element is one
+            beq = [ 1 ; zeros(obj.params.nw,1) ]; % ensure first elements is 1
+            lb = -ones(obj.params.nw+1,1);  % load should be in [-1,1]
+            ub = ones(obj.params.nw+1,1);   % load should be in [-1,1]
+            
+            % solve for what
+            [ sol , resnorm ] = lsqlin( Clsqlin , dlsqlin , A , b , Aeq , beq , lb , ub );  % solve for what using constrained least squares solver
+            what = sol(2:end);
         end
-        
+    
     end
 end
 

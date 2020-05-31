@@ -412,7 +412,7 @@ classdef Ksysid
                 classname = obj.params.classname;
             else
                 dateString = datestr(now , 'yyyy-mm-dd_HH-MM'); % current date/time
-                classname = [ obj.model_type , '_n-' , num2str( obj.params.n ) , '_m-' , num2str( obj.params.m ) , '_del-' , num2str( obj.params.nd ) , '_' , dateString ];
+                classname = [ obj.model_type , '_' , obj.obs_type{1} , '-' , num2str(obj.obs_degree) ,'_n-' , num2str( obj.params.n ) , '_m-' , num2str( obj.params.m ) , '_del-' , num2str( obj.params.nd ) , '_' , dateString ];
                 obj.params.classname = classname;   % create classname parameter
             end
     
