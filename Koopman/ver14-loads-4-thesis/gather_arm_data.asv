@@ -23,21 +23,15 @@ num_val = 3;
 train_len = ones(1,num_train) * 60;     % length of each training trial (s)
 val_len = ones(1,num_val) * 20;       % length of each valiation trial (s)
 
-% input ramp length bounds
+% ramp length bounds
 ramps_lb = 0.25;
 ramps_ub = 3;
-
-% load ramp length bounds
-w_ramps_lb = 3;
-w_ramps_ub = 10;
 
 % load condition bounds
 % w_lb = [ 0 , -pi/2 ];
 % w_ub = [ 1 , pi/2 ];
-w_lb = [0 0];   % endeff load only
-w_ub = [2 0];   % endeff load only
-% w_lb = [0 0];   % unloaded
-% w_ub = [0 0];   % unloaded 
+w_lb = [0 0];   % unloaded
+w_ub = [1 0];   % unloaded
 
 % input bounds
 u_lb = -0.9*pi * ones( 1 , Arm.params.Nmods );

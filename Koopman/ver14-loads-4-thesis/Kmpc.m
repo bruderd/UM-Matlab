@@ -746,7 +746,11 @@ classdef Kmpc
             zeta = zeta_temp( end , : )';   % want most recent points
             
             % lift zeta
-            z = obj.lift.econ_full( zeta );
+            if obj.loaded
+                z = obj.lift.econ_full_loaded( zeta , traj.what(end,:)' );
+            else
+                z = obj.lift.econ_full( zeta );
+            end
             zrow = z';
             
             % check that reference trajectory has correct dimensions
@@ -894,6 +898,79 @@ classdef Kmpc
             CBstack = kron(eye(hor-1) , obj.model.B( 1:obj.params.nzeta , : ) );    % accounts for delays
             Clsqlin = CAstack * Omega;
             dlsqlin = Zeta - CBstack * U;
+            
+            % optional: make sure new load estimate is close to last one
+            if nargin < 4
+                A = zeros( obj.params.nw + 1 , obj.params.nw + 1 );
+                b = zeros( obj.params.nw + 1 , 1 );
+            else
+                % inequality contsraints (acts as slope constraint)
+                A = [ -whatpast(end,:)' , eye( obj.params.nw );...
+                    whatpast(end,:)' , -eye( obj.params.nw )];
+                b = 0.01 * ones( obj.params.nw + 1 , 1 );
+            end
+            
+            % equality constraint matrices
+%             Aeq = blkdiag( 1 , zeros(obj.params.nw , obj.params.nw) );
+            Aeq = blkdiag( 1 , 0 , 1 ); % DEBUG: ensure last element is zero and first element is one
+            beq = [ 1 ; zeros(obj.params.nw,1) ]; % ensure first elements is 1
+            lb = -ones(obj.params.nw+1,1);  % load should be in [-1,1]
+            ub = ones(obj.params.nw+1,1);   % load should be in [-1,1]
+            
+            % solve for what
+            [ sol , resnorm ] = lsqlin( Clsqlin , dlsqlin , A , b , Aeq , beq , lb , ub );  % solve for what using constrained least squares solver
+            what = sol(2:end);
+        end
+        
+        % estimate_load_bilinear (infer the load based on dynamics)
+        function [ what , resnorm ] = estimate_load_bilinear( obj , ypast , upast , whatpast )
+            % estimate_load_bilinear: Estimate the load given measurements over a 
+            % past horizon.
+            %   ypast - [hor x n], output measurements over previous hor steps
+            %   upast - [hor x m], inputs over previous hor steps
+            %   whatpast - [1 x nw], load estimate at previous step (optional)
+            %   resnorm - squared 2-norm of residual of cost function
+            % Note: This doesn't work for delays yet...
+            %       This doesn't work for bilinear systems yet
+            
+            hor_y = size( ypast , 1 ); % length of past horizon
+            if size(upast,1) ~= hor_y
+                error('Input arguments must have the same number of rows');
+            end
+            
+            % construct zeta from input arguments
+            traj.y = ypast; traj.u = upast;
+            [ ~ , zetapast ] = obj.get_zeta( traj );
+            hor = size( zetapast , 1 ); % length of past horizon with delays
+            
+            % construct the RHS regression matrix ( LHS = RHS * [1;w] )
+            RHS = zeros( obj.params.nzeta * obj.params.m * (hor-1) , obj.params.nw+1 );
+            for i = 1 : hor-1
+                gy_i = obj.lift.econ_full( zetapast(i,:)' );    % should be zeta, but okay with no delays
+                Omega_i = kron( eye(obj.params.nw+1) , gy_i );
+                 
+                RHS_i = zeros( obj.params.nzeta * obj.params.m , obj.params.nw+1 );
+                for j = 1 : obj.params.m
+                    CA = obj.model.A( 1:obj.params.nzeta , : );
+                    B_col_range = (j-1)*obj.params.N*(obj.params.nw+1)+1 : j*obj.params.N*(obj.params.nw+1);
+                    CB = obj.model.B( 1:obj.params.nzeta , B_col_range );
+                    RHS_ij = CA * Omega_i + CB * Omega_i * upast(i,j);
+                    ind1 = (j-1)*obj.params.nzeta + 1;
+                    ind2 = j*obj.params.nzeta;
+                    RHS_i( ind1:ind2 , : ) = RHS_ij; 
+                end
+                ind1 = (obj.params.nzeta * obj.params.m) * (i-1) + 1;
+                ind2 = (obj.params.nzeta * obj.params.m) * i;
+                RHS( ind1:ind2 , :) = RHS_i;
+            end
+            
+            % construct the LHS regression matrix ( LHS = RHS * [1;w] )
+            zetapast_rep = repelem( zetapast , obj.params.m , 1 );  % duplicate each row of zetapast m times
+            LHS = reshape( zetapast_rep( obj.params.m+1:end , 1:obj.params.nzeta )' , [ obj.params.nzeta * (hor-1) * obj.params.m , 1 ] ); 
+                 
+            % cost function matrices
+            Clsqlin = RHS;
+            dlsqlin = LHS;
             
             % optional: make sure new load estimate is close to last one
             if nargin < 4

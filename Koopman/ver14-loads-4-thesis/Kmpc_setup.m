@@ -13,4 +13,4 @@ Kmpc = Kmpc( Ksysid ,...
         'cost_terminal' , 100 ,...  % 100
         'cost_input' , 0 ,...    % 1e-1
         'projmtx' , Ksysid.model.C(end-1:end,:) ,...  % just end effector
-        'load_obs_horizon' , 100);   % only needed for loaded models
+        'load_obs_horizon' , 50);   % only needed for loaded models

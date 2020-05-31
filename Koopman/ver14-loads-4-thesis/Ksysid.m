@@ -230,20 +230,19 @@ classdef Ksysid
                 w_min = min( data.w );
                 w_max = max( data.w );
                 w_dc = ( w_max + w_min ) ./ 2;
-                if w_min == w_max   % if load is constant just shift to zero
-                    w_scaledown = w - w_dc;
-                    obj.scaledown.w = matlabFunction( w_scaledown , 'Vars' , {w} );
-                    w_scaleup = w + w_dc;
-                    obj.scaleup.w = matlabFunction( w_scaleup , 'Vars' , {w} );
-                    data_scaled.w = data.w - w_dc;  % scale the data for output
-                else    % otherwise shift and scale it between [-1,1]
-                    scale_w = ( w_max - w_min ) ./ 2;
-                    data_scaled.w = ( data.w - w_dc ) ./ scale_w;
-                    w_scaledown = ( w - w_dc ) ./ scale_w;
-                    obj.scaledown.w = matlabFunction( w_scaledown , 'Vars' , {w} );
-                    w_scaleup = ( w .* scale_w ) + w_dc;
-                    obj.scaleup.w = matlabFunction( w_scaleup , 'Vars' , {w} );
+                w_nonconst_ind = find( w_min ~= w_max );   % find non-constant load parameters
+                % if load is constant just shift to zero
+                w_scaledown = w - w_dc;
+                w_scaleup = w + w_dc;
+                % otherwise shift and scale it between [-1,1]
+                for i = w_nonconst_ind
+                    scale_w = ( w_max(i) - w_min(i) ) ./ 2;
+                    w_scaledown(i) = ( w(i) - w_dc(i) ) ./ scale_w;
+                    w_scaleup(i) = ( w(i) .* scale_w ) + w_dc(i);
                 end
+                obj.scaledown.w = matlabFunction( w_scaledown , 'Vars' , {w} );
+                obj.scaleup.w = matlabFunction( w_scaleup , 'Vars' , {w} );
+                data_scaled.w = obj.scaledown.w( data.w );
             end
             
             % create scaling functions for zeta

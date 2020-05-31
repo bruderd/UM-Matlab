@@ -230,19 +230,32 @@ classdef Ksysid
                 w_min = min( data.w );
                 w_max = max( data.w );
                 w_dc = ( w_max + w_min ) ./ 2;
-                if w_min == w_max   % if load is constant just shift to zero
+                w_nonconst_ind = find( w_min ~= w_max );   % find non-constant load parameters
+%                 if isempty( w_nonconst_ind )   % if load is constant just shift to zero
                     w_scaledown = w - w_dc;
-                    obj.scaledown.w = matlabFunction( w_scaledown , 'Vars' , {w} );
                     w_scaleup = w + w_dc;
-                    obj.scaleup.w = matlabFunction( w_scaleup , 'Vars' , {w} );
-                    data_scaled.w = data.w - w_dc;  % scale the data for output
-                else    % otherwise shift and scale it between [-1,1]
-                    scale_w = ( w_max - w_min ) ./ 2;
-                    data_scaled.w = ( data.w - w_dc ) ./ scale_w;
-                    w_scaledown = ( w - w_dc ) ./ scale_w;
+                    for i = w_nonconst_ind
+                        scale_w = ( w_max(i) - w_min(i) ) ./ 2;
+                        w_scaledown(i) = ( w(i) - w_dc(i) ) ./ scale_w;
+                        w_scaleup(i) = ( w(i) .* scale_w ) + w_dc(i);
+                    end
                     obj.scaledown.w = matlabFunction( w_scaledown , 'Vars' , {w} );
-                    w_scaleup = ( w .* scale_w ) + w_dc;
                     obj.scaleup.w = matlabFunction( w_scaleup , 'Vars' , {w} );
+                    data_scaled.w = obj.scaledown.w( data.w );
+                    
+%                     w_scaledown = w - w_dc;
+%                     obj.scaledown.w = matlabFunction( w_scaledown , 'Vars' , {w} );
+%                     w_scaleup = w + w_dc;
+%                     obj.scaleup.w = matlabFunction( w_scaleup , 'Vars' , {w} );
+%                     data_scaled.w = data.w - w_dc;  % scale the data for output
+
+%                 else    % otherwise shift and scale it between [-1,1]
+%                     scale_w = ( w_max - w_min ) ./ 2;
+%                     data_scaled.w = ( data.w - w_dc ) ./ scale_w;
+%                     w_scaledown = ( w - w_dc ) ./ scale_w;
+%                     obj.scaledown.w = matlabFunction( w_scaledown , 'Vars' , {w} );
+%                     w_scaleup = ( w .* scale_w ) + w_dc;
+%                     obj.scaleup.w = matlabFunction( w_scaleup , 'Vars' , {w} );
                 end
             end
             
@@ -412,7 +425,7 @@ classdef Ksysid
                 classname = obj.params.classname;
             else
                 dateString = datestr(now , 'yyyy-mm-dd_HH-MM'); % current date/time
-                classname = [ obj.'n-' , num2str( obj.params.n ) , '_m-' , num2str( obj.params.m ) , '_del-' , num2str( obj.params.nd ) , '_' , dateString ];
+                classname = [ obj.model_type , '_' , obj.obs_type{1} , '-' , num2str(obj.obs_degree) ,'_n-' , num2str( obj.params.n ) , '_m-' , num2str( obj.params.m ) , '_del-' , num2str( obj.params.nd ) , '_' , dateString ];
                 obj.params.classname = classname;   % create classname parameter
             end
     
