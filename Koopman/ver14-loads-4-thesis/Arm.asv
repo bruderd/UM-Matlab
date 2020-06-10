@@ -499,10 +499,10 @@ classdef Arm
             %   varargin{2} = name - name of the video file (default: sysName)
 
             % deal with optional arguments w and name
-            if isempty(w)
+            if ~exist( 'w' , 'var')
                 w = kron( ones( size(t) ) , [0,0] );   % default is no load
             elseif size( w , 1 ) == 1
-                w = kron( ones( size(t) ) , w );   % constant load   
+                w = kron( ones( size(t) ) , w );   % default is no load    
             end
             if ~exist( 'name' , 'var')
                 name = obj.params.sysName;
@@ -726,8 +726,7 @@ classdef Arm
             
             % if load field is empty, set it to zero
             if isempty(w_k)
-                w_k = [ 0 ; 0 ];
-            end
+                w_k = [0 , 0 ];
             
             % if no timestep is provided use the default stored in params
             if nargin < 5

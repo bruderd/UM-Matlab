@@ -1,0 +1,42 @@
+% def_trajectory: Defines the refeference trajecory for the trial
+
+ref = struct;
+
+ref.name = 'blockM_c0-0p2_1x1_60sec';
+
+ref.T = 60;    % total time of trajectory (s)
+ref.Ts = 0.05;  % length of timestep (s)
+
+%% define shape of reference trajectory
+addpath('functions');
+% y_old = get_blockM([0,0.6], 0.75 , 0.75);   % collection of points that defines the shape of the trajectory
+y_old = get_blockM( [0,-0.2], 1 , 1 );   % collection of points that defines the shape of the trajectory
+
+% ref.y = -[ ref.y(:,2) , -ref.y(:,1) ];    % include after the block M to turn it into sigma
+% ref.y = get_circle([0,1] , 1);
+% ref.y = get_reachPoint([-0.4,-0.6]);
+% ref.y = get_reachLine([0,-6]);
+% ref.y = get_polygon( ( [1 2 ; 2 0 ; 4 0 ; 2.5 -1.5 ; 3 -3.5 ; 1 -2.5 ; -1 -3.5 ; -0.5 -1.5 ; -2 0 ; 0 0] ).* (8/6) + [1,1] ); % STAR
+% ref.y = get_polygon( [0 0; 1 1 ; 2 1.5 ; 3 1 ; 4 0 ; 4 -1 ; 3 -2 ; 2 -3 ; 1 -4 ; 0 -5 ;...
+%                     -1 -4; -2 -3; -3 -2; -4 -1; -4 0; -3 1; -2 1.5; -1 1; 0 0] ); % HEART
+% ref.y = get_sinusoid( [ 1 1 ] , [ 4 4 ] , 30 );
+% ref.y = get_pacman( [1,1] , 3 );
+% ref.y = get_blockM_corner([0,0] , 8 , 4);
+rmpath('functions');
+
+%% flip sign of y-coordinate (for planar arm system)
+y_old = [ y_old(:,1) , -y_old(:,2) ];
+
+%% ensure trajectory starts from resting configuration of system
+preamble = [ linspace( 0 , y_old(1,1) , 10 )' , linspace( 0 , y_old(1,2) , 10 )' ];
+y_old = [ 0 , 1 ; y_old ];   % planar manipulator
+
+%% define time vector
+t_old = linspace( 0 , ref.T , size( y_old , 1 ) )';
+ref.t = ( 0 : ref.Ts : ref.T )'; % timestep must be the same as model.params.Ts
+
+%% interpolate to match given timestep
+ref.y = interp1( t_old , y_old , ref.t);
+
+%% save reference trajectory struct
+save(['files' , filesep , ref.name , '.mat'] , 'ref');

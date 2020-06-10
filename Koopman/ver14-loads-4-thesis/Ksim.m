@@ -126,6 +126,7 @@ classdef Ksim
             results.R = [ ref(1,:) ];
             results.X = [ x0( end , : ) ];
             results.Z = []; %[ obj.mpc.lift.econ_full( zeta0' )' ]; % lifted states
+            results.comp_time = []; % mpc computation time
             if obj.mpc.loaded
                 results.W = w;  % actual load condition over entire horizon
                 results.What = [ zeros( 1 , size(w,2) ) ];    % estimated load condition
@@ -170,10 +171,14 @@ classdef Ksim
                         upast = obj.scaledown.u( up );
                     end
                     % choose appropriate estimateion function for model type
-                    if strcmp( obj.mpc.model_type , 'linear' )
-                        current.what = obj.mpc.estimate_load_linear( ypast , upast)';   % NOTE!!!!: Only works no delays for now
-                    elseif strcmp( obj.mpc.model_type , 'bilinear' )
-                        current.what = obj.mpc.estimate_load_bilinear( ypast , upast)';
+                    if mod( k , obj.mpc.load_obs_period ) == 0
+                        if strcmp( obj.mpc.model_type , 'linear' )
+                            current.what = obj.mpc.estimate_load_linear( ypast , upast)';   % NOTE!!!!: Only works no delays for now
+                        elseif strcmp( obj.mpc.model_type , 'bilinear' )
+                            current.what = obj.mpc.estimate_load_bilinear( ypast , upast)';
+                        end
+                    else
+                        current.what = obj.scaledown.w( results.What(end,:) );
                     end
                     results.What = [ results.What ; obj.scaleup.w( current.what ) ]; % update results struct
                 end
@@ -186,11 +191,13 @@ classdef Ksim
                 end 
                 
                 % get optimal input over horizon
+                tic
                 if strcmp( obj.mpc.model_type , 'linear' )
                     [ U , z ] = obj.mpc.get_mpcInput( current , refhor );
                 elseif strcmp( obj.mpc.model_type , 'bilinear' )
                     [ U , z ] = obj.mpc.get_mpcInput_bilinear( current , refhor );
                 end
+                comp_time = toc; % mpc computation time
                 
                 % if a solution was not found, break out of while loop
                 if any( isnan(U) )
@@ -218,7 +225,7 @@ classdef Ksim
                     w_k = results.W(k,:)'; % actual load at kth timestep
                     x_kp1 = obj.sys.simulate_Ts( x_k , u_k , w_k );
                 else
-                    x_kp1 = obj.sys.simulate_Ts( x_k , u_k );
+                    x_kp1 = obj.sys.simulate_Ts( x_k , u_k , [] );
                 end
                 y_kp1 = obj.sys.get_y( x_kp1' )';
                 
@@ -230,7 +237,7 @@ classdef Ksim
                 results.R = [ results.R ; obj.scaleup.ref( ref_sc( k , : ) ) ];   % note that this is not scaled down
                 results.X = [ results.X ; x_kp1' ];
                 results.Z = [ results.Z ; z'  ]; % current lifted state
-                
+                results.comp_time = [ results.comp_time ; comp_time ];   % mpc computation time
                 
                 k = k + 1;  % increment step counter
             end

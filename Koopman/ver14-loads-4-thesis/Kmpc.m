@@ -11,6 +11,7 @@ classdef Kmpc
         loaded; % does model have loads incorporated into it?
         horizon;
         load_obs_horizon;   % backwards looking load observer horizon
+        load_obs_period;    % timesteps between observer estimate updates
         input_bounds;
         input_slopeConst;
         input_smoothConst;
@@ -59,7 +60,8 @@ classdef Kmpc
             obj.projmtx = obj.model.C;   % recovers measured state (could also use Cshape)
             obj.cost = [];
             obj.constraints = [];
-            obj.load_obs_horizon = 10;  % backwards looking load horizon
+            obj.load_obs_horizon = 10;  % backwards looking load estimation horizon
+            obj.load_obs_period = 1;    % update period for load estimation
             
             % replace default values with user input values
             obj = obj.parse_args( varargin{:} );

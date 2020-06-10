@@ -13,13 +13,14 @@ data4sysid = load( [datafile_path , datafile_name] );
 
 %% construct sysid class
 Ksysid = Ksysid( data4sysid ,...
-        'model_type' , 'bilinear' ,...    % model type (linear or nonlinear)
+        'model_type' , 'nonlinear' ,...    % model type (linear, bilinear, or nonlinear)
         'obs_type' , { 'poly' } ,...    % type of basis functions
-        'obs_degree' , [ 2 ] ,...       % "degree" of basis functions
+        'obs_degree' , [ 3 ] ,...       % "degree" of basis functions
         'snapshots' , Inf ,...          % Number of snapshot pairs
-        'lasso' , [ Inf ] ,...           % L1 regularization term
+        'lasso' , [ Inf ] ,...          % L1 regularization term
         'delays' , 0 ,...               % Numer of state/input delays
-        'loaded' , true);             % Does system include loads?
+        'loaded' , false ,...           % Does system include loads?
+        'dim_red' , true);             % Should dimensional reduction be performed?
 
 if Ksysid.loaded
     disp(['Number of basis functions: ' , num2str( (Ksysid.params.nw + 1) * Ksysid.params.N ) ]);
@@ -27,12 +28,12 @@ else
    disp(['Number of basis functions: ' , num2str( Ksysid.params.N ) ]);
 end
     
-%% basis dimensional reduction (beta)
+%% basis dimensional reduction
 
 disp('Performing dimensional reduction...');
 Px = Ksysid.lift_snapshots( Ksysid.snapshotPairs );
 Ksysid = Ksysid.get_econ_observables( Px );
-disp(['Number of basis functions: ' , num2str( 2 * Ksysid.params.N ) ]);
+disp(['Number of basis functions: ' , num2str( Ksysid.params.N ) ]);
 clear Px;
     
 %% train model(s)
