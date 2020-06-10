@@ -2,7 +2,7 @@
 
 ref = struct;
 
-ref.name = 'blockM_c0-0p2_1x1_60sec';
+ref.name = 'blockM_c0p5-0_0p75x0p75_60sec';
 
 ref.T = 60;    % total time of trajectory (s)
 ref.Ts = 0.05;  % length of timestep (s)
@@ -10,7 +10,7 @@ ref.Ts = 0.05;  % length of timestep (s)
 %% define shape of reference trajectory
 addpath('functions');
 % y_old = get_blockM([0,0.6], 0.75 , 0.75);   % collection of points that defines the shape of the trajectory
-y_old = get_blockM( [0,-0.2], 1 , 1 );   % collection of points that defines the shape of the trajectory
+y_old = get_blockM( [0.5,0], 0.75 , 0.75 );   % collection of points that defines the shape of the trajectory
 
 % ref.y = -[ ref.y(:,2) , -ref.y(:,1) ];    % include after the block M to turn it into sigma
 % ref.y = get_circle([0,1] , 1);
@@ -28,8 +28,8 @@ rmpath('functions');
 y_old = [ y_old(:,1) , -y_old(:,2) ];
 
 %% ensure trajectory starts from resting configuration of system
-preamble = [ linspace( 0 , y_old(1,1) , 10 )' , linspace( 0 , y_old(1,2) , 10 )' ];
-y_old = [ 0 , 1 ; y_old ];   % planar manipulator
+preamble = [ linspace( 0 , y_old(1,1) , 10 )' , linspace( 1 , y_old(1,2) , 10 )' ];
+y_old = [ preamble(1:end-1,:) ; y_old ];   % planar manipulator
 
 %% define time vector
 t_old = linspace( 0 , ref.T , size( y_old , 1 ) )';

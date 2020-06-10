@@ -195,7 +195,8 @@ classdef Ksim
                 if strcmp( obj.mpc.model_type , 'linear' )
                     [ U , z ] = obj.mpc.get_mpcInput( current , refhor );
                 elseif strcmp( obj.mpc.model_type , 'bilinear' )
-                    [ U , z ] = obj.mpc.get_mpcInput_bilinear( current , refhor );
+%                     [ U , z ] = obj.mpc.get_mpcInput_bilinear( current , refhor );
+                    [ U , z ] = obj.mpc.get_mpcInput_bilinear_iter( current , refhor , 2 );
                 end
                 comp_time = toc; % mpc computation time
                 

@@ -860,21 +860,19 @@ classdef Kmpc
                 % solve the MPC problem
 %                 Uvec = quadprog_gurobi( H , f , A , b );   % solve using gurobi (returns NaNs of cannot be solved)
                 Uvec = quadprog( 2*H , f , A , b );     % solve using matlab
-                uhorizon = reshape( Uvec , [ obj.params.m , Np ] )';
                 
                 % solve for lifted state sequence corresponding to those inputs
-                zhorizon = zeros( Np+1 , obj.params.N );
+                zhorizon
                 zhorizon(1,:) = zrow;
                 for j = 1 : Np
-                    zhorizon(j+1,:) = ( obj.model.A * zhorizon(j,:)' + obj.get_modelB_bilinear( zhorizon(j,:)' ) * uhorizon(j,:)' )';
-                end
-%                 Zvec = obj.cost.A * z + obj.get_costB_bilinear( zhorizon ) * Uvec;
-%                 zhorizon = reshape( Zvec , [ obj.params.N , Np+1 ] )';
+                    zhorizon(j+1,:) = ( obj.model.A * zhorizon(j) )';
+                    
+                Zvec = obj.cost.A * z + obj.get_costB_bilinear( zhorizon ) * Uvec;
+                zhorizon = reshape( Zvec , [ obj.params.N , Np+1 ] )';
             end
             
             % reshape the output so each input will have one row (first row equals current input)
-%             U = reshape( Uvec , [ obj.params.m , Np ] )';
-            U = uhorizon;
+            U = reshape( Uvec , [ obj.params.m , Np ] )';
         end
         
         %% nonlinear MPC functions (Uncomment and finish writing later)

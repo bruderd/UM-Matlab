@@ -2,14 +2,16 @@
 
 ref = struct;
 
-ref.name = 'blockM_c11_3x3_120sec';
+ref.name = 'blockM_c0p01-0p4_0p6x0p6_60sec';
 
-ref.T = 20;    % total time of trajectory (s)
+ref.T = 60;    % total time of trajectory (s)
 ref.Ts = 0.05;  % length of timestep (s)
 
 %% define shape of reference trajectory
 addpath('functions');
-y_old = get_blockM([1,1], 3 , 3);   % collection of points that defines the shape of the trajectory
+% y_old = get_blockM([0,0.6], 0.75 , 0.75);   % collection of points that defines the shape of the trajectory
+y_old = get_blockM( [0.4,0], 0.6 , 0.6 );   % collection of points that defines the shape of the trajectory
+
 % ref.y = -[ ref.y(:,2) , -ref.y(:,1) ];    % include after the block M to turn it into sigma
 % ref.y = get_circle([0,1] , 1);
 % ref.y = get_reachPoint([-0.4,-0.6]);
@@ -22,11 +24,15 @@ y_old = get_blockM([1,1], 3 , 3);   % collection of points that defines the shap
 % ref.y = get_blockM_corner([0,0] , 8 , 4);
 rmpath('functions');
 
+%% flip sign of y-coordinate (for planar arm system)
+y_old = [ y_old(:,1) , -y_old(:,2) ];
+
 %% ensure trajectory starts from resting configuration of system
-y_old = [ 0 , 1 ; y_old ];   % planar manipulator
+preamble = [ linspace( 0 , y_old(1,1) , 10 )' , linspace( 1 , y_old(1,2) , 10 )' ];
+y_old = [ preamble(1:end-1,:) ; y_old ];   % planar manipulator
 
 %% define time vector
-t_old = linspace( 0 , ref.T , size( ref.y , 1 ) )';
+t_old = linspace( 0 , ref.T , size( y_old , 1 ) )';
 ref.t = ( 0 : ref.Ts : ref.T )'; % timestep must be the same as model.params.Ts
 
 %% interpolate to match given timestep
