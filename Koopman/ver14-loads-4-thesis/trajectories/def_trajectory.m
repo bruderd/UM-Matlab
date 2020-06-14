@@ -1,16 +1,18 @@
 % def_trajectory: Defines the refeference trajecory for the trial
 
+saveon = false; % should I save this model?
+
 ref = struct;
 
-ref.name = 'blockM_c0p5-0_0p75x0p75_60sec';
+ref.name = 'blockM_c0p45-0p35_0p5x0p5_15sec';
 
-ref.T = 60;    % total time of trajectory (s)
+ref.T = 15;    % total time of trajectory (s)
 ref.Ts = 0.05;  % length of timestep (s)
 
 %% define shape of reference trajectory
 addpath('functions');
-% y_old = get_blockM([0,0.6], 0.75 , 0.75);   % collection of points that defines the shape of the trajectory
-y_old = get_blockM( [0.5,0], 0.75 , 0.75 );   % collection of points that defines the shape of the trajectory
+% y_old = get_blockM([0,-0.4], 0.75 , 0.75);   % collection of points that defines the shape of the trajectory
+y_old = get_blockM( [0.45,-0.35], 0.5 , 0.5 );   % collection of points that defines the shape of the trajectory (This works)
 
 % ref.y = -[ ref.y(:,2) , -ref.y(:,1) ];    % include after the block M to turn it into sigma
 % ref.y = get_circle([0,1] , 1);
@@ -39,4 +41,6 @@ ref.t = ( 0 : ref.Ts : ref.T )'; % timestep must be the same as model.params.Ts
 ref.y = interp1( t_old , y_old , ref.t);
 
 %% save reference trajectory struct
-save(['files' , filesep , ref.name , '.mat'] , 'ref');
+if saveon
+    save(['files' , filesep , ref.name , '.mat'] , 'ref');
+end

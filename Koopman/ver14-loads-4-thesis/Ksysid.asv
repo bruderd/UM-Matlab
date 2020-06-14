@@ -1021,17 +1021,19 @@ classdef Ksysid
             end
             
             % Call function that solves QP problem
-            if obj.lasso >= 1e6
-            Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
-            if strcmp( obj.model_type , 'nonlinear' )
-                Umtx = reshape(Uvec, [ N*(nw+1) , N*(nw+1) ]); % Koopman operator matrix
-            elseif strcmp( obj.model.type , 'bilinear' )
-                Umtx = reshape(Uvec, [ N*(nw+1)*(m+1) , N*(nw+1)*(m+1) ]); % Koopman operator matrix
-            else
-                Umtx = reshape(Uvec, [ N*(nw+1)+m , N*(nw+1)+m ]); % Koopman operator matrix
+            if obj.lasso >= 1e6     % least-squares
+                K = Px \ Py;    % least-squares solution (very efficient, but no L1 penalty)
+            else    % LASSO 
+                Uvec = obj.solve_KoopmanQP( Px , Py , lasso);
+                if strcmp( obj.model_type , 'nonlinear' )
+                    Umtx = reshape(Uvec, [ N*(nw+1) , N*(nw+1) ]); % Koopman operator matrix
+                elseif strcmp( obj.model_type , 'bilinear' )
+                    Umtx = reshape(Uvec, [ N*(nw+1)*(m+1) , N*(nw+1)*(m+1) ]); % Koopman operator matrix
+                else
+                    Umtx = reshape(Uvec, [ N*(nw+1)+m , N*(nw+1)+m ]); % Koopman operator matrix
+                end
+                K = Umtx;   % switching to K convention to not confuse with input
             end
-            K = Umtx;   % switching to K convention to not confuse with input
-            else
             
             
             % other usefule outputs
@@ -1265,6 +1267,8 @@ classdef Ksysid
             end
 
             out.params = obj.params;    % save local copy of model parameters
+            
+            % Add a 
             
             % add model substruct to the class
             obj.model = out; 

@@ -32,14 +32,14 @@ w_ramps_lb = 4;
 w_ramps_ub = 10;
 
 % load condition bounds
-w_lb = [ 0 , -pi/2 ];
-w_ub = [ 10 , pi/2 ];
+% w_lb = [ 0 , -pi/2 ];
+% w_ub = [ 10 , pi/2 ];
 % w_lb = [0 0];   % endeff load only
 % w_ub = [10 0];   % endeff load only
 % w_lb = [ 0 , -pi/2 ];   % gravity load only
 % w_ub = [ 0 , pi/2 ];    % gravity load only
-% w_lb = [0 0];   % unloaded
-% w_ub = [0 0];   % unloaded 
+w_lb = [0 0];   % unloaded
+w_ub = [0 0];   % unloaded 
 
 % input bounds
 u_lb = -0.9*pi * ones( 1 , Arm.params.Nmods );
@@ -85,7 +85,7 @@ end
 
 %% put data together into a single struct
 
-file_name = 'thesis-3link-angles-load';
+file_name = 'debug-1link-angles-noload';
 data4sysid = Data.get_data4sysid( train , val , true , file_name );
 
 

@@ -12,9 +12,9 @@ saveon = true;  % decides whether to save the class or not
 %% Define parameters
 params = struct;
 
-params.sysName = 'thesis-arm-angles_load_3-mods_1-links_20hz';
+params.sysName = 'debug-arm-angles_noload_1-mods_1-links_20hz';
 
-params.Nmods = 3;   % number of modules (actuated sections)
+params.Nmods = 1;   % number of modules (actuated sections)
 params.nlinks = 1;      % number of links in each module
 params.Nlinks = params.Nmods * params.nlinks;   % total number of links in robot
 

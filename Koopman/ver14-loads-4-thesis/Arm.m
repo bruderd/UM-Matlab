@@ -568,7 +568,7 @@ classdef Arm
             close(vidObj);
         end
         
-        % animate_arm
+        % animate_arm_refvmpc
         function animate_arm_refvmpc( obj, t , xref , xmpc , varargin)
             %animate_arm: Animate a simualtion of the arm
             %   t - time vector from simulation
@@ -650,6 +650,96 @@ classdef Arm
             
             close(vidObj);
         end
+        
+        % animate_arm_refendeff
+        function animate_arm_refendeff( obj, t , ref , y , w , name )
+            %animate_arm_refendeff: Animate a simualtion of the arm
+            % and show the desired end effector trajectory
+            %   t - time vector from simulation
+            %   y - state vector from simulation (alpha and alphadot)
+            %   varargin{1} = degree - degree of the shape polynomial (default: 3)
+            %   varargin{2} = name - name of the video file (default: sysName)
+
+            % deal with optional arguments w and name
+            if isempty(w)
+                w = kron( ones( size(t) ) , [0,0] );   % default is no load
+            elseif size( w , 1 ) == 1
+                w = kron( ones( size(t) ) , w );   % constant load   
+            end
+            if ~exist( 'name' , 'var')
+                name = obj.params.sysName;
+            end
+            
+            alpha = y(: , 1:obj.params.Nlinks );   % joint angles over time
+            
+            fig = figure;   % create figure for the animation
+            axis([-1.25*obj.params.L, 1.25*obj.params.L, -1.25*obj.params.L, 1.25*obj.params.L])
+            set(gca,'Ydir','reverse')
+            xlabel('x(m)')
+            ylabel('y(m)')
+            daspect([1 1 1]);   % make axis ratio 1:1
+           
+            % Prepare the new file.
+            vidObj = VideoWriter( ['animations' , filesep , name , '.mp4'] , 'MPEG-4' );
+            vidObj.FrameRate = 30;
+            open(vidObj);
+            
+            set(gca,'nextplot','replacechildren', 'FontUnits' , 'normalized');
+            
+            totTime = t(end);    % total time for animation (s)
+            nsteps = length(t); % total steps in the simulation
+            totFrames = 30 * totTime;   % total frames in 30 fps video
+            
+            % Grid points for gravity direction arrows
+            arrow_len = 0.1;
+            [ x_grid , y_grid ] = meshgrid( -1.25*obj.params.L:arrow_len:1.25*obj.params.L , -1.25*obj.params.L:arrow_len:1.25*obj.params.L);
+            
+            % run animation fram by frame
+            for i = 1:totFrames
+                
+                index = floor( (i-1) * (nsteps / totFrames) ) + 1;   % skips points between frames
+                
+                % plot the reference trajectory
+                x_ref = ref(:,1);
+                y_ref = ref(:,2);
+                hold on;
+                r1 = plot(x_ref , y_ref, '-' , 'Color' , [1 0 0 0.5] , 'Linewidth' , 3 );
+                r2 = plot( x_ref(index) , y_ref(index) , '*' , 'Color' , [1 0 0]);
+                hold off;
+                
+                % direction of gravity
+                u_grid = -ones( size(x_grid) ) * arrow_len * sin(w(index,2));
+                v_grid = ones( size(y_grid) ) * arrow_len * cos(w(index,2));
+                
+                % locations of joints
+                [ X , ~ ] = obj.alpha2x( alpha(index,:)' );
+                x = X(:,1);
+                y = X(:,2);
+                marker = obj.get_markers( alpha(index,:) );   % get mocap sensor location
+                
+                hold on;
+                p0 = quiver( x_grid , y_grid , u_grid , v_grid , 'Color' , [0.65 0.65 0.65] );
+                p1 = plot(x, y, 'k-o' , 'LineWidth' , 3);
+                p2 = plot( marker(:,1) , marker(:,2) , 'r*');
+                p4 = plot( marker(end,1) , marker(end,2) , 'bo' , 'MarkerSize' , 2*w(index,1) + 0.01 , 'MarkerFaceColor' , 'b' );  % end effector load
+                hold off;
+                grid on;
+                
+                % write each frame to the file
+                currFrame = getframe(fig);
+                writeVideo(vidObj,currFrame);
+                
+                delete(r1);
+                delete(r2);
+                delete(p0);
+                delete(p1);
+                delete(p2); 
+                delete(p4);
+            end
+            
+            close(vidObj);
+        end
+        
             
         %% simulation
         

@@ -1268,6 +1268,9 @@ classdef Ksysid
 
             out.params = obj.params;    % save local copy of model parameters
             
+            % define a C matrix as identity (needed for Kmpc class)
+            out.C = eye( obj.params.n );
+            
             % add model substruct to the class
             obj.model = out; 
         end

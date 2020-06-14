@@ -80,6 +80,9 @@ classdef Kmpc
             elseif strcmp( obj.model_type , 'bilinear' )
                 obj = obj.get_costMatrices_bilinear;
                 obj = obj.get_constraintMatrices_bilinear;
+            elseif strcmp( obj.model_type , 'nonlinear' )
+                obj = obj.get_costMatrices_nonlinear;
+                obj = obj.get_constraintMatrices_nonlinear;
             end
         end
         
@@ -178,7 +181,7 @@ classdef Kmpc
             Q(end-nproj+1 : end , end-nproj+1 : end) = eye(nproj) * obj.cost_terminal;    % (terminal cost) (default 100)
             
             % R: Input magnitude penalty
-            R = kron( speye(obj.horizon) , eye(model.params.m) * obj.cost_input );  % input magnitude penalty (for flaccy use 0.5e-2) (new videos used 0.5e-3)
+            R = kron( speye(obj.horizon) , eye(model.params.m) .* obj.cost_input );  % input magnitude penalty (for flaccy use 0.5e-2) (new videos used 0.5e-3)
 
             % H, G, D
             H = B' * C' * Q * C * B + R;
@@ -525,7 +528,7 @@ classdef Kmpc
             Q(end-nproj+1 : end , end-nproj+1 : end) = eye(nproj) * obj.cost_terminal;    % (terminal cost) (default 100)
             
             % R: Input magnitude penalty
-            R = kron( speye(obj.horizon) , eye(model.params.m) * obj.cost_input );  % input magnitude penalty (for flaccy use 0.5e-2) (new videos used 0.5e-3)
+            R = kron( speye(obj.horizon) , eye(model.params.m) .* obj.cost_input );  % input magnitude penalty (for flaccy use 0.5e-2) (new videos used 0.5e-3)
             
             % set outputs
 %             obj.cost.H = H; obj.cost.G = G; obj.cost.D = D; obj.cost.B = B; % constructed matrices
@@ -850,6 +853,7 @@ classdef Kmpc
             b = [b ; btack];
             
             zhorizon = zrow;    % initial value
+%             zhorizon = ( obj.model.A * zrow' + obj.get_modelB_bilinear( zrow' ) * traj.u(end,:)' )';    % second z value
             for i = 1 : iter
                 % setup matrices for QP solver
                 H = obj.get_costH_bilinear( zhorizon );
@@ -862,12 +866,17 @@ classdef Kmpc
                 Uvec = quadprog( 2*H , f , A , b );     % solve using matlab
                 uhorizon = reshape( Uvec , [ obj.params.m , Np ] )';
                 
+                if i == iter    % don't execut remaininc code in loop if last iteration
+                    break;
+                end
+                
                 % solve for lifted state sequence corresponding to those inputs
                 zhorizon = zeros( Np+1 , obj.params.N );
                 zhorizon(1,:) = zrow;
                 for j = 1 : Np
                     zhorizon(j+1,:) = ( obj.model.A * zhorizon(j,:)' + obj.get_modelB_bilinear( zhorizon(j,:)' ) * uhorizon(j,:)' )';
                 end
+%                 % first version...
 %                 Zvec = obj.cost.A * z + obj.get_costB_bilinear( zhorizon ) * Uvec;
 %                 zhorizon = reshape( Zvec , [ obj.params.N , Np+1 ] )';
             end
@@ -878,70 +887,278 @@ classdef Kmpc
         end
         
         %% nonlinear MPC functions (Uncomment and finish writing later)
+
+        % get_costMatrices_nonlinear: Contructs the matrices for the mpc optim. problem
+        function obj = get_costMatrices_nonlinear( obj )
+            %get_costMatrices: Constructs cost the matrices for the mpc 
+            % optimization problem.
+            %   obj.cost has fields H, G, D, A, B, C, Q, R
+            
+            % define cost function matrices
+            % Cost function is defined: U'HU + ( z0'G + Yr'D )U
+            
+            % Selection matrices
+            Ny = obj.params.n*(obj.horizon+1); % dimension of vectorized sequence of lifted states
+            Nu = obj.params.m*obj.horizon; % dimension of vectorized sequence of inputs
+            Sy = [ eye( Ny ) , zeros( Ny , Nu ) ];  % isolates lifted states from decision variable
+            Su = [ zeros( Nu , Ny ) , eye( Nu ) ];  % isolates inputs from decision variable
+               
+            % C: matrix that projects state into reference trajectory space
+            C = kron( speye(obj.horizon+1) , obj.projmtx);
+            nproj = size( obj.projmtx , 1 );
+            
+            % Q: Error magnitude penalty
+            Q = kron( speye(obj.horizon+1) , eye(nproj) * obj.cost_running); % error magnitude penalty (running cost) (default 0.1)
+            Q(end-nproj+1 : end , end-nproj+1 : end) = eye(nproj) * obj.cost_terminal;    % (terminal cost) (default 100)
+            
+            % R: Input magnitude penalty
+            R = kron( speye(obj.horizon) , eye(obj.model.params.m) .* obj.cost_input );  % input magnitude penalty (for flaccy use 0.5e-2) (new videos used 0.5e-3)
+
+            % H, G, D
+            H = Sy' * C' * Q * C * Sy + Su' * R * Su;
+            D = -2 * Q * C * Sy;
+            
+            % set outputs
+            obj.cost.H = H; obj.cost.D = D; % constructed matrices
+            obj.cost.C = C; obj.cost.Q = Q; obj.cost.R = R; % component matrices
+            obj.params.Sy = Sy; obj.params.Su = Su; % selection matrices
+            obj.params.Ny = Ny; obj.params.Nu = Nu; % dimension of decision variables
+        end
         
-%         % get_mpcInput_nonlinear: Solve the mpc problem to get the input over entire horizon
-%         function [ U , z ]= get_mpcInput_nonlinear( obj , traj , ref )
-%             %get_mpcInput: Soves the mpc problem to get the input over
-%             % entire horizon.
-%             %   traj - struct with fields y , u. Contains the measured
-%             %    states and inputs for the past ndelay+1 timesteps.
-%             %   ref - matrix containing the reference trajectory for the
-%             %    system over the horizon (one row per timestep).
-%             %   shape_bounds - [min_shape_parameters , max_shape_parameters] 
-%             %    This is only requred if system has shape constraints 
-%             %   (note: size is num of shape observables x 2)
-%             %   z - the lifted state at the current timestep
-%             
-%             % shorthand variable names
-%             Np = obj.horizon;       % steps in the horizon
-%             nd = obj.params.nd;     % number of delays
-%             
-%             % construct the current value of zeta
-%             [ ~ , zeta_temp ] = obj.get_zeta( traj );
-%             zeta = zeta_temp( end , : )';   % want most recent points
-%             
-% %             % lift zeta
-% %             z = obj.lift.econ_full( zeta );
-% %             zrow = z';
-%             
-%             % check that reference trajectory has correct dimensions
-%             if size( ref , 2 ) ~= size( obj.projmtx , 1 )
-%                 error('Reference trajectory is not the correct dimension');
-%             elseif size( ref , 1 ) > Np + 1
-%                 ref = ref( 1 : Np + 1 , : );    % remove points over horizon
-%             elseif size( ref , 1 ) < Np + 1
-%                 ref_temp = kron( ones( Np+1 , 1 ) , ref(end,:) );
-%                 ref_temp( 1 : size(ref,1) , : ) = ref;
-%                 ref = ref_temp;     % repeat last point for remainer of horizon
-%             end
-%             
-%             % vectorize the reference trajectory
-%             Yr = reshape( ref' , [ ( Np + 1 ) * size(ref,2) , 1 ] );
-%             
-%             % setup matrices for gurobi solver
-%             H = obj.get_costH_bilinear( zrow );
-%             G = obj.get_costG_bilinear( zrow );
-%             D = obj.get_costD_bilinear( zrow );
-%             f = ( z' * G + Yr' * D )';
-%             A = obj.get_constraintL_bilinear( zrow );
-%             b = - obj.constraints.M * z + obj.constraints.c;
-%             
-%             % tack on "memory" constraint to fix initial input u_0
-%             Atack = [ [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - obj.params.m ) ];
-% %             Atack_bot = [ sparse( 2*obj.params.m , obj.params.m) , [ speye( obj.params.m ) ; -speye( obj.params.m ) ] , sparse( 2*obj.params.m , size(A,2) - 2*obj.params.m ) ];
-% %             Atack = [ Atack_top ; Atack_bot ];
-%             btack = [ traj.u(end,:)' ; -traj.u(end,:)' ];
-%             A = [A ; Atack];    % tack on memory constraint
-%             b = [b ; btack];
-%             
-%             % solve the MPC problem
-%             Svec = fmincon();     % solve using fmincon
-%             Yvec = Svec( 1 : obj.params.n * Np );   % vectorized outputs over horizon
-%             Uvec = Svec( obj.params.n * Np + 1 : end ); % vectorize inputs over horizon
-%             
-%             % reshape the output so each input will have one row (first row equals current input)
-%             U = reshape( Uvec , [ obj.params.m , Np ] )';
-%         end
+        % get_constraintMatrices_nonlinear: Constructs the constraint matrices
+        function obj = get_constraintMatrices_nonlinear( obj )
+            %get_constraintMatrices_nonlinear: Constructs the constraint matrices for
+            % the mpc optimization problem.
+            %   obj.constraints has fields A, F, E, c
+            %   F is for input constraints
+            %   E is for state constraints
+            
+            % shorten some variable names
+            Np = obj.horizon;     % steps in horizon
+            params = obj.params;    % linear system model parameters
+            cost = obj.cost;     % cost matrices
+            
+            F = []; E = [];     % initialize empty matrices
+            c = [];
+            
+            % input_bounds
+            if ~isempty( obj.input_bounds )
+                num = 2*params.m;     % number of input bound constraints
+                
+                % F: input_bounds
+                Fbounds_i = [ -speye(params.m) ; speye(params.m) ];    % diagonal element of F, for bounded inputs
+                Fbounds = sparse( num * (Np+1) , params.Nu );  % no constraints, all zeros
+                Fbounds( 1:num*Np , 1:Np*params.m ) = kron( speye(Np) , Fbounds_i );     % fill in nonzeros
+                F = [ F ; Fbounds ];    % append matrix
+                
+                % E: input_bounds (just zeros)
+                Ebounds = sparse( num * (Np+1) , params.Ny );  % no constraints, all zeros
+                E = [ E ; Ebounds ];    % append matrix
+                
+                % c: input_bounds
+                input_bounds_sc = obj.scaledown.u( obj.input_bounds' )';   % scale down the input bounds
+                cbounds_i = [ -input_bounds_sc(:,1) ; input_bounds_sc(:,2) ]; % [ -umin ; umax ]
+                cbounds = zeros( num * (Np+1) , 1);    % initialization
+                cbounds(1 : num*Np) = kron( ones( Np , 1 ) , cbounds_i );     % fill in nonzeros
+                c = [ c ; cbounds ];    % append vector
+            end
+            
+            % input_slopeConst
+            if ~isempty( obj.input_slopeConst )
+                % F: input_slopeConst
+                Fslope_i = speye(params.m);
+                Fslope_neg = [ kron( speye(Np-1) , -Fslope_i ) , sparse( params.m * (Np-1) , params.m ) ];
+                Fslope_pos = [ sparse( params.m * (Np-1) , params.m ) , kron( speye(Np-1) , Fslope_i ) ];
+                Fslope_top = Fslope_neg + Fslope_pos;
+                Fslope = [ Fslope_top ; -Fslope_top];
+                F = [ F ; Fslope ];     % append matrix
+
+                % E: input_slopeConst (just zeros)
+                E = [ E ; sparse( 2 * params.m * (Np-1) , params.Ny ) ];
+                
+                % c: input_slopeConst
+                slope_lim = obj.input_slopeConst * mean( params.scale.u_factor );  % scale down the 2nd deriv. limit
+                cslope_top = slope_lim * ones( params.m * (Np-1) , 1 );
+                cslope = [ cslope_top ; cslope_top ];
+                c = [ c ; cslope ];     % append vector
+            end
+            
+            % input_smoothConst
+            if ~isempty( obj.input_smoothConst )
+                % F: input_smoothConst
+                Fsmooth_i = speye(params.m);
+                Fsmooth_lI = [ kron( speye(Np-2) , Fsmooth_i ) , sparse( params.m * (Np-2) , 2 * params.m ) ];
+                Fsmooth_2I = [ sparse( params.m * (Np-2) , params.m ) , kron( speye(Np-2) , -2*Fslope_i ) , sparse( params.m * (Np-2) , params.m ) ];
+                Fsmooth_rI = [ sparse( params.m * (Np-2) , 2 * params.m ) , kron( speye(Np-2) , Fslope_i ) ];
+                Fsmooth_top = Fsmooth_lI + Fsmooth_2I + Fsmooth_rI;
+                Fsmooth = [ Fsmooth_top ; -Fsmooth_top ];
+                F = [ F ; Fsmooth ];
+                
+                % E: input_smoothConst
+                E = [ E ; sparse( 2 * params.m * (Np-2) , params.Ny ) ];
+                
+                % c: input_smoothConst
+                smooth_lim = params.Ts^2 * obj.input_smoothConst * mean( params.scale.u_factor );  % scale down the 2nd deriv. limit
+                csmooth = smooth_lim * ones( size(Fsmooth,1) ,1);
+                c = [ c ; csmooth ];
+            end
+            
+            % state_bounds
+            if ~isempty( obj.state_bounds )
+                num = 2*params.n;   % number of state bound constraints
+                
+                % E: state_bounds
+                Esbounds_i = [ -speye(params.n) ; speye(params.n) ];    % diagonal element of E, for bounding low dim. states (first n elements of lifted state)
+                Esbounds = sparse( num * (Np+1) , params.Ny );  % no constraints, all zeros
+                Esbounds( 1:num*(Np+1) , 1:(Np+1)*params.n ) = kron( speye(Np+1) , Esbounds_i );     % fill in nonzeros
+                E = [ E ; Esbounds ];    % append matrix
+                
+                % F: state_bounds (all zeros)
+                Fsbounds = zeros( size( Esbounds , 1 ) , params.Nu );
+                F = [ F ; Fsbounds ];    % append matrix
+                
+                % c: state_bounds
+                state_bounds_sc = obj.scaledown.y( obj.state_bounds' )';    % scaled down state bounds
+                csbounds_i = [ -state_bounds_sc(:,1) ; state_bounds_sc(:,2) ]; % [ -ymin ; ymax ]
+                csbounds = kron( ones( Np+1 , 1 ) , csbounds_i );     % fill in nonzeros
+                c = [ c ; csbounds ];    % append vector
+            end
+            
+            % create symbolic functions for gradients
+            obj.model.dFdzeta_sym = jacobian( obj.model.F_sym , obj.params.zeta );
+            obj.model.dFdu_sym = jacobian( obj.model.F_sym , obj.params.u );
+            obj.model.dFdzeta_func = matlabFunction( obj.model.dFdzeta_sym , 'Vars' , {obj.params.zeta, obj.params.u} );
+            obj.model.dFdu_func = matlabFunction( obj.model.dFdu_sym , 'Vars' , {obj.params.zeta, obj.params.u} );
+            
+            % set outputs
+            obj.constraints.F = F;
+            obj.constraints.E = E;    
+            obj.constraints.c = c;
+            obj.constraints.A = E * obj.params.Sy + F * obj.params.Su;
+        end
+        
+        % cost_function_nonlinear: Evaluates the cost function for NMPC
+        function [ cost , grad ] = cost_nmpc( obj , X , Yr )
+           %cost_nmpc: Evaluates NMPC cost function
+           %    X = [Z;U] - NMPC decision variable where Z is vectorized
+           %    sequence of lifted states and U is vectorized sequence of
+           %    inputs.
+           %    Yr - vectorized sequence of desired outputs
+           
+           cost = X' * obj.cost.H * X + Yr' * obj.cost.D * X;  % cost function
+           grad = 2 * obj.cost.H * X + obj.cost.D' * Yr;    % gradient of cost function
+        end
+        
+        % nonlcon_nmpc: Nonlinear constraints for NMPC
+        function [ c , ceq , gc , gceq] = nonlcon_nmpc( obj , X )
+            %nonlcon_nmpc: Nonlinear constraints for NMPC
+            % c - inequality constraints c <= 0
+            % ceq - equality constraints c = 0
+            % gc - gradient of inequality constraints
+            % gceq - gradient of equality constraints
+            
+            Y = obj.params.Sy * X;  % vectorized lifted states
+            U = obj.params.Su * X;  % vecotrized inputs
+            
+            % set equality constraints
+            ceq = zeros( size(Y,1)-obj.params.n , 1 ); % preallocate
+            gceq = zeros( size(Y,1)-obj.params.n , size(X,1) );
+            for i = 1 : obj.horizon
+                y_ind = (i-1)*obj.params.n+1 : i*obj.params.n;
+                u_ind = (i-1)*obj.params.m+1 : i*obj.params.m;
+                yk = Y(y_ind);
+                uk = U(u_ind);
+                ceq(y_ind) = Y( y_ind + obj.params.n ) - obj.model.F_func( yk , uk );
+                
+                % specify gradients
+                gceq( y_ind , y_ind) = -obj.model.dFdzeta_func( yk , uk );
+                gceq( y_ind , y_ind+obj.params.n ) = eye( obj.params.n );
+                gceq( y_ind , obj.params.Ny + u_ind ) = -obj.model.dFdu_func( yk , uk );
+            end
+            gceq = gceq'; % matlab wants columns to correspond to constraints
+            
+            % inequality constraints are equality constraints with tolerance
+%             tol = 1e-2;
+%             c = [ ceq - tol ; -ceq - tol ];
+%             gc = [ gceq , -gceq ];
+%             ceq = [];   % negate equality constraints
+%             gceq = [];
+            
+            % no inequality constraints 
+            c = 0;
+            gc = zeros( 1 , size(X,1) )';
+        end
+        
+        % get_mpcInput_nonlinear: Solve the mpc problem to get the input over entire horizon
+        function [ U , z ]= get_mpcInput_nonlinear( obj , traj , ref )
+            %get_mpcInput: Soves the mpc problem to get the input over
+            % entire horizon.
+            %   traj - struct with fields y , u. Contains the measured
+            %    states and inputs for the past ndelay+1 timesteps.
+            %   ref - matrix containing the reference trajectory for the
+            %    system over the horizon (one row per timestep).
+            %   shape_bounds - [min_shape_parameters , max_shape_parameters] 
+            %    This is only requred if system has shape constraints 
+            %   (note: size is num of shape observables x 2)
+            %   z - the lifted state at the current timestep
+            
+            % shorthand variable names
+            Np = obj.horizon;       % steps in the horizon
+            nd = obj.params.nd;     % number of delays
+            
+            % construct the current value of zeta
+            [ ~ , zeta_temp ] = obj.get_zeta( traj );
+            zeta = zeta_temp( end , : )';   % want most recent points
+            
+            % check that reference trajectory has correct dimensions
+            if size( ref , 2 ) ~= size( obj.projmtx , 1 )
+                error('Reference trajectory is not the correct dimension');
+            elseif size( ref , 1 ) > Np + 1
+                ref = ref( 1 : Np + 1 , : );    % remove points over horizon
+            elseif size( ref , 1 ) < Np + 1
+                ref_temp = kron( ones( Np+1 , 1 ) , ref(end,:) );
+                ref_temp( 1 : size(ref,1) , : ) = ref;
+                ref = ref_temp;     % repeat last point for remainer of horizon
+            end
+            
+            % vectorize the reference trajectory
+            Yr = reshape( ref' , [ ( Np + 1 ) * size(ref,2) , 1 ] );
+            
+            % setup matrices for fmincon
+            A = obj.constraints.A;
+            b = obj.constraints.c;
+            
+            % fix the initial state and input
+            Aeq = [ eye(obj.params.n) , zeros( obj.params.n , obj.params.Ny - obj.params.n + obj.params.Nu ) ;...
+                    zeros( obj.params.m , obj.params.Ny  ) , eye( obj.params.m ) , zeros( obj.params.m , obj.params.Nu - obj.params.m )];
+            beq = [ zeta ; traj.u(end,:)' ]; 
+            
+            % set initial condition for fmincon (repeat of current state and input)
+%             X0 = [ kron( ones(Np+1,1) , zeta ) ; kron( ones(Np,1) , traj.u(end,:)' ) ];
+%             X0 = zeros( obj.params.Ny + obj.params.Nu , 1 );    % zero IC
+            X0 = [ Yr ; kron( ones(Np,1) , traj.u(end,:)' ) ];  % from ref traj
+%             X0 = 2*rand( obj.params.Ny+obj.params.Nu , 1 ) - 1; % random
+            
+            % solve the MPC problem
+            fun = @(X) obj.cost_nmpc(X,Yr);
+            nonlcon = @(X) obj.nonlcon_nmpc(X);
+            options = optimoptions( 'fmincon' ,...
+                                    'Algorithm' , 'sqp' ,...
+                                    'SpecifyObjectiveGradient' , true ,...
+                                    'SpecifyConstraintGradient' , true ,...
+                                    'Display' , 'iter' , ...
+                                    'ConstraintTolerance' , 1e-6 , ...
+                                    'ScaleProblem', 'obj-and-constr', ...
+                                    'HessianApproximation', 'finite-difference');
+            X = fmincon(fun,X0,A,b,Aeq,beq,[],[],nonlcon,options);     % solve using fmincon
+%             X = fmincon(fun,X0,[],[],[],[],[],[],nonlcon,options);     % solve using fmincon
+            Yvec = X( 1 : obj.params.n * (Np+1) );   % vectorized outputs over horizon
+            Uvec = X( obj.params.n * (Np+1) + 1 : end ); % vectorize inputs over horizon
+            
+            % reshape the output so each input will have one row (first row equals current input)
+            U = reshape( Uvec , [ obj.params.m , Np ] )';
+            z = [ zeta ; zeros( obj.params.N - obj.params.n , 1 )]; % current lifted state isn't actually lifted for this system
+        end
         
 
         %% load estimation
