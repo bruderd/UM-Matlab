@@ -126,6 +126,7 @@ classdef Ksim
             results.R = [ ref(1,:) ];
             results.X = [ x0( end , : ) ];
             results.Z = []; %[ obj.mpc.lift.econ_full( zeta0' )' ]; % lifted states
+            results.comp_time = []; % mpc computation time
             if obj.mpc.loaded
                 results.W = w;  % actual load condition over entire horizon
                 results.What = [ zeros( 1 , size(w,2) ) ];    % estimated load condition
@@ -195,8 +196,12 @@ classdef Ksim
                     [ U , z ] = obj.mpc.get_mpcInput( current , refhor );
                 elseif strcmp( obj.mpc.model_type , 'bilinear' )
                     [ U , z ] = obj.mpc.get_mpcInput_bilinear( current , refhor );
+%                     [ U , z ] = obj.mpc.get_mpcInput_bilinear_iter( current , refhor , 6 );
+                elseif strcmp( obj.mpc.model_type , 'nonlinear' )
+%                     [ U , z ] = obj.mpc.get_mpcInput_nonlinear( current , refhor );
+                    unext = obj.mpc.get_nlmpc_input( current , refhor );
                 end
-                solve_time(k) = toc;
+                comp_time = toc; % mpc computation time
                 
                 % if a solution was not found, break out of while loop
                 if any( isnan(U) )
@@ -236,7 +241,7 @@ classdef Ksim
                 results.R = [ results.R ; obj.scaleup.ref( ref_sc( k , : ) ) ];   % note that this is not scaled down
                 results.X = [ results.X ; x_kp1' ];
                 results.Z = [ results.Z ; z'  ]; % current lifted state
-                results.comp_time
+                results.comp_time = [ results.comp_time ; comp_time ];   % mpc computation time
                 
                 k = k + 1;  % increment step counter
             end

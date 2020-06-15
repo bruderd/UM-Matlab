@@ -25,6 +25,8 @@ classdef Kmpc
         set_constRHS;  % function that sets the value of the RHS of constraints
         get_zeta;   % function that constructs zeta from state and input data in time
         
+        nlmpc_controller;   % matlab nlmpc controller object (MPC toolbox)
+        
         scaledown;  % functions for scaling to [-1,1]
         scaleup;    % functions for scaling from [-1,1]
     end
@@ -84,6 +86,9 @@ classdef Kmpc
                 obj = obj.get_costMatrices_nonlinear;
                 obj = obj.get_constraintMatrices_nonlinear;
             end
+            
+            % construct a matlab nlmpc controller
+            obj = obj.get_nlmpc_controller;
         end
         
         % parse_args: Parses the Name, Value pairs in varargin
@@ -1037,7 +1042,7 @@ classdef Kmpc
             obj.constraints.A = E * obj.params.Sy + F * obj.params.Su;
         end
         
-        % cost_function_nonlinear: Evaluates the cost function for NMPC
+        % cost_nmpc: Evaluates the cost function for NMPC
         function [ cost , grad ] = cost_nmpc( obj , X , Yr )
            %cost_nmpc: Evaluates NMPC cost function
            %    X = [Z;U] - NMPC decision variable where Z is vectorized
@@ -1160,7 +1165,118 @@ classdef Kmpc
             z = [ zeta ; zeros( obj.params.N - obj.params.n , 1 )]; % current lifted state isn't actually lifted for this system
         end
         
-
+        %% nlmpc matlab object
+        % get_nlmpc_controller: Construct nlmpc Matlab object
+        function obj = get_nlmpc_controller(obj)
+           
+            % crete nlmpc object (requires MPC and Optimization Toolboxes)
+            nlobj = nlmpc( obj.params.n , obj.params.n , obj.params.m );
+            
+            % change default nlmpc object parameters
+            nlobj.Ts = obj.params.Ts;
+            nlobj.PredictionHorizon = obj.horizon;
+            nlobj.Model.StateFcn = @(zeta,u) obj.model.F_func(zeta,u);
+            nlobj.Model.OutputFcn = matlabFunction( obj.model.C * obj.params.zeta , 'Vars' , {obj.params.zeta , obj.params.u} );
+%             nlobj.Model.OutputFcn = @(zeta,u) obj.model.C * obj.params.zeta;
+            nlobj.Model.IsContinuousTime = false;
+            nlobj.OutputVariables.Min = obj.input_bounds(:,1);
+            nlobj.OutputVariables.Max = obj.input_bounds(:,2);
+            
+            % specify cost function
+            nlobj.Optimization.CustomCostFcn = @obj.nlmpc_cost_function;
+            nlobj.Optimization.CustomEqConFcn = @obj.nlmpc_eqcon_function;
+            nlobj.Optimization.CustomIneqConFcn = @obj.nlmpc_ineqcon_function;
+            
+            % specify jacobians
+%             nlobj.Jacobian.StateFcn = @(zeta,u) jacobian( obj.model.F_sym , obj.params.zeta );
+%             nlobj.Jacobian.OutputFcn = @(zeta,u) jacobian( obj.model.C * obj.params.zeta , obj.params.zeta );
+%             nlobj.Jacobian.CustomCostFcn = @(zeta,u) obj.nlmpc_cost_jacobian;
+%             nlobj.Jacobian.CustomEqConFcn = @(zeta,u) obj.nlmpc_eqcon_jacobian;
+%             nlobj.Jacobian.CustomIneqConFcn = @(zeta,u) obj.nlmpc_ineqcon_jacobian;
+            
+            % specify output
+            obj.nlmpc_controller = nlobj;
+        end
+        
+        % nlmpc_cost_function: Cost function needed for Matlab nlmpc object
+        function cost = nlmpc_cost_function( obj , Z , U , e , data)
+            % vectorize inputs
+            Zvec = reshape( Z' , [ numel(Z) , 1 ] );
+            Uvec = reshape( U' , [ numel(U) , 1 ] );
+            X = [ Zvec ; Uvec( 1 : end - obj.params.m ) ];  % remove final value
+            ref = [ data.References ; data.References(end,:) ];   % needs additional row
+            Yr = reshape( ref' , [ numel(ref) , 1 ] );
+            
+            % calculate cost
+            cost = obj.cost_nmpc( X , Yr );
+        end
+        
+        % nlmpc_cost_jacobian: Cost function needed for Matlab nlmpc object
+        function cost_jacobian = nlmpc_cost_jacobian( obj , Z , U , e , data)
+            % vectorize inputs
+            Zvec = reshape( Z' , [ numel(Z) , 1 ] );
+            Uvec = reshape( U' , [ numel(U) , 1 ] );
+            X = [ Zvec ; Uvec( 1 : end - obj.params.m ) ];  % remove final value
+            ref = [ data.References ; data.References(end,:) ];   % needs additional row
+            Yr = reshape( ref' , [ numel(ref) , 1 ] );
+            
+            % calculate cost
+            [ cost , gradcost ] = obj.cost_nmpc( X , Yr );
+            cost_jacobian = gradcost( 1 : length(Zvec) , : )';
+        end
+        
+        % nlmpc_eqcon_function: Equality constraints needed for Matlab nlmpc object
+        function ceq = nlmpc_eqcon_function( obj , Z , U , data)
+            % vectorize inputs
+            Zvec = reshape( Z' , [ numel(Z) , 1 ] );
+            Uvec = reshape( U' , [ numel(U) , 1 ] );
+            X = [ Zvec ; Uvec( 1 : end - obj.params.m ) ];  % remove final value
+            
+            % calculate equality constraints
+            [ c , ceq , gc , gceq] = obj.nonlcon_nmpc( X );
+        end
+        
+        % nlmpc_eqcon_jacobian: Equality constraints needed for Matlab nlmpc object
+        function ceq_jacobian = nlmpc_eqcon_jacobian( obj , Z , U , data)
+            % vectorize inputs
+            Zvec = reshape( Z' , [ numel(Z) , 1 ] );
+            Uvec = reshape( U' , [ numel(U) , 1 ] );
+            X = [ Zvec ; Uvec( 1 : end - obj.params.m ) ];  % remove final value
+            
+            % calculate equality constraints
+            [ c , ceq , gc , gceq] = obj.nonlcon_nmpc( X );
+            ceq_jacobian = gceq( 1 : length(Zvec) , : )';
+        end
+        
+        % nlmpc_ineqcon_function: Inequality constraints needed for Matlab nlmpc object
+        function c = nlmpc_ineqcon_function( obj , Z , U , e , data)
+            % vectorize inputs
+            Zvec = reshape( Z' , [ numel(Z) , 1 ] );
+            Uvec = reshape( U' , [ numel(U) , 1 ] );
+            X = [ Zvec ; Uvec( 1 : end - obj.params.m ) ];  % remove final value
+            
+            % calculate equality constraints
+            [ c , ceq , gc , gceq] = obj.nonlcon_nmpc( X );
+        end
+        
+        % nlmpc_ineqcon_jacobian: Inequality constraints needed for Matlab nlmpc object
+        function c_jacobian = nlmpc_ineqcon_jacobian( obj , Z , U , e , data)
+            % vectorize inputs
+            Zvec = reshape( Z' , [ numel(Z) , 1 ] );
+            Uvec = reshape( U' , [ numel(U) , 1 ] );
+            X = [ Zvec ; Uvec( 1 : end - obj.params.m ) ];  % remove final value
+            
+            % calculate equality constraints
+            [ c , ceq , gc , gceq] = obj.nonlcon_nmpc( X );
+            c_jacobian = gc( 1 : length(Zvec) , : )';
+        end
+        
+        % get_nlmpc_input
+        function unext = get_nlmpc_input( obj , traj , ref )
+            % use matlab nonlinear mpc object
+            unext = nlmpcmove( obj.nlmpc_controller , traj.y(end,:) , traj.u(end,:) ,ref );
+        end
+        
         %% load estimation
     
         % estimate_load_linear (infer the load based on dynamics)
