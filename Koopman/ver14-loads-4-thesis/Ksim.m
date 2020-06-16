@@ -198,11 +198,11 @@ classdef Ksim
                     [ U , z ] = obj.mpc.get_mpcInput_bilinear( current , refhor );
 %                     [ U , z ] = obj.mpc.get_mpcInput_bilinear_iter( current , refhor , 6 );
                 elseif strcmp( obj.mpc.model_type , 'nonlinear' )
-%                     [ U , z ] = obj.mpc.get_mpcInput_nonlinear( current , refhor );
-                    unext = obj.mpc.get_nlmpc_input( current , refhor );
-                    U = zeros(2,obj.mpc.params.m);
-                    U(2,:) = unext;
-                    z = [];
+                    [ U , z ] = obj.mpc.get_mpcInput_nonlinear( current , refhor );
+%                     unext = obj.mpc.get_nlmpc_input( current , refhor );
+%                     U = zeros(2,obj.mpc.params.m);
+%                     U(2,:) = unext';
+%                     z = [];
                 end
                 comp_time = toc; % mpc computation time
                 

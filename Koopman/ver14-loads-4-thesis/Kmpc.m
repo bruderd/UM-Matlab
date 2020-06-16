@@ -952,18 +952,18 @@ classdef Kmpc
                 
                 % F: input_bounds
                 Fbounds_i = [ -speye(params.m) ; speye(params.m) ];    % diagonal element of F, for bounded inputs
-                Fbounds = sparse( num * (Np+1) , params.Nu );  % no constraints, all zeros
+                Fbounds = sparse( num * (Np+0) , params.Nu );  % no constraints, all zeros
                 Fbounds( 1:num*Np , 1:Np*params.m ) = kron( speye(Np) , Fbounds_i );     % fill in nonzeros
                 F = [ F ; Fbounds ];    % append matrix
                 
                 % E: input_bounds (just zeros)
-                Ebounds = sparse( num * (Np+1) , params.Ny );  % no constraints, all zeros
+                Ebounds = sparse( num * (Np+0) , params.Ny );  % no constraints, all zeros
                 E = [ E ; Ebounds ];    % append matrix
                 
                 % c: input_bounds
                 input_bounds_sc = obj.scaledown.u( obj.input_bounds' )';   % scale down the input bounds
                 cbounds_i = [ -input_bounds_sc(:,1) ; input_bounds_sc(:,2) ]; % [ -umin ; umax ]
-                cbounds = zeros( num * (Np+1) , 1);    % initialization
+                cbounds = zeros( num * (Np+0) , 1);    % initialization
                 cbounds(1 : num*Np) = kron( ones( Np , 1 ) , cbounds_i );     % fill in nonzeros
                 c = [ c ; cbounds ];    % append vector
             end
@@ -1039,7 +1039,11 @@ classdef Kmpc
             obj.constraints.F = F;
             obj.constraints.E = E;    
             obj.constraints.c = c;
-            obj.constraints.A = E * obj.params.Sy + F * obj.params.Su;
+            if ~isempty(E)
+                obj.constraints.A = E * obj.params.Sy + F * obj.params.Su;
+            else
+                obj.constraints.A = [];
+            end
         end
         
         % cost_nmpc: Evaluates the cost function for NMPC
@@ -1139,10 +1143,11 @@ classdef Kmpc
             beq = [ zeta ; traj.u(end,:)' ]; 
             
             % set initial condition for fmincon (repeat of current state and input)
-%             X0 = [ kron( ones(Np+1,1) , zeta ) ; kron( ones(Np,1) , traj.u(end,:)' ) ];
+            X0 = [ kron( ones(Np+1,1) , zeta ) ; kron( ones(Np,1) , traj.u(end,:)' ) ];
 %             X0 = zeros( obj.params.Ny + obj.params.Nu , 1 );    % zero IC
-            X0 = [ Yr ; kron( ones(Np,1) , traj.u(end,:)' ) ];  % from ref traj
+%             X0 = [ Yr ; kron( ones(Np,1) , traj.u(end,:)' ) ];  % from ref traj
 %             X0 = 2*rand( obj.params.Ny+obj.params.Nu , 1 ) - 1; % random
+%             X0 = [ Yr ; Yr(2:end) ];  % known optimal solution
             
             % solve the MPC problem
             fun = @(X) obj.cost_nmpc(X,Yr);
@@ -1153,10 +1158,8 @@ classdef Kmpc
                                     'SpecifyConstraintGradient' , true ,...
                                     'Display' , 'iter' , ...
                                     'ConstraintTolerance' , 1e-6 , ...
-                                    'ScaleProblem', 'obj-and-constr', ...
-                                    'HessianApproximation', 'finite-difference');
+                                    'ScaleProblem', false );
             X = fmincon(fun,X0,A,b,Aeq,beq,[],[],nonlcon,options);     % solve using fmincon
-%             X = fmincon(fun,X0,[],[],[],[],[],[],nonlcon,options);     % solve using fmincon
             Yvec = X( 1 : obj.params.n * (Np+1) );   % vectorized outputs over horizon
             Uvec = X( obj.params.n * (Np+1) + 1 : end ); % vectorize inputs over horizon
             
@@ -1170,17 +1173,17 @@ classdef Kmpc
         function obj = get_nlmpc_controller(obj)
            
             % crete nlmpc object (requires MPC and Optimization Toolboxes)
-            nlobj = nlmpc( obj.params.n , obj.params.n , obj.params.m );
+            nlobj = nlmpc( obj.params.n , size(obj.projmtx,1) , obj.params.m );
             
             % change default nlmpc object parameters
             nlobj.Ts = obj.params.Ts;
             nlobj.PredictionHorizon = obj.horizon;
             nlobj.Model.StateFcn = @(zeta,u) obj.model.F_func(zeta,u);
-            nlobj.Model.OutputFcn = matlabFunction( obj.model.C * obj.params.zeta , 'Vars' , {obj.params.zeta , obj.params.u} );
+            nlobj.Model.OutputFcn = matlabFunction( obj.projmtx * obj.params.zeta , 'Vars' , {obj.params.zeta , obj.params.u} );
 %             nlobj.Model.OutputFcn = @(zeta,u) obj.model.C * obj.params.zeta;
             nlobj.Model.IsContinuousTime = false;
-            nlobj.OutputVariables.Min = obj.input_bounds(:,1);
-            nlobj.OutputVariables.Max = obj.input_bounds(:,2);
+%             nlobj.OutputVariables.Min = obj.input_bounds(1,1);
+%             nlobj.OutputVariables.Max = obj.input_bounds(1,2);
             
             % specify cost function
             nlobj.Optimization.CustomCostFcn = @obj.nlmpc_cost_function;
@@ -1188,8 +1191,8 @@ classdef Kmpc
             nlobj.Optimization.CustomIneqConFcn = @obj.nlmpc_ineqcon_function;
             
             % specify jacobians
-%             nlobj.Jacobian.StateFcn = @(zeta,u) jacobian( obj.model.F_sym , obj.params.zeta );
-%             nlobj.Jacobian.OutputFcn = @(zeta,u) jacobian( obj.model.C * obj.params.zeta , obj.params.zeta );
+            nlobj.Jacobian.StateFcn = @(zeta,u) jacobian( obj.model.F_sym , obj.params.zeta );
+            nlobj.Jacobian.OutputFcn = @(zeta,u) jacobian( obj.model.C * obj.params.zeta , obj.params.zeta );
 %             nlobj.Jacobian.CustomCostFcn = @(zeta,u) obj.nlmpc_cost_jacobian;
 %             nlobj.Jacobian.CustomEqConFcn = @(zeta,u) obj.nlmpc_eqcon_jacobian;
 %             nlobj.Jacobian.CustomIneqConFcn = @(zeta,u) obj.nlmpc_ineqcon_jacobian;
