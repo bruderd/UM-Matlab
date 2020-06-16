@@ -952,18 +952,18 @@ classdef Kmpc
                 
                 % F: input_bounds
                 Fbounds_i = [ -speye(params.m) ; speye(params.m) ];    % diagonal element of F, for bounded inputs
-                Fbounds = sparse( num * (Np+1) , params.Nu );  % no constraints, all zeros
+                Fbounds = sparse( num * (Np+0) , params.Nu );  % no constraints, all zeros
                 Fbounds( 1:num*Np , 1:Np*params.m ) = kron( speye(Np) , Fbounds_i );     % fill in nonzeros
                 F = [ F ; Fbounds ];    % append matrix
                 
                 % E: input_bounds (just zeros)
-                Ebounds = sparse( num * (Np+1) , params.Ny );  % no constraints, all zeros
+                Ebounds = sparse( num * (Np+0) , params.Ny );  % no constraints, all zeros
                 E = [ E ; Ebounds ];    % append matrix
                 
                 % c: input_bounds
                 input_bounds_sc = obj.scaledown.u( obj.input_bounds' )';   % scale down the input bounds
                 cbounds_i = [ -input_bounds_sc(:,1) ; input_bounds_sc(:,2) ]; % [ -umin ; umax ]
-                cbounds = zeros( num * (Np+1) , 1);    % initialization
+                cbounds = zeros( num * (Np+0) , 1);    % initialization
                 cbounds(1 : num*Np) = kron( ones( Np , 1 ) , cbounds_i );     % fill in nonzeros
                 c = [ c ; cbounds ];    % append vector
             end
@@ -1039,7 +1039,11 @@ classdef Kmpc
             obj.constraints.F = F;
             obj.constraints.E = E;    
             obj.constraints.c = c;
-            obj.constraints.A = E * obj.params.Sy + F * obj.params.Su;
+            if ~isempty(E)
+                obj.constraints.A = E * obj.params.Sy + F * obj.params.Su;
+            else
+                obj.constraints.A = [];
+            end
         end
         
         % cost_nmpc: Evaluates the cost function for NMPC
@@ -1139,25 +1143,23 @@ classdef Kmpc
             beq = [ zeta ; traj.u(end,:)' ]; 
             
             % set initial condition for fmincon (repeat of current state and input)
-%             X0 = [ kron( ones(Np+1,1) , zeta ) ; kron( ones(Np,1) , traj.u(end,:)' ) ];
+            X0 = [ kron( ones(Np+1,1) , zeta ) ; kron( ones(Np,1) , traj.u(end,:)' ) ];
 %             X0 = zeros( obj.params.Ny + obj.params.Nu , 1 );    % zero IC
 %             X0 = [ Yr ; kron( ones(Np,1) , traj.u(end,:)' ) ];  % from ref traj
 %             X0 = 2*rand( obj.params.Ny+obj.params.Nu , 1 ) - 1; % random
-            X0 = [ Yr ; Yr(2:end) ];  % known optimal solution
+%             X0 = [ Yr ; Yr(2:end) ];  % known optimal solution
             
             % solve the MPC problem
             fun = @(X) obj.cost_nmpc(X,Yr);
             nonlcon = @(X) obj.nonlcon_nmpc(X);
             options = optimoptions( 'fmincon' ,...
-                                    'Algorithm' , 'interior-point' ,...
-                                    'SpecifyObjectiveGradient' , false ,...
-                                    'SpecifyConstraintGradient' , false ,...
-                                    'CheckGradients' , true , ...
+                                    'Algorithm' , 'sqp' ,...
+                                    'SpecifyObjectiveGradient' , true ,...
+                                    'SpecifyConstraintGradient' , true ,...
                                     'Display' , 'iter' , ...
                                     'ConstraintTolerance' , 1e-6 , ...
                                     'ScaleProblem', false );
-%             X = fmincon(fun,X0,A,b,Aeq,beq,[],[],nonlcon,options);     % solve using fmincon
-            X = fmincon(fun,X0,A,b,[],[],[],[],nonlcon,options);     % solve using fmincon
+            X = fmincon(fun,X0,A,b,Aeq,beq,[],[],nonlcon,options);     % solve using fmincon
             Yvec = X( 1 : obj.params.n * (Np+1) );   % vectorized outputs over horizon
             Uvec = X( obj.params.n * (Np+1) + 1 : end ); % vectorize inputs over horizon
             
@@ -1166,7 +1168,7 @@ classdef Kmpc
             z = [ zeta ; zeros( obj.params.N - obj.params.n , 1 )]; % current lifted state isn't actually lifted for this system
         end
         
-        %% nlmpc matlab object
+        %% nlmpc matlab object (UN)
         % get_nlmpc_controller: Construct nlmpc Matlab object
         function obj = get_nlmpc_controller(obj)
            

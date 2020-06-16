@@ -1168,7 +1168,7 @@ classdef Kmpc
             z = [ zeta ; zeros( obj.params.N - obj.params.n , 1 )]; % current lifted state isn't actually lifted for this system
         end
         
-        %% nlmpc matlab object
+        %% nlmpc matlab object (UNUSED: DELETE WHEN READY)
         % get_nlmpc_controller: Construct nlmpc Matlab object
         function obj = get_nlmpc_controller(obj)
            

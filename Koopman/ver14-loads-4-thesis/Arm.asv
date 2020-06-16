@@ -673,8 +673,8 @@ classdef Arm
             alpha = y(: , 1:obj.params.Nlinks );   % joint angles over time
             
             fig = figure;   % create figure for the animation
-%             axis([-1.25*obj.params.L, 1.25*obj.params.L, -1.25*obj.params.L, 1.25*obj.params.L]);
-            axis([ min(ref(:,1))-0.2 , max(ref(:,1))+0.2 , min(ref(:,2))-0.2 , max(ref(:,2))+0.2 ]);
+            axis([-1.25*obj.params.L, 1.25*obj.params.L, -1.25*obj.params.L, 1.25*obj.params.L])
+            axis([ min(ref(:,1))-0.2 , max(ref(:,1)) ])
             set(gca,'Ydir','reverse')
             xlabel('x(m)')
             ylabel('y(m)')
@@ -727,9 +727,9 @@ classdef Arm
                 hold on;
                 p0 = quiver( x_grid , y_grid , u_grid , v_grid , 'Color' , [0.65 0.65 0.65] );
                 p1 = plot(x, y, 'k-o' , 'LineWidth' , 3);
-%                 p2 = plot( marker(:,1) , marker(:,2) , 'r*');
+                p2 = plot( marker(:,1) , marker(:,2) , 'r*');
                 p4 = plot( marker(end,1) , marker(end,2) , 'bo' , 'MarkerSize' , 2*w(index,1) + 0.01 , 'MarkerFaceColor' , 'b' );  % end effector load
-                p5 = plot( endeff_path(1:i,1) , endeff_path(1:i,2) , 'b' , 'LineWidth' , 2);     % end effector path
+                p5 = plot( endeff_path(1:i,1) , endeff_path(1:i,2) , 'b' );     % end effector path
                 hold off;
                 grid on;
                 
@@ -741,7 +741,7 @@ classdef Arm
                 delete(r2);
                 delete(p0);
                 delete(p1);
-%                 delete(p2); 
+                delete(p2); 
                 delete(p4);
                 delete(p5);
             end
