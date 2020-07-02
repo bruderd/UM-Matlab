@@ -1,7 +1,10 @@
-% gather_arm_data
+% gather_arm_data_mesh
 %
 % Perform simulations of an Arm model under various rampNhold inputs and 
 % loading conditions.
+%
+% Differs from gather_arm_data in the way training loads are selected.
+% It covers a whole grid of constant loads rather than ramping them.
 %
 % Generates the following objects
 %   train - cell array containing data for each training trial
@@ -27,9 +30,9 @@ val_len = ones(1,num_val) * 30;       % length of each valiation trial (s)
 ramps_lb = 0.25;
 ramps_ub = 3;
 
-% load ramp length bounds
-w_ramps_lb = 5;
-w_ramps_ub = 10;
+% % load ramp length bounds
+% w_ramps_lb = 5;
+% w_ramps_ub = 10;
 
 % load condition bounds
 % w_lb = [ 0 , -pi/2 ];
@@ -40,6 +43,13 @@ w_lb = [ 0 , -pi/2 ];   % gravity load only
 w_ub = [ 1 , pi/2 ];    % gravity load only
 % w_lb = [0 0];   % unloaded
 % w_ub = [0 0];   % unloaded 
+
+% load condition meshgrid
+numsteps_w_train = [ 2 , 11 ];
+numsteps_w_val = [ 2 , 5 ];
+[ W1_train , W2_train ] = meshgrid( linspace( w_lb(1) , w_ub(1) , numsteps_w_train(1) ) ,...
+                                linspace( w_lb(2) , w_ub(2) , numsteps_w_train(2) ) );
+
 
 % input bounds
 u_lb = -0.9*pi * ones( 1 , Arm.params.Nmods );
@@ -87,8 +97,3 @@ end
 
 file_name = 'thesis-3link-markers-grav-endload-01';
 data4sysid = Data.get_data4sysid( train , val , true , file_name );
-
-
-
-
-

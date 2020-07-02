@@ -93,6 +93,14 @@ classdef Ksim
                         w = load;
                     end
                 end
+            elseif ~isempty(load)   % model doesn't have load, but want to apply one to system
+                if size( load , 1 ) == 1    % assume constant load
+                    w = kron( ones( size(ref,1) , 1 ) , load );
+                elseif size( load , 1 ) ~= size( ref , 1 )
+                    error('Load argument must have 1 or the same number of rows as ref argument');
+                else
+                    w = load;
+                end
             end
 %             % set value of initial conditions to zero if none provided
 %             if nargin < 3
@@ -127,9 +135,12 @@ classdef Ksim
             results.X = [ x0( end , : ) ];
             results.Z = []; %[ obj.mpc.lift.econ_full( zeta0' )' ]; % lifted states
             results.comp_time = []; % mpc computation time
+            results.err = [];   % tracking error (Euclidean distance)
             if obj.mpc.loaded
                 results.W = w;  % actual load condition over entire horizon
                 results.What = [ zeros( 1 , size(w,2) ) ];    % estimated load condition
+            elseif ~isempty(load)
+                results.W = w;  % actual load condition over entire horizon
             end
             
             k = 1;
@@ -170,7 +181,7 @@ classdef Ksim
                         ypast = obj.scaledown.y( yp );
                         upast = obj.scaledown.u( up );
                     end
-                    % choose appropriate estimateion function for model type
+                    % choose appropriate estimation function for model type
                     if mod( k , obj.mpc.load_obs_period ) == 0
                         if strcmp( obj.mpc.model_type , 'linear' )
                             current.what = obj.mpc.estimate_load_linear( ypast , upast)';   % NOTE!!!!: Only works no delays for now
@@ -195,8 +206,8 @@ classdef Ksim
                 if strcmp( obj.mpc.model_type , 'linear' )
                     [ U , z ] = obj.mpc.get_mpcInput( current , refhor );
                 elseif strcmp( obj.mpc.model_type , 'bilinear' )
-                    [ U , z ] = obj.mpc.get_mpcInput_bilinear( current , refhor );
-%                     [ U , z ] = obj.mpc.get_mpcInput_bilinear_iter( current , refhor , 6 );
+%                     [ U , z ] = obj.mpc.get_mpcInput_bilinear( current , refhor );
+                    [ U , z ] = obj.mpc.get_mpcInput_bilinear_iter( current , refhor , 1 );
                 elseif strcmp( obj.mpc.model_type , 'nonlinear' )
                     [ U , z ] = obj.mpc.get_mpcInput_nonlinear( current , refhor );
                 end
@@ -224,7 +235,7 @@ classdef Ksim
                 % simulate the system over one time-step (using actual system model)
                 x_k = results.X( end , : )';
                 u_k = results.U(end,:)'; %current.u';
-                if obj.mpc.loaded
+                if obj.mpc.loaded || ~isempty(load)
                     w_k = results.W(k,:)'; % actual load at kth timestep
                     x_kp1 = obj.sys.simulate_Ts( x_k , u_k , w_k );
                 else
@@ -241,6 +252,7 @@ classdef Ksim
                 results.X = [ results.X ; x_kp1' ];
                 results.Z = [ results.Z ; z'  ]; % current lifted state
                 results.comp_time = [ results.comp_time ; comp_time ];   % mpc computation time
+                results.err = [ results.err ; sqrt( sum( ( results.R(end,:) - results.Y(end,:)*obj.mpc.projmtx(:,1:obj.mpc.params.n)' ).^2 ) ) ];
                 
                 k = k + 1;  % increment step counter
             end

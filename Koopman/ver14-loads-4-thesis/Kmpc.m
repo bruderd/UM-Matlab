@@ -25,7 +25,7 @@ classdef Kmpc
         set_constRHS;  % function that sets the value of the RHS of constraints
         get_zeta;   % function that constructs zeta from state and input data in time
         
-        nlmpc_controller;   % matlab nlmpc controller object (MPC toolbox)
+%         nlmpc_controller;   % matlab nlmpc controller object (MPC toolbox)
         
         scaledown;  % functions for scaling to [-1,1]
         scaleup;    % functions for scaling from [-1,1]
@@ -86,9 +86,6 @@ classdef Kmpc
                 obj = obj.get_costMatrices_nonlinear;
                 obj = obj.get_constraintMatrices_nonlinear;
             end
-            
-            % construct a matlab nlmpc controller
-            obj = obj.get_nlmpc_controller;
         end
         
         % parse_args: Parses the Name, Value pairs in varargin
@@ -891,7 +888,7 @@ classdef Kmpc
             U = uhorizon;
         end
         
-        %% nonlinear MPC functions (Uncomment and finish writing later)
+        %% nonlinear MPC functions
 
         % get_costMatrices_nonlinear: Contructs the matrices for the mpc optim. problem
         function obj = get_costMatrices_nonlinear( obj )
@@ -1369,7 +1366,7 @@ classdef Kmpc
             RHS = zeros( obj.params.nzeta * (hor-1) , obj.params.nw+1 );
 %             RHS = zeros( obj.params.nzeta * obj.params.m * (hor-1) , obj.params.nw+1 );
             for i = 1 : hor-1
-                gy_i = obj.lift.econ_full( zetapast(i,:)' );    % should be zeta, but okay with no delays
+                gy_i = obj.lift.econ_full( zetapast(i,:)' );   
                 Omega_i = kron( eye(obj.params.nw+1) , gy_i );
                  
                 RHS_i_CB = zeros( obj.params.nzeta , obj.params.nw+1 );
@@ -1420,8 +1417,9 @@ classdef Kmpc
             end
             
             % equality constraint matrices
-%             Aeq = blkdiag( 1 , zeros(obj.params.nw , obj.params.nw) );
-            Aeq = blkdiag( 1 , 0 , 1 ); % DEBUG: ensure last element is zero and first element is one
+            Aeq = blkdiag( 1 , zeros(obj.params.nw , obj.params.nw) );
+%             Aeq = blkdiag( 1 , 0 , 1 ); % DEBUG: ensure last element is zero and first element is one
+%             Aeq = blkdiag( 1 , 1 , 0 ); % DEBUG: ensure second element is zero and first element is one
             beq = [ 1 ; zeros(obj.params.nw,1) ]; % ensure first elements is 1
             lb = -ones(obj.params.nw+1,1);  % load should be in [-1,1]
             ub = ones(obj.params.nw+1,1);   % load should be in [-1,1]

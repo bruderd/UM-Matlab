@@ -25,7 +25,7 @@ classdef Kmpc
         set_constRHS;  % function that sets the value of the RHS of constraints
         get_zeta;   % function that constructs zeta from state and input data in time
         
-        nlmpc_controller;   % matlab nlmpc controller object (MPC toolbox)
+%         nlmpc_controller;   % matlab nlmpc controller object (MPC toolbox)
         
         scaledown;  % functions for scaling to [-1,1]
         scaleup;    % functions for scaling from [-1,1]
@@ -86,9 +86,6 @@ classdef Kmpc
                 obj = obj.get_costMatrices_nonlinear;
                 obj = obj.get_constraintMatrices_nonlinear;
             end
-            
-            % construct a matlab nlmpc controller
-            obj = obj.get_nlmpc_controller;
         end
         
         % parse_args: Parses the Name, Value pairs in varargin
@@ -891,7 +888,7 @@ classdef Kmpc
             U = uhorizon;
         end
         
-        %% nonlinear MPC functions (Uncomment and finish writing later)
+        %% nonlinear MPC functions
 
         % get_costMatrices_nonlinear: Contructs the matrices for the mpc optim. problem
         function obj = get_costMatrices_nonlinear( obj )
@@ -1168,7 +1165,7 @@ classdef Kmpc
             z = [ zeta ; zeros( obj.params.N - obj.params.n , 1 )]; % current lifted state isn't actually lifted for this system
         end
         
-        %% nlmpc matlab object (UN)
+        %% nlmpc matlab object (UNUSED: DELETE WHEN READY)
         % get_nlmpc_controller: Construct nlmpc Matlab object
         function obj = get_nlmpc_controller(obj)
            
@@ -1369,7 +1366,7 @@ classdef Kmpc
             RHS = zeros( obj.params.nzeta * (hor-1) , obj.params.nw+1 );
 %             RHS = zeros( obj.params.nzeta * obj.params.m * (hor-1) , obj.params.nw+1 );
             for i = 1 : hor-1
-                gy_i = obj.lift.econ_full( zetapast(i,:)' );    % should be zeta, but okay with no delays
+                gy_i = obj.lift.econ_full( zetapast(i,:)' );   
                 Omega_i = kron( eye(obj.params.nw+1) , gy_i );
                  
                 RHS_i_CB = zeros( obj.params.nzeta , obj.params.nw+1 );

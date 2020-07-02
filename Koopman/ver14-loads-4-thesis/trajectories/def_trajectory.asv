@@ -5,7 +5,7 @@ saveon = true; % should I save this model?
 ref = struct;
 
 % ref.name = 'blockM_c0p45-0p35_0p5x0p5_45sec';
-ref.name = 'circle_c0-0p7_r0p3_15sec';
+ref.name = 'circle_c0p5-0p6_r0p25_15sec';
 
 ref.T = 15;    % total time of trajectory (s)
 ref.Ts = 0.05;  % length of timestep (s)
@@ -15,7 +15,7 @@ addpath('functions');
 
 % y_old = get_blockM( [0.45,-0.35], 0.5 , 0.5 );   % collection of points that defines the shape of the trajectory (This works)
 % y_old = get_circle( [ 0.5 , -0.6 ] , 0.25 ); % circle trajectory
-y_old = get_circle( [ 0 , -0.7 ] , 0.3 ); % centered circle trajectory
+y_old = get_circle( [ 0 , -0.6 ] , 0.25 ); % centered circle trajectory
 
 % ref.y = -[ ref.y(:,2) , -ref.y(:,1) ];    % include after the block M to turn it into sigma
 % ref.y = get_circle([0,1] , 1);
