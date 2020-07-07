@@ -848,27 +848,35 @@ classdef Ksysid
             
             data_out = data_in;
             
-            % add the zeta field
-            for i = obj.params.nd + 1 : size( data_in.y , 1 )
-                ind = i - obj.params.nd;    % current timestep index
-                y = data_in.y( i , : );
-                u = data_in.u( i , : );
-                ydel = zeros( 1 , obj.params.nd * obj.params.n );
-                udel = zeros( 1 , obj.params.nd * obj.params.m );
-                for j = 1 : obj.params.nd
-                    fillrange_y = obj.params.n * (j - 1) + 1 : obj.params.n * j;
-                    fillrange_u = obj.params.m * (j - 1) + 1 : obj.params.m * j;
-                    ydel(1 , fillrange_y) = data_in.y( i - j , : );
-                    udel(1 , fillrange_u) = data_in.u( i - j , : );
+            if obj.delays ~= 0
+                % add the zeta field
+                for i = obj.params.nd + 1 : size( data_in.y , 1 )
+                    ind = i - obj.params.nd;    % current timestep index
+                    y = data_in.y( i , : );
+                    u = data_in.u( i , : );
+                    ydel = zeros( 1 , obj.params.nd * obj.params.n );
+                    udel = zeros( 1 , obj.params.nd * obj.params.m );
+                    for j = 1 : obj.params.nd
+                        fillrange_y = obj.params.n * (j - 1) + 1 : obj.params.n * j;
+                        fillrange_u = obj.params.m * (j - 1) + 1 : obj.params.m * j;
+                        ydel(1 , fillrange_y) = data_in.y( i - j , : );
+                        udel(1 , fillrange_u) = data_in.u( i - j , : );
+                    end
+                    zetak = [ y , ydel , udel ];
+                    %                 if strcmp( obj.model_type , 'nonlinear' )     % include input in zeta
+                    %                     zetak = [ zetak , u ];
+                    %                 end
+                    data_out.zeta( ind , : ) = zetak;
+                    data_out.uzeta( ind , : ) = data_in.u( i , : );    % current timestep with zeta (input starting at current timestep)
+                    if isfield( data_in , 'w' )
+                        data_out.wzeta( ind , : ) = data_in.w( i , : );
+                    end
                 end
-                zetak = [ y , ydel , udel ];
-%                 if strcmp( obj.model_type , 'nonlinear' )     % include input in zeta
-%                     zetak = [ zetak , u ];
-%                 end
-                data_out.zeta( ind , : ) = zetak;
-                data_out.uzeta( ind , : ) = data_in.u( i , : );    % current timestep with zeta (input starting at current timestep)
+            else
+                data_out.zeta = data_in.y;  % if no delays, zeta is equal to y
+                data_out.uzeta = data_in.u;
                 if isfield( data_in , 'w' )
-                    data_out.wzeta( ind , : ) = data_in.w( i , : );
+                    data_out.wzeta = data_in.w;
                 end
             end
             zeta = data_out.zeta;
@@ -881,6 +889,8 @@ classdef Ksysid
             %   data - struct with fields x , y , u , t , (zeta) OR cell
             %     array containing cells which contain those fields
             %   varargin = num - number of snapshot pairs to be taken
+            
+            disp('Constructing snapshots...');
             
             % check wheter data is a cell array (i.e. contains several trials)
             % If so, concatenate all trials into a single data struct 
@@ -1323,7 +1333,7 @@ classdef Ksysid
             end
         end
         
-        %% Reduce dimension of the set of basis functions (only works for poly and loades systems)
+        %% Reduce dimension of the set of basis functions (only works for poly and loaded systems)
         
         % lift_snapshots (lift the snapshots)
         function Px = lift_snapshots( obj , snapshotPairs )

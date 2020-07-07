@@ -5,7 +5,7 @@
 %   This is not a general purpose function.
 
 %% Choose whether to save siulation results or not
-saveon = false;
+saveon = true;
 
 %% Load the models
 
@@ -69,7 +69,7 @@ end
 
 %% save results (OPTIONAL)
 if saveon
-    sim_folder = [ 'systems' , filesep , Kmpc_lin.model.params.sysParams.sysName , filesep , 'simulations' ];
+    sim_folder = [ 'systems' , filesep , Kmpc.model.params.sysParams.sysName , filesep , 'simulations' ];
     mkdir( sim_folder , ref.name );
     filepath = [ sim_folder , filesep , ref.name ];
     

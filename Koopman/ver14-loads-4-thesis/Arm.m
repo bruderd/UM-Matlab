@@ -510,11 +510,12 @@ classdef Arm
             
             alpha = y(: , 1:obj.params.Nlinks );   % joint angles over time
             
-            fig = figure;   % create figure for the animation
-            axis([-1.25*obj.params.L, 1.25*obj.params.L, -1.25*obj.params.L, 1.25*obj.params.L])
+%             fig = figure;   % create figure for the animation
+            fig = figure('units','pixels','position',[0 0 720 720]);   % create figure for the animation (ensures high resolution)
+            axis([-1.1*obj.params.L, 1.1*obj.params.L, -1.1*obj.params.L, 1.1*obj.params.L])
             set(gca,'Ydir','reverse')
-            xlabel('x(m)')
-            ylabel('y(m)')
+            xlabel('$\hat{\alpha}$ (m)' , 'Interpreter' , 'Latex' , 'FontSize' , 26);
+            ylabel('$\hat{\beta}$ (m)' , 'Interpreter' , 'Latex' , 'FontSize' , 26);
             daspect([1 1 1]);   % make axis ratio 1:1
            
             % Prepare the new file.
@@ -548,9 +549,9 @@ classdef Arm
                 marker = obj.get_markers( alpha(index,:) );   % get mocap sensor location
                 
                 hold on;
-                p0 = quiver( x_grid , y_grid , u_grid , v_grid , 'Color' , [0.65 0.65 0.65] );
+                p0 = quiver( x_grid , y_grid , u_grid , v_grid , 'Color' , [0.75 0.75 0.75] );
                 p1 = plot(x, y, 'k-o' , 'LineWidth' , 3);
-                p2 = plot( marker(:,1) , marker(:,2) , 'r*');
+%                 p2 = plot( marker(:,1) , marker(:,2) , 'r*');
                 p4 = plot( marker(end,1) , marker(end,2) , 'bo' , 'MarkerSize' , 2*w(index,1) + 0.01 , 'MarkerFaceColor' , 'b' );  % end effector load
                 hold off;
                 grid on;
@@ -561,7 +562,7 @@ classdef Arm
                 
                 delete(p0);
                 delete(p1);
-                delete(p2); 
+%                 delete(p2); 
                 delete(p4);
             end
             
@@ -670,14 +671,23 @@ classdef Arm
                 name = obj.params.sysName;
             end
             
+            % colormap
+            colormap lines;
+            cmap = colormap;
+            linewidth = 5;  % width of the lines
+            pathwidth = 2;  % width of end effector path line
+            
             alpha = y(: , 1:obj.params.Nlinks );   % joint angles over time
             
-            fig = figure;   % create figure for the animation
+%             fig = figure;   % create figure for the animation
+            fig = figure('units','pixels','position',[0 0 720 720]);   % create figure for the animation (ensures high resolution)
 %             axis([-1.25*obj.params.L, 1.25*obj.params.L, -1.25*obj.params.L, 1.25*obj.params.L]);
-            axis([ min(ref(:,1))-0.2 , max(ref(:,1))+0.2 , min(ref(:,2))-0.2 , max(ref(:,2))+0.2 ]);
+            window_buffer = 0.5;
+            window = [ min(ref(:,1))-window_buffer , max(ref(:,1))+window_buffer , min(ref(:,2))-window_buffer , max(ref(:,2))+window_buffer-0.3 ]; % axis limits
+            axis(window);
             set(gca,'Ydir','reverse')
-            xlabel('x(m)')
-            ylabel('y(m)')
+            xlabel('$\hat{\alpha}$ (m)' , 'Interpreter' , 'Latex' , 'FontSize' , 26);
+            ylabel('$\hat{\beta}$ (m)' , 'Interpreter' , 'Latex' , 'FontSize' , 26);
             daspect([1 1 1]);   % make axis ratio 1:1
            
             % Prepare the new file.
@@ -693,7 +703,8 @@ classdef Arm
             
             % Grid points for gravity direction arrows
             arrow_len = 0.1;
-            [ x_grid , y_grid ] = meshgrid( -1.25*obj.params.L:arrow_len:1.25*obj.params.L , -1.25*obj.params.L:arrow_len:1.25*obj.params.L);
+%             [ x_grid , y_grid ] = meshgrid( -1.25*obj.params.L:arrow_len:1.25*obj.params.L , -1.25*obj.params.L:arrow_len:1.25*obj.params.L);
+            [ x_grid , y_grid ] = meshgrid( window(1):arrow_len:window(2) , window(3):arrow_len:window(4));
             
             % initialize end effector path
             endeff_path = zeros(totFrames,2);
@@ -707,7 +718,7 @@ classdef Arm
                 x_ref = ref(:,1);
                 y_ref = ref(:,2);
                 hold on;
-                r1 = plot(x_ref , y_ref, '-' , 'Color' , [1 0 0 0.5] , 'Linewidth' , 3 );
+                r1 = plot(x_ref , y_ref, '-' , 'Color' , [0 0 0 0.5] , 'Linewidth' , linewidth );
                 r2 = plot( x_ref(index) , y_ref(index) , '*' , 'Color' , [1 0 0]);
                 hold off;
                 
@@ -725,11 +736,11 @@ classdef Arm
                 endeff_path(i,:) = marker(end,:);
                 
                 hold on;
-                p0 = quiver( x_grid , y_grid , u_grid , v_grid , 'Color' , [0.65 0.65 0.65] );
-                p1 = plot(x, y, 'k-o' , 'LineWidth' , 3);
+                p0 = quiver( x_grid , y_grid , u_grid , v_grid , 'Color' , [0.75 0.75 0.75] );
+                p1 = plot(x, y, 'k-o' , 'LineWidth' , linewidth);
 %                 p2 = plot( marker(:,1) , marker(:,2) , 'r*');
-                p4 = plot( marker(end,1) , marker(end,2) , 'bo' , 'MarkerSize' , 2*w(index,1) + 0.01 , 'MarkerFaceColor' , 'b' );  % end effector load
-                p5 = plot( endeff_path(1:i,1) , endeff_path(1:i,2) , 'b' , 'LineWidth' , 2);     % end effector path
+                p4 = plot( marker(end,1) , marker(end,2) , 'bo' , 'MarkerSize' , 20*w(index,1) + 0.01 , 'MarkerFaceColor' , 'b' );  % end effector load
+                p5 = plot( endeff_path(1:i,1) , endeff_path(1:i,2) , 'Color' , cmap(4,:) , 'LineWidth' , pathwidth);     % end effector path
                 hold off;
                 grid on;
                 
@@ -762,6 +773,8 @@ classdef Arm
             %   Alpha - joint angles and velocities at each timestep
             %   markers - marker position at each time step [x0,y0,...,xn,yn ; ...]
             %   varargin - save on? (true/false)
+            
+%             obj.params.umax = 4.5*pi/8;   % DEBUG, make inputs larger
             
             % replace default values with user input values
             p = inputParser;
