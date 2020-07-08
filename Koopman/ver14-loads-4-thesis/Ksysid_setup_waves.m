@@ -9,7 +9,7 @@
 %% gather training data (need to prepare data file before running this)
 
 % % load in data file(s)
-data4sysid = load('datafiles' , filesep , 'thesis-3link-markers-noload-50trials_train-10_val-5_2020-06-04_17-04.mat' ); % for thesis model comparison of 3link arm
+data4sysid = load([ 'datafiles' , filesep , 'thesis-3link-markers-noload-50trials_train-10_val-5_2020-06-04_17-04.mat' ]); % for thesis model comparison of 3link arm
 % [ datafile_name , datafile_path ] = uigetfile( 'datafiles/*.mat' , 'Choose data file for sysid...' );
 % data4sysid = load( [datafile_path , datafile_name] );
 
