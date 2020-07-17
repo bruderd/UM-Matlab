@@ -100,20 +100,54 @@ end
 
 %% simulate nonlinear Koopman model
 
-% load in the nonlinear koopman model
-matcontents = load('n-2_m-3_del-0_2020-04-29_21-20.mat');
-ksysid = matcontents.sysid_class;
+% % load in the nonlinear koopman model (continuous)
+% matcontents = load('n-2_m-3_del-0_2020-04-29_21-20.mat');
+% ksysid = matcontents.sysid_class;
+% koop = cell( size(data) );
+% for i = 1 : length(data)
+% %     Ts_nl = ( data{i}.t(end) + 1 ) / length( data{i}.t );   % actual average timestep
+%     koop{i}.t = data{i}.t;
+%     koop{i}.u = ksysid.scaledown.u( data{i}.u );
+%     ykoop0 = ksysid.scaledown.y( data{i}.y(1,:) );
+%     [ ~ , koop{i}.y ] = ode45( @(t,y) ksysid.model.F_func( y , koop{i}.u( min( floor(t/Ts)+1 , size(koop{i}.u,1) ) ,:)' ) , koop{i}.t , ykoop0' );
+%     
+%     % scale data back up
+%     koop{i}.u = data{i}.u;
+%     koop{i}.y = ksysid.scaleup.y( koop{i}.y );
+%     
+%     % distance error at each timestep
+%     koop{i}.err = sqrt( sum( ( data{i}.y - koop{i}.y ).^2 , 2 ) );
+%     koop{i}.err_ave = sum( koop{i}.err ) / length(koop{i}.err);
+%     koop{i}.err_cm = in2cm( koop{i}.err );
+%     koop{i}.err_ave_cm = in2cm( koop{i}.err_ave );
+% end
+
+% load in the nonlinear koopman model (discrete)
+matcontents = load('nonlinear-discrete-laserrobot-model.mat');
+ksysid = matcontents.temp;
 koop = cell( size(data) );
 for i = 1 : length(data)
-%     Ts_nl = ( data{i}.t(end) + 1 ) / length( data{i}.t );   % actual average timestep
     koop{i}.t = data{i}.t;
-    koop{i}.u = ksysid.scaledown.u( data{i}.u );
-    ykoop0 = ksysid.scaledown.y( data{i}.y(1,:) );
-    [ ~ , koop{i}.y ] = ode45( @(t,y) ksysid.model.F_func( y , koop{i}.u( min( floor(t/Ts)+1 , size(koop{i}.u,1) ) ,:)' ) , koop{i}.t , ykoop0' );
+    
+    % scale down the data (re-uses scaling function from linear model)
+    datasc.t = data{i}.t;
+    datasc.u = ksysid_lin.scaledown.u( data{i}.u );
+    datasc.y = ksysid_lin.scaledown.y( data{i}.y );
+    
+    koop{i}.zeta = zeros( length(koop{i}.t) , size( kooplin{1}.zeta , 2 ) );   % preallocate  
+    koop{i}.zeta(1,:) = kooplin{i}.zeta(1,:);   % initial value
+    koop{i}.y = zeros( size( data{i}.y ) );  % preallocate
+    koop{i}.y(1,:) = datasc.y(1,:);  % initial value
+    
+    % simulate the (scaled) system
+    for j = 1 : length( koop{i}.t ) - 1
+        koop{i}.zeta(j+1,:) = ksysid.F_func( koop{i}.zeta(j,:)' , datasc.u(j,:)' )';
+        koop{i}.y(j+1,:) = koop{i}.zeta(j+1,1:2);
+    end
     
     % scale data back up
     koop{i}.u = data{i}.u;
-    koop{i}.y = ksysid.scaleup.y( koop{i}.y );
+    koop{i}.y = ksysid_lin.scaleup.y( koop{i}.y );
     
     % distance error at each timestep
     koop{i}.err = sqrt( sum( ( data{i}.y - koop{i}.y ).^2 , 2 ) );
@@ -121,7 +155,6 @@ for i = 1 : length(data)
     koop{i}.err_cm = in2cm( koop{i}.err );
     koop{i}.err_ave_cm = in2cm( koop{i}.err_ave );
 end
-
 
 %% simulate neural network model
 
@@ -299,6 +332,42 @@ xtickangle(45);
 xticklabels( {'Koopman' , '(Linear)     ' , 'State Space' , 'Koopman' , '(Nonlinear)   ' , 'Neural Network'} );
 ylabel('Average Error (cm)');
 ylim([0 8]);
+% eb = errorbar(1:numSystems-1, [mean_NRMSE_alltrials(1:3)' * 100, mean_NRMSE_alltrials(5:end)' * 100], [std_NRMSE_alltrials(1:3)' * 100, std_NRMSE_alltrials(5:end)' * 100], '.', 'CapSize', 14, 'LineWidth', 1.5, 'Color', 'k');
+eb = errorbar([1 2 4 5], [err.kooplin.ave , err.lin.ave , err.koop.ave , err.nnet.ave] * 2.54, [err.kooplin.std , err.lin.std , err.koop.std , err.nnet.std] * 2.54, '.', 'CapSize', 14, 'LineWidth', 1.5, 'Color', 'k');
+box on;
+set(gca, 'YGrid', 'on', 'XGrid', 'off');
+hold off
+
+%% plot the error comparison over all validation trials (excluding NLARX and Hamm-Weiner) but using colors for dissertation defense
+
+% Define color map
+colormap lines;
+cb = colormap;
+
+% % Define custom colors:
+% cb(1,:) = [69,117,180]/255;
+% cb(2,:) = [145,191,219]/255;
+% cb(3,:) = [254,224,144]/255;
+% cb(4,:) = [252,141,89]/255;
+% cb(5,:) = [215,48,39]/255;
+
+% Define more colors
+cb_blue = cb(1,:);  % blue (for linear koopman)
+cb_orange = cb(2,:);   % orange (for nonlinear koopman)
+
+
+% bar chart showing TOTAL NRMSE across all states and all trials
+figure
+hold on
+bar(1 , err.kooplin.ave * 2.54 , 'FaceColor' , cb_blue );
+bar(2 , err.lin.ave * 2.54 , 'FaceColor' , cb_grey );
+bar(4 , err.koop.ave * 2.54 , 'FaceColor' , cb_orange );
+bar(5 , err.nnet.ave * 2.54 , 'FaceColor' , cb_grey );
+xticks([0.85 1.15 2 3.85 4.15 5]);
+xtickangle(45);
+xticklabels( {'Koopman' , '(Linear)     ' , 'State Space' , 'Koopman' , '(Nonlinear)   ' , 'Neural Network'} );
+ylabel('Average Error (cm)');
+ylim([0 5]);
 % eb = errorbar(1:numSystems-1, [mean_NRMSE_alltrials(1:3)' * 100, mean_NRMSE_alltrials(5:end)' * 100], [std_NRMSE_alltrials(1:3)' * 100, std_NRMSE_alltrials(5:end)' * 100], '.', 'CapSize', 14, 'LineWidth', 1.5, 'Color', 'k');
 eb = errorbar([1 2 4 5], [err.kooplin.ave , err.lin.ave , err.koop.ave , err.nnet.ave] * 2.54, [err.kooplin.std , err.lin.std , err.koop.std , err.nnet.std] * 2.54, '.', 'CapSize', 14, 'LineWidth', 1.5, 'Color', 'k');
 box on;

@@ -1803,12 +1803,19 @@ classdef Ksysid
         function err = get_error( obj , simdata , realdata )
             %get_error: Computes the error between real and simulated data.
             
+            % scaled down data in [-1,1]
             err.abs = abs( simdata.y - realdata.y );  % absolute error over time
             err.mean = mean( err.abs , 1 );   % average absolute error over time
             err.rmse = sqrt( sum( (simdata.y - realdata.y).^2 , 1 ) ./ length(realdata.t) ); % RMSE (over each state)
             err.nrmse = err.rmse ./ abs( max( realdata.y ) - min( realdata.y ) );   % RMSE normalized by total range of real data values
             err.euclid = sqrt( sum( (simdata.y - realdata.y).^2 , 2 ) );    % euclidean distance error in R^n at each point
             err.euclid_mean = sum( err.euclid ) / length(realdata.t);   % average euclidean distance error over all time steps
+            
+            % data in original data range
+            ysim = obj.scaleup.y( simdata.y );
+            yreal = obj.scaleup.y( realdata.y );
+            err.unscaled.euclid = sqrt( sum( (ysim - yreal).^2 , 2 ) );    % euclidean distance error in R^n at each point
+            err.unscaled.euclid_mean = sum( err.unscaled.euclid ) / length(realdata.t);   % average euclidean distance error over all time steps
         end
         
         % plot_comparison (plots a comparison between simulation and real data)

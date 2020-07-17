@@ -69,6 +69,6 @@ Ksysid = Ksysid.train_models;
 
 %% save model(s)
 
-You do this based on the validation results.
-Call this function:
+% You do this based on the validation results.
+% Call this function:
   Ksysid.save_class( )

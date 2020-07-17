@@ -38,15 +38,21 @@ for j = 1 : length( modelfile_name )
     toterr{j}.nrmse = zeros( size(err{1}.nrmse) );
     toterr{j}.euclid = [];
     toterr{j}.euclid_zsr = [];
+    toterr{j}.unscaled.euclid = [];
+    toterr{j}.unscaled.euclid_zsr = [];
     for i = 1:length(err)
         toterr{j}.mean = toterr{j}.mean + err{i}.mean;
         toterr{j}.rmse = toterr{j}.rmse + err{i}.rmse;
         toterr{j}.nrmse = toterr{j}.nrmse + err{i}.nrmse;
         toterr{j}.euclid = [ toterr{j}.euclid ; err{i}.euclid ];   % stack errors at all time steps
         toterr{j}.euclid_zsr = [ toterr{j}.euclid_zsr ; sqrt( sum( results{i}.real.y.^2 , 2) ) ];   % euclidean error of a zeros state response
+        toterr{j}.unscaled.euclid = [ toterr{j}.unscaled.euclid ; err{i}.unscaled.euclid ];   % stack errors at all time steps (unscaled units)
+        toterr{j}.unscaled.euclid_zsr = [ toterr{j}.unscaled.euclid_zsr ; sqrt( sum( Ksysid.scaleup.y(results{i}.real.y).^2 , 2) ) ];   % euclidean error of a zeros state response (unscaled units)
     end
     toterr{j}.euclid_mean = sum( toterr{j}.euclid , 1 ) / length( toterr{j}.euclid );  % divide by total number of steps
     toterr{j}.euclid_zsr_mean = sum( toterr{j}.euclid_zsr , 1 ) / length( toterr{j}.euclid );  % divide by total number of steps
+    toterr{j}.unscaled.euclid_mean = sum( toterr{j}.unscaled.euclid , 1 ) / length( toterr{j}.unscaled.euclid );  % divide by total number of steps
+    toterr{j}.unscaled.euclid_zsr_mean = sum( toterr{j}.unscaled.euclid_zsr , 1 ) / length( toterr{j}.unscaled.euclid_zsr );  % divide by total number of steps
 end
 
 %% plot the accumulated errors of the systems
@@ -58,36 +64,58 @@ err_bilinear = [];
 dim_nonlinear = [];
 err_nonlinear = [];
 
+% % normalized by zsr
+% for i = 1 : length(toterr)
+%     if strcmp( toterr{i}.model_type , 'linear' )
+%         dim_linear = [ dim_linear , toterr{i}.dimK ];
+%         err_linear = [ err_linear , toterr{i}.euclid_mean / toterr{i}.euclid_zsr_mean ];    % normalize by zsr error
+%     elseif strcmp( toterr{i}.model_type , 'bilinear' )
+%         dim_bilinear = [ dim_bilinear , toterr{i}.dimK ];
+%         err_bilinear = [ err_bilinear , toterr{i}.euclid_mean / toterr{i}.euclid_zsr_mean ]; % normalize by zsr error
+%     elseif strcmp( toterr{i}.model_type , 'nonlinear' )
+%         dim_nonlinear = [ dim_nonlinear , toterr{i}.dimK ];
+%         err_nonlinear = [ err_nonlinear , toterr{i}.euclid_mean / toterr{i}.euclid_zsr_mean ]; % normalize by zsr error
+%     end  
+% end
+
+% Not normalized by zsr (and in unscaled units)
 for i = 1 : length(toterr)
     if strcmp( toterr{i}.model_type , 'linear' )
         dim_linear = [ dim_linear , toterr{i}.dimK ];
-        err_linear = [ err_linear , toterr{i}.euclid_mean / toterr{i}.euclid_zsr_mean ];    % normalize by zsr error
+        err_linear = [ err_linear , toterr{i}.unscaled.euclid_mean ]; 
     elseif strcmp( toterr{i}.model_type , 'bilinear' )
         dim_bilinear = [ dim_bilinear , toterr{i}.dimK ];
-        err_bilinear = [ err_bilinear , toterr{i}.euclid_mean / toterr{i}.euclid_zsr_mean ]; % normalize by zsr error
+        err_bilinear = [ err_bilinear , toterr{i}.unscaled.euclid_mean ]; 
     elseif strcmp( toterr{i}.model_type , 'nonlinear' )
         dim_nonlinear = [ dim_nonlinear , toterr{i}.dimK ];
-        err_nonlinear = [ err_nonlinear , toterr{i}.euclid_mean / toterr{i}.euclid_zsr_mean ]; % normalize by zsr error
+        err_nonlinear = [ err_nonlinear , toterr{i}.unscaled.euclid_mean ];
     end  
 end
 
-% dim_linear = [ toterr{1}.dimK , toterr{2}.dimK , toterr{3}.dimK , toterr{4}.dimK , toterr{5}.dimK , toterr{6}.dimK ];
-% err_linear = [ toterr{1}.euclid_mean , toterr{2}.euclid_mean , toterr{3}.euclid_mean , toterr{4}.euclid_mean , toterr{5}.euclid_mean , toterr{6}.euclid_mean ];
-% dim_bilinear = [ toterr{7}.dimK , toterr{8}.dimK , toterr{9}.dimK , toterr{10}.dimK ];
-% err_bilinear = [ toterr{7}.euclid_mean , toterr{8}.euclid_mean , toterr{9}.euclid_mean , toterr{10}.euclid_mean ];
-% dim_nonlinear = [ toterr{11}.dimK , toterr{12}.dimK , toterr{13}.dimK , toterr{14}.dimK ];
-% err_nonlinear = [ toterr{11}.euclid_mean , toterr{12}.euclid_mean , toterr{13}.euclid_mean , toterr{14}.euclid_mean ];
 
 figure;
 hold on;
-plot( dim_linear , err_linear , '*-');
-plot( dim_bilinear , err_bilinear , '*-' );
-plot( dim_nonlinear , err_nonlinear , '*-' );
+plot( dim_linear , err_linear * 2.54 , '*-');  % multiply by 2.54 to convert from in to cm
+plot( dim_bilinear , err_bilinear * 2.54 , '*-' ); % multiply by 2.54 to convert from in to cm
+plot( dim_nonlinear , err_nonlinear * 2.54 , '*-' );   % multiply by 2.54 to convert from in to cm
 hold off;
 ylim([0,1]); % was [0,2]
 set(gca, 'XScale', 'log')
 xlim([10,1000]);
 grid on; box on;
-xlabel('dim($\psi(\tilde{y},\tilde{u})$)' , 'Interpreter' , 'Latex');
-ylabel('Model Prediction Error' , 'Interpreter' , 'Latex')
+% xlabel('dim($\psi(\tilde{y},\tilde{u})$)' , 'Interpreter' , 'Latex');
+% xlabel('Number of Basis Functions, i.e. dim($\psi(\tilde{y},\tilde{u})$)' , 'Interpreter' , 'Latex');
+xlabel('Number of Basis Functions');
+% ylabel('Average Model Prediction Error' , 'Interpreter' , 'Latex')
+% ylabel('Average Error (Normalized)')
+ylabel('Average Error (cm)')
 legend({'Linear' , 'Bilinear' , 'Nonlinear'} , 'Location' , 'northwest');
+
+
+
+
+
+
+
+
+
