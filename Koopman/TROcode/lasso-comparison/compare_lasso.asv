@@ -1,0 +1,24 @@
+% compare_lasso.m
+%
+% Compare the performance of models across lasso parameters
+
+%% load candidate models
+class_nomodels = load('..\systems\waves\old-robot_class-nomodels.mat');
+models_proj = load('..\systems\waves\old-robot_lasso-candidate-models.mat');
+models_proj = temp.candidates;
+
+ksysid_proj = sysid_class;
+ksysid_proj.candidates = models_proj;
+
+%% Run validation on all the models
+
+results = cell( size(ksysid.candidates) );    % store results in a cell array
+err = cell( size(ksysid.candidates) );    % store error in a cell array 
+
+if iscell(ksysid.candidates)
+    for i = 1 : length(ksysid.candidates)
+        [ results{i} , err{i} ] = ksysid.valNplot_model( i );
+    end
+else
+    [ results{1} , err{1} ] = ksysid.valNplot_model;
+end

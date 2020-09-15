@@ -1,0 +1,25 @@
+function [ nn_input , nn_output ] = prep_nndata( data )
+%prep_nnet: prepares data to be used with Matlab Neural Network Toolbox
+%   Detailed explanation goes here
+%
+%   INPUTS:
+%       data is a cell array containing experimental data.
+%       It is a cell array where each element is a 
+%       struct containing data from a single trial
+%
+%   OUTPUTS:
+%       nn_input is the inputs from all of the trials in data concatenated 
+%       together into a single matrix.
+%
+%       nn_output is the inputs from all of the trials in data concatenated 
+%       together into a single matrix.
+%       zmerged is an iddata object containing the merged data from all
+%       experements
+%
+%       zval is an iddata object containing tht data from the validation
+%       experiment
+%
+%       zall is a struct containing the individual data from each
+%       experiment. Each experiment can be accessed zall.z#, where # is the
+%       experiment's identification number
+%

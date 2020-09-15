@@ -1,0 +1,27 @@
+% multilinear_lift
+%
+% Defines a multilinear lifting function.
+% Valid only for SISO systems
+% Assumes U is a row vector
+% Order is the order of the volterra series, default is length(U)
+
+function [ Umulti , exponents ] = multilinear_lift( U , order)
+
+horizon = size(U,2);    % only for SISO systems
+
+% set value of order if none provided
+if nargin == 1
+    order = horizon;
+end
+
+% % Old way, without order argument included
+% exponents = fliplr( permn( [0,1] , horizon ) );
+
+exponents = [];
+for i = 1:order
+    exponents = [ exponents ; partitions( i , ones(1,horizon) , ones(1,horizon) ) ];
+end
+
+Umulti = prod( U .^ exponents , 2); %output is a column vector
+
+end

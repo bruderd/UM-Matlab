@@ -1,0 +1,33 @@
+function [A,N,B,C] = get_realization_from_H( H , m , n )
+%get_realization_from_H: Extracts a bilinear realization from the Hankel
+%matrix of the form: x[k+1] = Ax[k] + Nx[k]u[k] + Bu[k] , y[k] = Cx[k]
+%   
+% Inputs:
+%   H - Hankel matrix
+%   m - "block" height of hankel matrix
+%   n - "block" width of hankel matrix
+%
+% Note: SISO systems only.
+
+% Remove last "block" dimension from width and height
+Hs = H( 1 : 2^(m-1)-1 , 1 : 2^(n-1)-1 ); 
+
+% Take SVD of Hankel matrix
+[U,S,V] = svd( Hs , 'econ' );
+Q = U*S;    % notation to match paper
+P = V';     % notation to match paper
+
+% Partition the Hankel matrix (see paper) (H1, H2, and Hs should have same dimensions)
+H1 = zeros( size(Hs) ); % preallocate
+H2 = zeros( size(Hs) ); % preallocate
+for i = 1 : n - 1
+    
+    col_index = 2^(i-1) : 2^i - 1;
+    
+    one_index = 2^(i) : 2^(i+1) - 1;
+    
+    H1( : , col_index ) = H( 1 : 2^(m-1)-1 ,  );
+    H2( : , col_index ) = H( 1 : 2^(m-1)-1 ,  );
+end
+
+end
