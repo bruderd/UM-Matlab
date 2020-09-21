@@ -1814,8 +1814,8 @@ classdef Ksysid
             % data in original data range
             ysim = obj.scaleup.y( simdata.y );
             yreal = obj.scaleup.y( realdata.y );
-            err.unscaled.euclid = sqrt( sum( (ysim - realdata.y).^2 , 2 ) );    % euclidean distance error in R^n at each point
-            err.unscaled.euclid_mean = sum( err.euclid ) / length(realdata.t);   % average euclidean distance error over all time steps
+            err.unscaled.euclid = sqrt( sum( (ysim - yreal).^2 , 2 ) );    % euclidean distance error in R^n at each point
+            err.unscaled.euclid_mean = sum( err.unscaled.euclid ) / length(realdata.t);   % average euclidean distance error over all time steps
         end
         
         % plot_comparison (plots a comparison between simulation and real data)

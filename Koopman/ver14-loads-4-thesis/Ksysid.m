@@ -124,7 +124,7 @@ classdef Ksysid
             end
             obj.traindata = traindata;
             obj.valdata = valdata;
-%             % To suppress scaling, comment this in and comment out above
+%             % To suppress scaling, comment this in and comment out above 2 lines
 %             obj.traindata = data4train_merged;
 %             obj.valdata = data4val;
             
@@ -904,48 +904,58 @@ classdef Ksysid
                 data = obj.get_zeta( data );
             end
             
-            % separate data into 'before' and 'after' time step
-            before.t = data.t( obj.params.nd + 1 : end-1 );
-            before.zeta = data.zeta( 1:end-1 , : );
-            after.t = data.t( obj.params.nd + 2 : end );
-            after.zeta = data.zeta( 2:end , : );
-            u = data.uzeta( 1:end-1 , : );    % input that happens between before.zeta and after.zeta
-            
-            % remove pairs that fall at the boundary between sim/exp trials
-            goodpts = find( before.t < after.t );
-            before.zeta = before.zeta( goodpts , : );
-            after.zeta = after.zeta( goodpts , : );
-            u = u( goodpts , : );
-            
-            % if system is loaded, include the load
-            if isfield( data , 'w' )
-                w = data.wzeta( 1:end-1 , : );    % load that happens between before.zeta and after.zeta
-                w = w( goodpts , : );
-            end
-            
-            % set the number of snapshot pairs to be taken
-            num_max = size( before.zeta , 1 ) - 1; % maximum number of snapshot pairs
-            if length(varargin) == 1
-                num = varargin{1};
-                if num > num_max - 1
-                    message = [ 'Number of snapshot pairs cannot exceed ' , num2str(num_max) , '. Taking ' , num2str(num_max) , ' pairs instead.' ];
-                    disp(message);
+            % If snapshots are already defined in data file use those
+            if ismember( 'snapshots' , fields(data) )
+                snapshotPairs.alpha = data.snapshots.alpha;
+                snapshotPairs.beta = data.snapshots.beta;
+                snapshotPairs.u = data.snapshots.u;
+                if ismember( 'w' , fields(data.snapshots) )
+                    snapshotPairs.w = data.snapshots.w;
+                end
+            else    % otherwise, construct them from time-series data 
+                % separate data into 'before' and 'after' time step
+                before.t = data.t( obj.params.nd + 1 : end-1 );
+                before.zeta = data.zeta( 1:end-1 , : );
+                after.t = data.t( obj.params.nd + 2 : end );
+                after.zeta = data.zeta( 2:end , : );
+                u = data.uzeta( 1:end-1 , : );    % input that happens between before.zeta and after.zeta
+                
+                % remove pairs that fall at the boundary between sim/exp trials
+                goodpts = find( before.t < after.t );
+                before.zeta = before.zeta( goodpts , : );
+                after.zeta = after.zeta( goodpts , : );
+                u = u( goodpts , : );
+                
+                % if system is loaded, include the load
+                if isfield( data , 'w' )
+                    w = data.wzeta( 1:end-1 , : );    % load that happens between before.zeta and after.zeta
+                    w = w( goodpts , : );
+                end
+                
+                % set the number of snapshot pairs to be taken
+                num_max = size( before.zeta , 1 ) - 1; % maximum number of snapshot pairs
+                if length(varargin) == 1
+                    num = varargin{1};
+                    if num > num_max - 1
+                        message = [ 'Number of snapshot pairs cannot exceed ' , num2str(num_max) , '. Taking ' , num2str(num_max) , ' pairs instead.' ];
+                        disp(message);
+                        num = num_max;
+                    end
+                else
                     num = num_max;
                 end
-            else
-                num = num_max;
-            end
-            
-            % randomly select num snapshot pairs
-            total = num_max;
-            s = RandStream('mlfg6331_64'); 
-            index = datasample(s , 1:total, num , 'Replace' , false);
-            
-            snapshotPairs.alpha = before.zeta( index , : ); 
-            snapshotPairs.beta = after.zeta( index , : );
-            snapshotPairs.u = u( index , : );
-            if isfield( data , 'w' )
-                snapshotPairs.w = w( index , : );
+                
+                % randomly select num snapshot pairs
+                total = num_max;
+                s = RandStream('mlfg6331_64');
+                index = datasample(s , 1:total, num , 'Replace' , false);
+                
+                snapshotPairs.alpha = before.zeta( index , : );
+                snapshotPairs.beta = after.zeta( index , : );
+                snapshotPairs.u = u( index , : );
+                if isfield( data , 'w' )
+                    snapshotPairs.w = w( index , : );
+                end
             end
         end
         

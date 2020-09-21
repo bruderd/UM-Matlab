@@ -16,12 +16,12 @@ Arm_setup;  % edit arm parameters in Arm_setup.m
 %% Set experimental parameters
 
 % number of trials
-num_train = 10;
-num_val = 5;
+num_train = 2; %10
+num_val = 2;    %5
 
 % size of len arrays determines the number of each type of trial
-train_len = ones(1,num_train) * 60;     % length of each training trial (s)
-val_len = ones(1,num_val) * 30;       % length of each valiation trial (s)
+train_len = ones(1,num_train) * 100; %60     % length of each training trial (s)
+val_len = ones(1,num_val) * 20; %10       % length of each valiation trial (s)
 
 % input ramp length bounds
 ramps_lb = 0.25;
@@ -36,10 +36,10 @@ w_ramps_ub = 10;
 % w_ub = [ 10 , pi/2 ];
 % w_lb = [0 0];   % endeff load only
 % w_ub = [10 0];   % endeff load only
-w_lb = [ 0 , -pi/2 ];   % gravity load only
-w_ub = [ 1 , pi/2 ];    % gravity load only
-% w_lb = [0 0];   % unloaded
-% w_ub = [0 0];   % unloaded 
+% w_lb = [ 0 , -pi/2 ];   % gravity load only
+% w_ub = [ 1 , pi/2 ];    % gravity load only
+w_lb = [0 0];   % unloaded
+w_ub = [0 0];   % unloaded 
 
 % input bounds
 u_lb = -0.9*pi * ones( 1 , Arm.params.Nmods );
@@ -85,7 +85,8 @@ end
 
 %% put data together into a single struct
 
-file_name = 'thesis-3link-markers-grav-endload-01';
+% file_name = 'thesis-3link-markers-grav-endload-01';
+file_name = 'single-pend2_1-links_endeff';
 data4sysid = Data.get_data4sysid( train , val , true , file_name );
 
 
