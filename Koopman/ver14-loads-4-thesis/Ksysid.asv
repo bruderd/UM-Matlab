@@ -1281,12 +1281,6 @@ classdef Ksysid
             %       F_func = function handle for function that evaluates F(x,u)
             %   obj.model - property of struct which stores the model
             
-            % convert to continuous time Koopman matrix
-            if strcmp( obj.time_type , 'continuous' )
-                koopData.K_dis = koopData.K;
-                koopData.K = (1/obj.params.Ts) * logm( koopData.K + 1e-12 * eye(size(koopData.K)) );   % apply conditioning
-            end
-            
             % define the unloaded basis vector
             if obj.dim_red  % reduced order basis
                 basis_noload = [ obj.params.zeta ; obj.params.u ; obj.basis.econ ; 1 ];  % unlifted state and input
@@ -1300,7 +1294,11 @@ classdef Ksysid
                 for i = 1 : obj.params.nw
                     basis_loaded = [ basis_loaded ; obj.params.w(i) * basis_noload ]; % lifted state including loads
                 end
-                F = koopData.K( : , 1 : obj.params.nzeta )' * basis_loaded;
+                if strcmp( obj.time_typ , 'continuous' )
+                    F = koopData.K_cont( : , 1 : obj.params.nzeta )' * basis_loaded;
+                else
+                    F = koopData.K( : , 1 : obj.params.nzeta )' * basis_loaded;
+                end
                 out.F_sym = F;
                 out.F_func = matlabFunction( F , 'Vars', { obj.params.zeta , obj.params.u , obj.params.w } );
             else
@@ -1822,19 +1820,10 @@ classdef Ksysid
             usim = ureal;
 %             [ tsim , zetasim ] = ode45( @(t,y) model.F_func( y , ureal( floor(t/obj.params.Ts)+1 ,:)' ) , treal , zeta0 );
             for j = 1 : length(treal)-1
-                if strcmp( obj.time_type , 'continuous' )   % continuous time model
-                    if obj.loaded
-                        [ ~ , zetat ] = ode45( @(t,zeta) model.F_func( zeta , usim(j,:)' , wsim(j,:)' ) , [0 , obj.params.Ts] , zetasim(j,:)' );
-                    else
-                        [ ~ , zetat ] = ode45( @(t,zeta) model.F_func( zeta , usim(j,:)' ) , [0 , obj.params.Ts] , zetasim(j,:)' );
-                    end
-                    zetasim(j+1,:) = zetat(end,:);
-                else    % discrete time model
-                    if obj.loaded
-                        zetasim(j+1,:) = model.F_func( zetasim(j,:)' , usim(j,:)' , wsim(j,:)' );
-                    else
-                        zetasim(j+1,:) = model.F_func( zetasim(j,:)' , usim(j,:)' );
-                    end
+                if obj.loaded
+                    zetasim(j+1,:) = model.F_func( zetasim(j,:)' , usim(j,:)' , wsim(j,:)' );
+                else
+                    zetasim(j+1,:) = model.F_func( zetasim(j,:)' , usim(j,:)' );
                 end
             end
             ysim = zetasim( : , 1 : obj.params.n );
