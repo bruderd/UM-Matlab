@@ -4,7 +4,7 @@
 %
 %   This is not a general purpose function.
 
-%% Choose whether to save siulation results or not
+%% Choose whether to save simulation results or not
 saveon = true;
 
 %% Load the models
